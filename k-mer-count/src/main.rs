@@ -5,6 +5,41 @@ use std::fs::File;
 use bio::io::fasta::{Record, FastaRead, Reader};
 use std::str::from_utf8;
 
+
+fn bucket_sort(source: Vec<&str>, place: usize) -> Vec<&str>{
+    assert!(source[0].len() >= place);
+    let mut result_a: Vec<&str> = Vec::new();
+    let mut result_c: Vec<&str> = Vec::new();
+    let mut result_g: Vec<&str> = Vec::new();
+    let mut result_t: Vec<&str> = Vec::new();
+    let index:  usize = source[0].len() - place;
+    for each_chunk in source.iter(){
+        let current_char = each_chunk.chars().nth(index).unwrap();
+        match current_char{
+            'A' => {result_a.push(each_chunk);}
+            'C' => {result_c.push(each_chunk);}
+            'G' => {result_g.push(each_chunk);}
+            'T' => {result_t.push(each_chunk);}
+            _   => {panic!("Unexpected charactor {} appears in {}", current_char, each_chunk);}
+        }
+    }
+    let mut result: Vec<&str> = Vec::new();
+    result.append(&mut result_a);
+    result.append(&mut result_c);
+    result.append(&mut result_g);
+    result.append(&mut result_t);
+    return result;
+}
+
+fn radix_sort(mut source: Vec<&str>) -> Vec<&str>{
+    let length: usize = source[0].len();
+    for i in 1..length{
+        source = bucket_sort(source, i);
+    }
+    return source;
+}
+
+
 fn main() {
     let file = File::open("sample.fasta").expect("Error during opening the file");
     let mut reader = Reader::new(file);
@@ -38,23 +73,20 @@ fn main() {
                 if r_end > record.seq().len(){
                     break;
                 }
-                /*
-                print!("record id: {}\twindow start: {}\tDNA chunk size: {}", record.id(), window_start, dna_chunk_size);
-                print!("\tL start: {}\t L end: {}\tR start: {}\tR end: {}", l_start, l_end, r_start, r_end);
-                println!("\trecord length: {}\t {}", record.seq().len(), r_end > record.seq().len());
-                */
                 let l = &record.seq()[l_start..l_end];
                 let r = &record.seq()[r_start..r_end];
-                //print!("{:?}", from_utf8(l).unwrap());
-                //println!("{:?}", from_utf8(r).unwrap());
                 let tmp_lr_chunk = from_utf8(l).unwrap().clone().to_owned() + from_utf8(r).unwrap();
                 lr_chunk.push(tmp_lr_chunk);
             }
-            //println!("{} loop {} DONE", record.id(), dna_chunk_size);
         }
     }
+    
+    let sorted_lr_chunk = radix_sort(lr_chunk.iter().map(|s| &**s).collect());
+
+
     lr_chunk.sort();
     for each_chunk in lr_chunk.iter() {
         println!("{}", each_chunk);
     }
+    
 }
