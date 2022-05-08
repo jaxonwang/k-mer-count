@@ -4,8 +4,11 @@ extern crate rdxsort;
 use std::fs::File;
 use bio::io::fasta::{Record, FastaRead, Reader};
 use std::str::from_utf8;
+use rdxsort::*;
+use bit_reverse::ParallelReverse;
 
 
+/*
 fn bucket_sort(source: Vec<&str>, place: usize) -> Vec<&str>{
     assert!(source[0].len() >= place);
     let mut result_a: Vec<&str> = Vec::new();
@@ -38,7 +41,46 @@ fn radix_sort(mut source: Vec<&str>) -> Vec<&str>{
     }
     return source;
 }
+*/
 
+fn encode_DNA_seq_2_u64(sequence: &[u8]) -> u64{
+    let mut result: u64 = 0;
+    for each_base in sequence.iter(){
+        match each_base{
+            b'A' => {result |= 0;}
+            b'C' => {result |= 1;}
+            b'G' => {result |= 2;}
+            b'T' => {result |= 3;}
+            _   => {panic!("Unexpected character: {}", each_base);}
+        }
+        result = result << 2;
+    }
+    result = result >> 2;
+    return result;
+}
+
+
+fn decode_u64_2_DNA_seq(source:u64, index: usize, length: usize) ->u8{
+    let mut result: u8 = 0;
+    let mut tmp: u64 = source;
+    //println!("{:#066b}", tmp);
+    tmp = source << (64 - length * 2);
+    //println!("{:#066b}", tmp);
+    tmp = tmp << index  * 2;
+    //println!("{:#066b}", tmp);
+    tmp = tmp >> 62;
+    //println!("{:#066b}", tmp);
+
+    match tmp{
+        0 => {result = b'A';}
+        1 => {result = b'C';}
+        2 => {result = b'G';}
+        3 => {result = b'T';}
+        _ => {panic!("Never reached!!!tmp: {}", tmp);}
+    }
+    return result;
+
+}
 
 fn main() {
     let file = File::open("sample.fasta").expect("Error during opening the file");
@@ -47,7 +89,7 @@ fn main() {
 
     let l_len = 27;
     let r_len = 27;
-    let mut lr_chunk:Vec<String> = Vec::new();
+    let mut lr_chunk:Vec<[u64;2]> = Vec::new();
     let mut window_start: usize;
     let mut l_start: usize;
     let mut l_end:   usize;
@@ -75,18 +117,25 @@ fn main() {
                 }
                 let l = &record.seq()[l_start..l_end];
                 let r = &record.seq()[r_start..r_end];
-                let tmp_lr_chunk = from_utf8(l).unwrap().clone().to_owned() + from_utf8(r).unwrap();
-                lr_chunk.push(tmp_lr_chunk);
+                let l_u64: u64 = encode_DNA_seq_2_u64(l);
+                let r_u64: u64 = encode_DNA_seq_2_u64(r);
+                //println!("{} => {:#066b}", from_utf8(l).unwrap(), l_u64);
+
+                for i in 0..27{
+                    let tmp = decode_u64_2_DNA_seq(l_u64, i, l_len);
+                    //println!("{}th base: {}", i, tmp);
+                }
+
+                //let tmp_lr_chunk = from_utf8(l).unwrap().clone().to_owned() + from_utf8(r).unwrap();
+                lr_chunk.push([l_u64, r_u64]);
             }
         }
     }
-    
-    let sorted_lr_chunk = radix_sort(lr_chunk.iter().map(|s| &**s).collect());
 
 
-    lr_chunk.sort();
+    lr_chunk.rdxsort();
+
     for each_chunk in lr_chunk.iter() {
-        println!("{}", each_chunk);
+        println!("{:?}", each_chunk);
     }
-    
 }
