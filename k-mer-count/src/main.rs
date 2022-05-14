@@ -1,12 +1,25 @@
 extern crate bio;
 extern crate rdxsort;
 
+use std::io;
+use std::env;
+use std::fs;
 use std::fs::File;
-use bio::io::fasta::{Record, FastaRead, Reader};
 use std::str::from_utf8;
+use std::io::{BufRead, BufReader};
+use std::path::Path;
+
+use bio::io::fastq::Reader as fqReader;
+use bio::io::fastq::Record as fqRecord;
+use bio::io::fasta::Reader as faReader;
+use bio::io::fasta::Record as faRecord;
+use crate::bio::io::fastq::FastqRead;
+use crate::bio::io::fasta::FastaRead;
+
 use rdxsort::*;
 use bit_reverse::ParallelReverse;
-
+use anyhow::Result;
+use flate2::read::MultiGzDecoder;
 
 /*
 fn bucket_sort(source: Vec<&str>, place: usize) -> Vec<&str>{
@@ -82,10 +95,27 @@ fn decode_u64_2_DNA_seq(source:u64, index: usize, length: usize) ->u8{
 
 }
 
+pub fn open_with_gz<P: AsRef<Path>>(p: P) -> Result<Box<dyn BufRead>> {
+    let r = std::fs::File::open(p.as_ref())?;
+    let ext = p.as_ref().extension();
+
+    if ext == Some(std::ffi::OsStr::new("gz")) {
+        let gz = MultiGzDecoder::new(r)?;
+        let buf_reader = BufReader::new(gz);
+        Ok(Box::new(buf_reader))
+    } else {
+        let buf_reader = BufReader::new(r);
+        Ok(Box::new(buf_reader))
+    }
+}
+
 fn main() {
-    let file = File::open("sample.fasta").expect("Error during opening the file");
-    let mut reader = Reader::new(file);
-    let mut record = Record::new();
+    let args: Vec<String> = env::args().collect();
+    let path = &args[1];
+    //let mut reader = fastq::Reader::new(open_with_gz(path).unwrap());
+    let file = File::open(path).expect("Error during opening the file");
+    let mut reader = faReader::new(file);
+    let mut record = faRecord::new();
 
     let l_len = 27;
     let r_len = 27;
@@ -120,18 +150,22 @@ fn main() {
                 let l_u64: u64 = encode_DNA_seq_2_u64(l);
                 let r_u64: u64 = encode_DNA_seq_2_u64(r);
                 //println!("{} => {:#066b}", from_utf8(l).unwrap(), l_u64);
-
+/*
                 for i in 0..27{
                     let tmp = decode_u64_2_DNA_seq(l_u64, i, l_len);
                     //println!("{}th base: {}", i, tmp);
                 }
-
+*/
                 //let tmp_lr_chunk = from_utf8(l).unwrap().clone().to_owned() + from_utf8(r).unwrap();
                 lr_chunk.push([l_u64, r_u64]);
             }
         }
     }
-
+/*
+1/10 or 1/100のリードを調べて当たりをつける
+hyper log log counter......?
+bloom filterで出現回数の少ないものをカットする
+*/
 
     lr_chunk.rdxsort();
 
