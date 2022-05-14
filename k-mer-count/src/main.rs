@@ -21,6 +21,7 @@ use bit_reverse::ParallelReverse;
 use anyhow::Result;
 use flate2::read::MultiGzDecoder;
 
+
 /*
 fn bucket_sort(source: Vec<&str>, place: usize) -> Vec<&str>{
     assert!(source[0].len() >= place);
@@ -112,10 +113,12 @@ pub fn open_with_gz<P: AsRef<Path>>(p: P) -> Result<Box<dyn BufRead>> {
 fn main() {
     let args: Vec<String> = env::args().collect();
     let path = &args[1];
+    eprintln!("input {:?}", path);
     //let mut reader = fastq::Reader::new(open_with_gz(path).unwrap());
     let file = File::open(path).expect("Error during opening the file");
     let mut reader = faReader::new(file);
     let mut record = faRecord::new();
+
     eprintln!("loading {:?} done", path);
 
     let l_len = 27;
@@ -133,6 +136,7 @@ fn main() {
         if record.is_empty(){
             break;
         }
+        eprintln!("current record id:{:?}", record.id());
         for dna_chunk_size in 80..141 {
             window_start = 0;
             loop{
@@ -169,8 +173,20 @@ bloom filterで出現回数の少ないものをカットする
 */
 
     lr_chunk.rdxsort();
-
+    let mut buf: [u8;54] = [64; 54];
+    let mut cnt = 0;
     for each_chunk in lr_chunk.iter() {
-        println!("{:?}", each_chunk);
+        for i in 0..l_len{
+            buf[cnt] = decode_u64_2_DNA_seq(each_chunk[0], i, l_len);
+            cnt+=1;
+            //print!("{:?}", char::from(decode_u64_2_DNA_seq(each_chunk[0], i, l_len)));
+        }
+        for i in 0..r_len{
+            buf[cnt] = decode_u64_2_DNA_seq(each_chunk[1], i, l_len);
+            cnt+=1;
+            //print!("{:?}", char::from(decode_u64_2_DNA_seq(each_chunk[1], i, r_len)));
+        }
+        cnt = 0;
+        println!("{:?}", std::str::from_utf8(&buf).unwrap());
     }
 }
