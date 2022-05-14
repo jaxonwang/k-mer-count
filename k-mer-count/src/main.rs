@@ -130,13 +130,14 @@ fn main() {
     let mut r_start: usize;
     let mut r_end:   usize;
     let mut m_len:   usize;
-
+    let mut loop_cnt:usize = 0;
     loop {
         reader.read(&mut record).unwrap();
         if record.is_empty(){
             break;
         }
-        eprintln!("current record id:{:?}", record.id());
+        eprintln!("loop: {:03?}, current record id:{:?}", loop_cnt, record.id());
+        loop_cnt += 1;
         for dna_chunk_size in 80..141 {
             window_start = 0;
             loop{
