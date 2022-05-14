@@ -116,6 +116,7 @@ fn main() {
     let file = File::open(path).expect("Error during opening the file");
     let mut reader = faReader::new(file);
     let mut record = faRecord::new();
+    eprintln!("loading {:?} done", path);
 
     let l_len = 27;
     let r_len = 27;
