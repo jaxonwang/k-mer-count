@@ -21,6 +21,7 @@ use bit_reverse::ParallelReverse;
 use anyhow::Result;
 use flate2::read::MultiGzDecoder;
 
+use voracious_radix_sort::{RadixSort};
 
 /*
 fn bucket_sort(source: Vec<&str>, place: usize) -> Vec<&str>{
@@ -136,7 +137,7 @@ fn main() {
         if record.is_empty(){
             break;
         }
-        eprintln!("loop: {:03?}, current record id:{:?}", loop_cnt, record.id());
+        eprintln!("loop: {:09?}, current record id:{:?}\tlength: {:?}", loop_cnt, record.id(), record.seq().len());
         loop_cnt += 1;
         for dna_chunk_size in 80..141 {
             window_start = 0;
@@ -174,6 +175,7 @@ bloom filterで出現回数の少ないものをカットする
 */
 
     lr_chunk.rdxsort();
+    //lr_chunk.voracious_stable_sort();
     let mut buf: [u8;54] = [64; 54];
     let mut cnt = 0;
     for each_chunk in lr_chunk.iter() {
