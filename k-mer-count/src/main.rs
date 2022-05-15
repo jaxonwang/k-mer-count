@@ -208,7 +208,7 @@ bloom filterで出現回数の少ないものをカットする
 */
 
     //lr_chunk.rdxsort();
-    lr_chunk.voracious_mt_sort(16);
+    lr_chunk.voracious_mt_sort(8);
 /*
     for each_chunk in lr_chunk.iter() {
         let dna_string = String::from_utf8(decode_u128_2_dna_seq(each_chunk).to_vec()).unwrap();
