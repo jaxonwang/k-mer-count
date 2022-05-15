@@ -1,11 +1,11 @@
 extern crate bio;
 extern crate rdxsort;
 
-use std::io;
+//use std::io;
 use std::env;
-use std::fs;
+//use std::fs;
 use std::fs::File;
-use std::str::from_utf8;
+//use std::str::from_utf8;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 
@@ -58,7 +58,7 @@ fn radix_sort(mut source: Vec<&str>) -> Vec<&str>{
 }
 */
 
-fn encode_DNA_seq_2_u64(sequence: &[u8]) -> u64{
+fn encode_dna_seq_2_u64(sequence: &[u8]) -> u64{
     let mut result: u64 = 0;
     for each_base in sequence.iter(){
         match each_base{
@@ -74,7 +74,7 @@ fn encode_DNA_seq_2_u64(sequence: &[u8]) -> u64{
     return result;
 }
 
-fn encode_DNA_seq_2_u128(sequence: &[u8]) -> u128{
+fn encode_dna_seq_2_u128(sequence: &[u8]) -> u128{
     let mut result: u128 = 0;
     for each_base in sequence.iter(){
         match each_base{
@@ -92,18 +92,11 @@ fn encode_DNA_seq_2_u128(sequence: &[u8]) -> u128{
 
 
 
-
-fn decode_u64_2_DNA_seq(source:u64, index: usize, length: usize) ->u8{
+fn decode_u64_2_dna_seq(source:u64, index: usize, length: usize) ->u8{
     let mut result: u8 = 0;
-    let mut tmp: u64 = source;
-    //println!("{:#066b}", tmp);
-    tmp = source << (64 - length * 2);
-    //println!("{:#066b}", tmp);
-    tmp = tmp << index  * 2;
-    //println!("{:#066b}", tmp);
+    let mut tmp: u64 = source << (64 - length * 2);
+    tmp = tmp << index * 2;
     tmp = tmp >> 62;
-    //println!("{:#066b}", tmp);
-
     match tmp{
         0 => {result = b'A';}
         1 => {result = b'C';}
@@ -112,8 +105,28 @@ fn decode_u64_2_DNA_seq(source:u64, index: usize, length: usize) ->u8{
         _ => {panic!("Never reached!!!tmp: {}", tmp);}
     }
     return result;
-
 }
+
+fn decode_u128_2_dna_seq(source:&u128) -> [u8; 54]{
+    let mut result: [u8; 54] = [b'X'; 54];
+    let mut tmp: u128 = source.clone() << 20;
+    let mut base: u128;
+    for i in 0..54{
+        base = (tmp & 0xC000_0000_0000_0000_0000_0000_0000_0000) >> 126;
+        //println!("{}, {:#130b}", base, tmp);
+        tmp = tmp << 2;
+        match base{
+            0 => {result[i] = b'A';}
+            1 => {result[i] = b'C';}
+            2 => {result[i] = b'G';}
+            3 => {result[i] = b'T';}
+            _ => {panic!("Never reached!!!tmp: {}", tmp);}
+        }
+    }
+    return result;
+}
+
+
 
 pub fn open_with_gz<P: AsRef<Path>>(p: P) -> Result<Box<dyn BufRead>> {
     let r = std::fs::File::open(p.as_ref())?;
@@ -173,12 +186,16 @@ fn main() {
                 }
                 let l = &record.seq()[l_start..l_end];
                 let r = &record.seq()[r_start..r_end];
-                let lr_String: String = String::new();
-                lr_String.push_str(l);
-                lr_String.push_str(r);
-                let lr_u128 = encode_DNA_seq_2_u128(lr_String);
-                //let l_u64: u64 = encode_DNA_seq_2_u64(l);
-                //let r_u64: u64 = encode_DNA_seq_2_u64(r);
+                let mut lr_string: [u8;54] = [64; 54];
+                for i in 0..l_len{
+                    lr_string[i] = l[i];
+                }
+                for i in 0..r_len{
+                    lr_string[i + l_len] = r[i];
+                }
+                let lr_u128 = encode_dna_seq_2_u128(&lr_string);
+                //let l_u64: u64 = encode_dna_seq_2_u64(l);
+                //let r_u64: u64 = encode_dna_seq_2_u64(r);
                 //lr_chunk.push([l_u64, r_u64]);
                 lr_chunk.push(lr_u128);
             }
@@ -191,21 +208,26 @@ bloom filterで出現回数の少ないものをカットする
 */
 
     //lr_chunk.rdxsort();
-    lcar_chunk.voracious_stable_sort();
-    let mut buf: [u8;54] = [64; 54];
-    let mut cnt = 0;
+    lr_chunk.voracious_stable_sort();
+    for each_chunk in lr_chunk.iter() {
+        let dna_string = String::from_utf8(decode_u128_2_dna_seq(each_chunk).to_vec()).unwrap();
+        println!("{:?}", dna_string);
+    }
+
+/*    let mut cnt = 0;
     for each_chunk in lr_chunk.iter() {
         for i in 0..l_len{
-            buf[cnt] = decode_u64_2_DNA_seq(each_chunk[0], i, l_len);
+            buf[cnt] = decode_u64_2_dna_seq(each_chunk[0], i, l_len);
             cnt+=1;
-            //print!("{:?}", char::from(decode_u64_2_DNA_seq(each_chunk[0], i, l_len)));
+            //print!("{:?}", char::from(decode_u64_2_dna_seq(each_chunk[0], i, l_len)));
         }
         for i in 0..r_len{
-            buf[cnt] = decode_u64_2_DNA_seq(each_chunk[1], i, l_len);
+            buf[cnt] = decode_u64_2_dna_seq(each_chunk[1], i, l_len);
             cnt+=1;
-            //print!("{:?}", char::from(decode_u64_2_DNA_seq(each_chunk[1], i, r_len)));
+            //print!("{:?}", char::from(decode_u64_2_dna_seq(each_chunk[1], i, r_len)));
         }
         cnt = 0;
         println!("{:?}", std::str::from_utf8(&buf).unwrap());
-    }
+    }*/
+
 }
