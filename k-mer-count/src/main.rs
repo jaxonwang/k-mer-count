@@ -74,6 +74,24 @@ fn encode_DNA_seq_2_u64(sequence: &[u8]) -> u64{
     return result;
 }
 
+fn encode_DNA_seq_2_u128(sequence: &[u8]) -> u128{
+    let mut result: u128 = 0;
+    for each_base in sequence.iter(){
+        match each_base{
+            b'A' => {result |= 0;}
+            b'C' => {result |= 1;}
+            b'G' => {result |= 2;}
+            b'T' => {result |= 3;}
+            _   => {panic!("Unexpected character: {}", each_base);}
+        }
+        result = result << 2;
+    }
+    result = result >> 2;
+    return result;
+}
+
+
+
 
 fn decode_u64_2_DNA_seq(source:u64, index: usize, length: usize) ->u8{
     let mut result: u8 = 0;
@@ -124,7 +142,8 @@ fn main() {
 
     let l_len = 27;
     let r_len = 27;
-    let mut lr_chunk:Vec<[u64;2]> = Vec::new();
+    //let mut lr_chunk:Vec<[u64;2]> = Vec::new();
+    let mut lr_chunk:Vec<u128> = Vec::new();
     let mut window_start: usize;
     let mut l_start: usize;
     let mut l_end:   usize;
@@ -154,17 +173,14 @@ fn main() {
                 }
                 let l = &record.seq()[l_start..l_end];
                 let r = &record.seq()[r_start..r_end];
-                let l_u64: u64 = encode_DNA_seq_2_u64(l);
-                let r_u64: u64 = encode_DNA_seq_2_u64(r);
-                //println!("{} => {:#066b}", from_utf8(l).unwrap(), l_u64);
-/*
-                for i in 0..27{
-                    let tmp = decode_u64_2_DNA_seq(l_u64, i, l_len);
-                    //println!("{}th base: {}", i, tmp);
-                }
-*/
-                //let tmp_lr_chunk = from_utf8(l).unwrap().clone().to_owned() + from_utf8(r).unwrap();
-                lr_chunk.push([l_u64, r_u64]);
+                let lr_String: String = String::new();
+                lr_String.push_str(l);
+                lr_String.push_str(r);
+                let lr_u128 = encode_DNA_seq_2_u128(lr_String);
+                //let l_u64: u64 = encode_DNA_seq_2_u64(l);
+                //let r_u64: u64 = encode_DNA_seq_2_u64(r);
+                //lr_chunk.push([l_u64, r_u64]);
+                lr_chunk.push(lr_u128);
             }
         }
     }
@@ -174,8 +190,8 @@ hyper log log counter......?
 bloom filterで出現回数の少ないものをカットする
 */
 
-    lr_chunk.rdxsort();
-    //lr_chunk.voracious_stable_sort();
+    //lr_chunk.rdxsort();
+    lcar_chunk.voracious_stable_sort();
     let mut buf: [u8;54] = [64; 54];
     let mut cnt = 0;
     for each_chunk in lr_chunk.iter() {
