@@ -23,6 +23,9 @@ use flate2::read::MultiGzDecoder;
 
 use voracious_radix_sort::{RadixSort};
 
+const L_LEN: usize = 27;
+const R_LEN: usize = 27;
+
 /*
 fn bucket_sort(source: Vec<&str>, place: usize) -> Vec<&str>{
     assert!(source[0].len() >= place);
@@ -57,6 +60,31 @@ fn radix_sort(mut source: Vec<&str>) -> Vec<&str>{
     return source;
 }
 */
+
+fn count_occurence(input_sequence: Vec<u128>) -> Vec<u128>{
+    let mut current_sequence: u128 = input_sequence[0];
+    let mut buf: u128 = input_sequence[0];
+    let mut ret_vec: Vec<u128> = Vec::new();
+    let mut index: usize = 0;
+    let mut counter: usize = 0;
+    let goal: usize = input_sequence.len();
+    loop{
+        index += 1;
+        if index >= goal{
+            break ret_vec;
+        }
+        //in case that index reaches the border between different sequence.
+        if input_sequence[index] != current_sequence{
+        let dna_string = String::from_utf8(decode_u128_2_dna_seq(&current_sequence).to_vec()).unwrap();
+        println!("{}\t{:?}", counter, dna_string);
+        ret_vec.push(current_sequence);
+        counter = 0;
+        current_sequence = input_sequence[index];
+        }else{
+            counter += 1;
+        }
+    }
+}
 
 fn encode_dna_seq_2_u64(sequence: &[u8]) -> u64{
     let mut result: u64 = 0;
@@ -107,11 +135,11 @@ fn decode_u64_2_dna_seq(source:u64, index: usize, length: usize) ->u8{
     return result;
 }
 
-fn decode_u128_2_dna_seq(source:&u128) -> [u8; 54]{
-    let mut result: [u8; 54] = [b'X'; 54];
+fn decode_u128_2_dna_seq(source:&u128) -> [u8; L_LEN + R_LEN]{
+    let mut result: [u8; L_LEN + R_LEN] = [b'X'; L_LEN + R_LEN];
     let mut tmp: u128 = source.clone() << 20;
     let mut base: u128;
-    for i in 0..54{
+    for i in 0..L_LEN + R_LEN{
         base = (tmp & 0xC000_0000_0000_0000_0000_0000_0000_0000) >> 126;
         //println!("{}, {:#130b}", base, tmp);
         tmp = tmp << 2;
@@ -153,8 +181,6 @@ fn main() {
 
     eprintln!("loading {:?} done", path);
 
-    let l_len = 27;
-    let r_len = 27;
     //let mut lr_chunk:Vec<[u64;2]> = Vec::new();
     let mut lr_chunk:Vec<u128> = Vec::new();
     let mut window_start: usize;
@@ -174,11 +200,11 @@ fn main() {
         for dna_chunk_size in 80..141 {
             window_start = 0;
             loop{
-                m_len = dna_chunk_size - l_len - r_len;
+                m_len = dna_chunk_size - L_LEN - R_LEN;
                 l_start = window_start;
-                l_end   = l_start + l_len;
+                l_end   = l_start + L_LEN;
                 r_start = l_end + m_len;
-                r_end   = r_start + r_len;
+                r_end   = r_start + R_LEN;
                 window_start += 1;
 
                 if r_end > record.seq().len(){
@@ -186,12 +212,12 @@ fn main() {
                 }
                 let l = &record.seq()[l_start..l_end];
                 let r = &record.seq()[r_start..r_end];
-                let mut lr_string: [u8;54] = [64; 54];
-                for i in 0..l_len{
+                let mut lr_string: [u8;L_LEN + R_LEN] = [64; L_LEN + R_LEN];
+                for i in 0..L_LEN{
                     lr_string[i] = l[i];
                 }
-                for i in 0..r_len{
-                    lr_string[i + l_len] = r[i];
+                for i in 0..R_LEN{
+                    lr_string[i + L_LEN] = r[i];
                 }
                 let lr_u128 = encode_dna_seq_2_u128(&lr_string);
                 //let l_u64: u64 = encode_dna_seq_2_u64(l);
@@ -209,6 +235,7 @@ bloom filterで出現回数の少ないものをカットする
 
     //lr_chunk.rdxsort();
     lr_chunk.voracious_mt_sort(8);
+    count_occurence(lr_chunk);
 /*
     for each_chunk in lr_chunk.iter() {
         let dna_string = String::from_utf8(decode_u128_2_dna_seq(each_chunk).to_vec()).unwrap();
@@ -217,15 +244,15 @@ bloom filterで出現回数の少ないものをカットする
 */
 /*    let mut cnt = 0;
     for each_chunk in lr_chunk.iter() {
-        for i in 0..l_len{
-            buf[cnt] = decode_u64_2_dna_seq(each_chunk[0], i, l_len);
+        for i in 0..L_LEN{
+            buf[cnt] = decode_u64_2_dna_seq(each_chunk[0], i, L_LEN);
             cnt+=1;
-            //print!("{:?}", char::from(decode_u64_2_dna_seq(each_chunk[0], i, l_len)));
+            //print!("{:?}", char::from(decode_u64_2_dna_seq(each_chunk[0], i, L_LEN)));
         }
-        for i in 0..r_len{
-            buf[cnt] = decode_u64_2_dna_seq(each_chunk[1], i, l_len);
+        for i in 0..R_LEN{
+            buf[cnt] = decode_u64_2_dna_seq(each_chunk[1], i, L_LEN);
             cnt+=1;
-            //print!("{:?}", char::from(decode_u64_2_dna_seq(each_chunk[1], i, r_len)));
+            //print!("{:?}", char::from(decode_u64_2_dna_seq(each_chunk[1], i, R_LEN)));
         }
         cnt = 0;
         println!("{:?}", std::str::from_utf8(&buf).unwrap());
