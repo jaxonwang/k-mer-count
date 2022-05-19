@@ -66,7 +66,7 @@ fn count_occurence(input_sequence: Vec<u128>) -> Vec<u128>{
     let mut buf: u128 = input_sequence[0];
     let mut ret_vec: Vec<u128> = Vec::new();
     let mut index: usize = 0;
-    let mut counter: usize = 0;
+    let mut counter: usize = 1;
     let goal: usize = input_sequence.len();
     loop{
         index += 1;
@@ -78,7 +78,7 @@ fn count_occurence(input_sequence: Vec<u128>) -> Vec<u128>{
         let dna_string = String::from_utf8(decode_u128_2_dna_seq(&current_sequence).to_vec()).unwrap();
         println!("{}\t{:?}", counter, dna_string);
         ret_vec.push(current_sequence);
-        counter = 0;
+        counter = 1;
         current_sequence = input_sequence[index];
         }else{
             counter += 1;
