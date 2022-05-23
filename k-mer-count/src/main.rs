@@ -27,40 +27,6 @@ const L_LEN: usize = 27;
 const R_LEN: usize = 27;
 const TOW_SQ20: u128 = 2_u128.pow(20);
 
-/*
-fn bucket_sort(source: Vec<&str>, place: usize) -> Vec<&str>{
-    assert!(source[0].len() >= place);
-    let mut result_a: Vec<&str> = Vec::new();
-    let mut result_c: Vec<&str> = Vec::new();
-    let mut result_g: Vec<&str> = Vec::new();
-    let mut result_t: Vec<&str> = Vec::new();
-    let index:  usize = source[0].len() - place;
-    for each_chunk in source.iter(){
-        let current_char = each_chunk.chars().nth(index).unwrap();
-        match current_char{
-            'A' => {result_a.push(each_chunk);}
-            'C' => {result_c.push(each_chunk);}
-            'G' => {result_g.push(each_chunk);}
-            'T' => {result_t.push(each_chunk);}
-            _   => {panic!("Unexpected charactor {} appears in {}", current_char, each_chunk);}
-        }
-    }
-    let mut result: Vec<&str> = Vec::new();
-    result.append(&mut result_a);
-    result.append(&mut result_c);
-    result.append(&mut result_g);
-    result.append(&mut result_t);
-    return result;
-}
-
-fn radix_sort(mut source: Vec<&str>) -> Vec<&str>{
-    let length: usize = source[0].len();
-    for i in 1..length{
-        source = bucket_sort(source, i);
-    }
-    return source;
-}
-*/
 
 fn count_occurence(input_sequence: Vec<u128>) -> Vec<u128>{
     let mut current_sequence: u128 = input_sequence[0];
@@ -76,33 +42,33 @@ fn count_occurence(input_sequence: Vec<u128>) -> Vec<u128>{
         }
         //in case that index reaches the border between different sequence.
         if input_sequence[index] != current_sequence{
-        let dna_string = String::from_utf8(decode_u128_2_dna_seq(&current_sequence).to_vec()).unwrap();
-        if counter > TOW_SQ20{
-            eprintln!("count_occurence unexpected situation: {} appears more than {}", dna_string, TOW_SQ20);
-            eprintln!("{}\t{:?}", counter, dna_string);
-            break ret_vec;
-        }
+            let dna_string = String::from_utf8(decode_u128_2_dna_seq(&current_sequence).to_vec()).unwrap();
+            if counter > TOW_SQ20{
+                eprintln!("count_occurence unexpected situation: {} appears more than {}", dna_string, TOW_SQ20);
+                eprintln!("{}\t{:?}", counter, dna_string);
+                break ret_vec;
+            }
 
 /*
-        println!("counter: {}", counter);
-        println!("current_sequence: {}", dna_string);
-        println!("counter:          {:#0130b}", counter);//バイナリ列で表示する
+            println!("counter: {}", counter);
+            println!("current_sequence: {}", dna_string);
+            println!("counter:          {:#0130b}", counter);//バイナリ列で表示する
 */
-        counter = counter << (L_LEN + R_LEN) * 2;
+            counter = counter << (L_LEN + R_LEN) * 2;
 /*
-        println!("counter(shifted): {:#0130b}", counter);//バイナリ列で表示する
-        println!("current_sequence: {:#0130b}", current_sequence);//バイナリ列で表示する
+            println!("counter(shifted): {:#0130b}", counter);//バイナリ列で表示する
+            println!("current_sequence: {:#0130b}", current_sequence);//バイナリ列で表示する
 */
-        buf = counter + current_sequence;
+            buf = counter + current_sequence;
 /*
-        println!("sum of them:      {:#0130b}",buf);//バイナリ列で表示する
-        println!("{}", decode_u128_2_occurence(&buf));
-        println!("{}", String::from_utf8(decode_u128_2_dna_seq(&buf).to_vec()).unwrap());
-        println!();
+            println!("sum of them:      {:#0130b}",buf);//バイナリ列で表示する
+            println!("{}", decode_u128_2_occurence(&buf));
+            println!("{}", String::from_utf8(decode_u128_2_dna_seq(&buf).to_vec()).unwrap());
+            println!();
 */
-        ret_vec.push(buf);
-        counter = 1;
-        current_sequence = input_sequence[index];
+            ret_vec.push(buf);
+            counter = 1;
+            current_sequence = input_sequence[index];
         }else{
             counter += 1;
         }
@@ -180,6 +146,20 @@ fn decode_u128_2_occurence(source: &u128) -> u32{
     return TryFrom::try_from(source >> (L_LEN + R_LEN) * 2).unwrap();
 }
 
+fn extract_occurence(source: &Vec<u128>) -> Vec<u32>{
+    let mut result: Vec<u32> = Vec::new();
+    let length = source.len();
+    let mut cnt: usize = 0;
+    loop{
+        if cnt < length{
+            result.push(decode_u128_2_occurence(&source[cnt]));
+            cnt += 1;
+        }else{
+            break;
+        }
+    }
+    return result;
+}
 
 pub fn open_with_gz<P: AsRef<Path>>(p: P) -> Result<Box<dyn BufRead>> {
     let r = std::fs::File::open(p.as_ref())?;
@@ -206,7 +186,6 @@ fn main() {
 
     eprintln!("loading {:?} done", path);
 
-    //let mut lr_chunk:Vec<[u64;2]> = Vec::new();
     let mut lr_chunk:Vec<u128> = Vec::new();
     let mut window_start: usize;
     let mut l_start: usize;
@@ -245,9 +224,6 @@ fn main() {
                     lr_string[i + L_LEN] = r[i];
                 }
                 let lr_u128 = encode_dna_seq_2_u128(&lr_string);
-                //let l_u64: u64 = encode_dna_seq_2_u64(l);
-                //let r_u64: u64 = encode_dna_seq_2_u64(r);
-                //lr_chunk.push([l_u64, r_u64]);
                 lr_chunk.push(lr_u128);
             }
         }
@@ -257,36 +233,20 @@ fn main() {
 hyper log log counter......?
 bloom filterで出現回数の少ないものをカットする
 */
-
-    //lr_chunk.rdxsort();
+    eprintln!("sort start");
     lr_chunk.voracious_mt_sort(8);
+    eprintln!("sort end");
+    eprintln!("count start");
     let sorted_lr_chunk: Vec<u128> = count_occurence(lr_chunk);
+    eprintln!("count end");
+
     for each_chunk in sorted_lr_chunk.iter() {
         let dna_string = String::from_utf8(decode_u128_2_dna_seq(each_chunk).to_vec()).unwrap();
         let occurrence = decode_u128_2_occurence(&each_chunk);
-        println!("{}\t{}", occurrence, dna_string);
-
+        //println!("{}\t{}", occurrence, dna_string);
     }
-/*
-    for each_chunk in lr_chunk.iter() {
-        let dna_string = String::from_utf8(decode_u128_2_dna_seq(each_chunk).to_vec()).unwrap();
-        println!("{:?}", dna_string);
+    let occurences: Vec<u32> = extract_occurence(&sorted_lr_chunk);
+    for each_occurrence in occurences.iter() {
+        println!("{}", each_occurrence);
     }
-*/
-/*    let mut cnt = 0;
-    for each_chunk in lr_chunk.iter() {
-        for i in 0..L_LEN{
-            buf[cnt] = decode_u64_2_dna_seq(each_chunk[0], i, L_LEN);
-            cnt+=1;
-            //print!("{:?}", char::from(decode_u64_2_dna_seq(each_chunk[0], i, L_LEN)));
-        }
-        for i in 0..R_LEN{
-            buf[cnt] = decode_u64_2_dna_seq(each_chunk[1], i, L_LEN);
-            cnt+=1;
-            //print!("{:?}", char::from(decode_u64_2_dna_seq(each_chunk[1], i, R_LEN)));
-        }
-        cnt = 0;
-        println!("{:?}", std::str::from_utf8(&buf).unwrap());
-    }*/
-
 }
