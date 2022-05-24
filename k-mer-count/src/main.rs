@@ -28,8 +28,8 @@ const R_LEN: usize = 27;
 const TOW_SQ20: u128 = 2_u128.pow(20);
 
 
-fn count_occurence(input_sequence: Vec<u128>) -> Vec<u128>{
-    let mut current_sequence: u128 = input_sequence[0];
+fn count_occurence(input_sequence: &Vec<u128>) -> Vec<u128>{
+    let mut current_sequence: &u128 = &input_sequence[0];
     let mut ret_vec: Vec<u128> = Vec::new();
     let mut index: usize = 0;
     let mut counter: u128 = 1;
@@ -41,7 +41,7 @@ fn count_occurence(input_sequence: Vec<u128>) -> Vec<u128>{
             break ret_vec;
         }
         //in case that index reaches the border between different sequence.
-        if input_sequence[index] != current_sequence{
+        if input_sequence[index] != *current_sequence{
             let dna_string = String::from_utf8(decode_u128_2_dna_seq(&current_sequence).to_vec()).unwrap();
             if counter > TOW_SQ20{
                 eprintln!("count_occurence unexpected situation: {} appears more than {}", dna_string, TOW_SQ20);
@@ -59,7 +59,7 @@ fn count_occurence(input_sequence: Vec<u128>) -> Vec<u128>{
             println!("counter(shifted): {:#0130b}", counter);//バイナリ列で表示する
             println!("current_sequence: {:#0130b}", current_sequence);//バイナリ列で表示する
 */
-            buf = counter + current_sequence;
+            buf = counter + *current_sequence;
 /*
             println!("sum of them:      {:#0130b}",buf);//バイナリ列で表示する
             println!("{}", decode_u128_2_occurence(&buf));
@@ -68,7 +68,7 @@ fn count_occurence(input_sequence: Vec<u128>) -> Vec<u128>{
 */
             ret_vec.push(buf);
             counter = 1;
-            current_sequence = input_sequence[index];
+            current_sequence = &input_sequence[index];
         }else{
             counter += 1;
         }
@@ -237,16 +237,22 @@ bloom filterで出現回数の少ないものをカットする
     lr_chunk.voracious_mt_sort(8);
     eprintln!("sort end");
     eprintln!("count start");
-    let sorted_lr_chunk: Vec<u128> = count_occurence(lr_chunk);
+    let mut sorted_lr_chunk: Vec<u128> = count_occurence(&lr_chunk);
     eprintln!("count end");
+    eprintln!("sort start");
+    sorted_lr_chunk.voracious_mt_sort(8);
+    eprintln!("sort end");
+    sorted_lr_chunk.reverse();
 
     for each_chunk in sorted_lr_chunk.iter() {
         let dna_string = String::from_utf8(decode_u128_2_dna_seq(each_chunk).to_vec()).unwrap();
         let occurrence = decode_u128_2_occurence(&each_chunk);
-        //println!("{}\t{}", occurrence, dna_string);
+        println!("{}\t{}", occurrence, dna_string);
     }
+/*
     let occurences: Vec<u32> = extract_occurence(&sorted_lr_chunk);
     for each_occurrence in occurences.iter() {
         println!("{}", each_occurrence);
     }
+*/
 }
