@@ -27,6 +27,22 @@ const L_LEN: usize = 27;
 const R_LEN: usize = 27;
 const TOW_SQ20: u128 = 2_u128.pow(20);
 
+const SIMPLE_ITTR: [u32;4] = [
+    0b00000000,//AAAA
+    0b01010101,//CCCC
+    0b10101010,//GGGG
+    0b11111111//TTTT
+];
+
+fn is_complex(sequence: &u128) -> bool {
+    let mut result: bool = false;
+    for i in 0..(L_LEN + R_LEN) {
+        for j in SIMPLE_ITTR{
+            result |= ((sequence >> i * 2) as u32 & j) == j;
+        }
+    }
+    return result;
+}
 
 fn count_occurence(input_sequence: &Vec<u128>) -> Vec<u128>{
     let mut current_sequence: &u128 = &input_sequence[0];
@@ -48,27 +64,30 @@ fn count_occurence(input_sequence: &Vec<u128>) -> Vec<u128>{
                 eprintln!("{}\t{:?}", counter, dna_string);
                 break ret_vec;
             }
-
+            if true{
 /*
-            println!("counter: {}", counter);
-            println!("current_sequence: {}", dna_string);
-            println!("counter:          {:#0130b}", counter);//バイナリ列で表示する
+                println!("counter: {}", counter);
+                println!("current_sequence: {}", dna_string);
+                println!("counter:          {:#0130b}", counter);//バイナリ列で表示する
 */
-            counter = counter << (L_LEN + R_LEN) * 2;
+                counter = counter << (L_LEN + R_LEN) * 2;
 /*
-            println!("counter(shifted): {:#0130b}", counter);//バイナリ列で表示する
-            println!("current_sequence: {:#0130b}", current_sequence);//バイナリ列で表示する
+                println!("counter(shifted): {:#0130b}", counter);//バイナリ列で表示する
+                println!("current_sequence: {:#0130b}", current_sequence);//バイナリ列で表示する
 */
-            buf = counter + *current_sequence;
+                buf = counter + *current_sequence;
 /*
-            println!("sum of them:      {:#0130b}",buf);//バイナリ列で表示する
-            println!("{}", decode_u128_2_occurence(&buf));
-            println!("{}", String::from_utf8(decode_u128_2_dna_seq(&buf).to_vec()).unwrap());
-            println!();
+                println!("sum of them:      {:#0130b}",buf);//バイナリ列で表示する
+                println!("{}", decode_u128_2_occurence(&buf));
+                println!("{}", String::from_utf8(decode_u128_2_dna_seq(&buf).to_vec()).unwrap());
+                println!();
 */
-            ret_vec.push(buf);
-            counter = 1;
-            current_sequence = &input_sequence[index];
+                ret_vec.push(buf);
+                counter = 1;
+                current_sequence = &input_sequence[index];
+            }else{
+                eprintln!("is complex");
+            }
         }else{
             counter += 1;
         }
