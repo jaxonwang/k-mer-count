@@ -8,6 +8,8 @@ use std::fs::File;
 //use std::str::from_utf8;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
+use std::collections::hash_map::DefaultHasher;
+use sha2::{Sha256, Sha512, Digest};
 
 use bio::io::fastq::Reader as fqReader;
 use bio::io::fastq::Record as fqRecord;
@@ -23,9 +25,14 @@ use flate2::read::MultiGzDecoder;
 
 use voracious_radix_sort::{RadixSort};
 
+use rand::prelude::*;
+
+
 const L_LEN: usize = 27;
 const R_LEN: usize = 27;
 const TOW_SQ20: u128 = 2_u128.pow(20);
+const BLOOMFILTER_TABLE_SIZE: usize = 73 * 1024 * 1024 * 1024;//u64なら足りるはず。2^6 < 73 < 2^7で、2^37におさまる。
+//const BLOOMFILTER_TABLE_SIZE: usize = 10 * 1024 * 1024;
 
 const SIMPLE_ITTR: [u32;4] = [
     0b00000000,//AAAA
@@ -194,6 +201,91 @@ pub fn open_with_gz<P: AsRef<Path>>(p: P) -> Result<Box<dyn BufRead>> {
     }
 }
 
+fn counting_bloom_filter(path: &str) -> [u8; BLOOMFILTER_TABLE_SIZE]{
+    let mut window_start: usize;
+    let mut l_start: usize;
+    let mut l_end:   usize;
+    let mut r_start: usize;
+    let mut r_end:   usize;
+    let mut m_len:   usize;
+    let mut loop_cnt:usize = 0;
+    let mut ret_array: [u8; BLOOMFILTER_TABLE_SIZE] = [0; BLOOMFILTER_TABLE_SIZE];
+
+    let file = File::open(path).expect("Error during opening the file");
+    let mut reader = faReader::new(file);
+    let mut record = faRecord::new();
+    let mut buf: u64 = 0;
+    let mut lr_string: [u8;L_LEN + R_LEN] = [64; L_LEN + R_LEN];
+
+    loop {
+        reader.read(&mut record).unwrap();
+        if record.is_empty(){
+            break;
+        }
+        eprintln!("loop: {:09?}, current record id:{:?}\tlength: {:?}", loop_cnt, record.id(), record.seq().len());
+        loop_cnt += 1;
+        for dna_chunk_size in 80..141 {
+            window_start = 0;
+            loop{
+                m_len = dna_chunk_size - L_LEN - R_LEN;
+                l_start = window_start;
+                l_end   = l_start + L_LEN;
+                r_start = l_end + m_len;
+                r_end   = r_start + R_LEN;
+                window_start += 1;
+
+                if r_end > record.seq().len(){
+                    break;
+                }
+                let l = &record.seq()[l_start..l_end];
+                let r = &record.seq()[r_start..r_end];
+                for i in 0..L_LEN{
+                    lr_string[i] = l[i];
+                }
+                for i in 0..R_LEN{
+                    lr_string[i + L_LEN] = r[i];
+                }
+                let table_indice:[u64;8] = hasher(&lr_string);
+                let tmp: u8 = count_occurence_from_counting_bloomfilter_table(&ret_array, &lr_string);
+                if rand::random::<u8>() < (u8::MAX >> tmp) && tmp != u8::MAX{
+                    for i in 0..8{
+                        ret_array[table_indice[i] as usize] += 1;
+                    }
+                }
+            }
+        }
+    }
+    return ret_array;
+}
+
+fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &[u8; BLOOMFILTER_TABLE_SIZE], query: &[u8;L_LEN + R_LEN]) -> u8{
+    let indice: [u64; 8] = hasher(query);
+    let mut retval: u8 = u8::MAX;
+    for index in indice{
+        if counting_bloomfilter_table[index as usize] < retval{
+            retval = counting_bloomfilter_table[index as usize];
+        }
+    }
+    return retval;
+}
+
+
+
+fn hasher(source: &[u8;L_LEN + R_LEN]) -> [u64; 8]{
+    let mut ret_val: [u64; 8] = [0;8];
+    let mut hasher = Sha512::new();
+    hasher.update(source);
+    let result = hasher.finalize();
+    let sha512_bit_array = result.as_slice();//&[u8;64]
+    for i in 0..8{
+        for j in 0..8{
+            ret_val[i] += sha512_bit_array[i * 8 + j] as u64;
+            ret_val[i] <<= 8;
+        }
+    }
+    return ret_val;
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let path = &args[1];
@@ -213,6 +305,9 @@ fn main() {
     let mut r_end:   usize;
     let mut m_len:   usize;
     let mut loop_cnt:usize = 0;
+
+    counting_bloom_filter(path);
+/*
     loop {
         reader.read(&mut record).unwrap();
         if record.is_empty(){
@@ -273,5 +368,6 @@ bloom filterで出現回数の少ないものをカットする
     for each_occurrence in occurences.iter() {
         println!("{}", each_occurrence);
     }
+*/
 */
 }
