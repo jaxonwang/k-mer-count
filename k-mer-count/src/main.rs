@@ -32,7 +32,7 @@ const L_LEN: usize = 27;
 const R_LEN: usize = 27;
 const TOW_SQ20: u128 = 2_u128.pow(20);
 const BLOOMFILTER_TABLE_SIZE: usize = 73 * 1024 * 1024 * 1024;//u64なら足りるはず。2^6 < 73 < 2^7で、2^37におさまる。
-//const BLOOMFILTER_TABLE_SIZE: usize = 10 * 1024 * 1024;
+//const BLOOMFILTER_TABLE_SIZE: usize = 1024 * 1024;
 
 /*
 const SIMPLE_ITTR: [u32;4] = [
