@@ -34,6 +34,7 @@ const TOW_SQ20: u128 = 2_u128.pow(20);
 const BLOOMFILTER_TABLE_SIZE: usize = 73 * 1024 * 1024 * 1024;//u64なら足りるはず。2^6 < 73 < 2^7で、2^37におさまる。
 //const BLOOMFILTER_TABLE_SIZE: usize = 10 * 1024 * 1024;
 
+/*
 const SIMPLE_ITTR: [u32;4] = [
     0b00000000,//AAAA
     0b01010101,//CCCC
@@ -50,6 +51,7 @@ fn is_complex(sequence: &u128) -> bool {
     }
     return result;
 }
+*/
 
 fn count_occurence(input_sequence: &Vec<u128>) -> Vec<u128>{
     let mut current_sequence: &u128 = &input_sequence[0];
@@ -201,7 +203,7 @@ pub fn open_with_gz<P: AsRef<Path>>(p: P) -> Result<Box<dyn BufRead>> {
     }
 }
 
-fn counting_bloom_filter(path: &str) -> [u8; BLOOMFILTER_TABLE_SIZE]{
+fn counting_bloom_filter(path: &str) -> Box<[u8; BLOOMFILTER_TABLE_SIZE]>{
     let mut window_start: usize;
     let mut l_start: usize;
     let mut l_end:   usize;
@@ -209,7 +211,7 @@ fn counting_bloom_filter(path: &str) -> [u8; BLOOMFILTER_TABLE_SIZE]{
     let mut r_end:   usize;
     let mut m_len:   usize;
     let mut loop_cnt:usize = 0;
-    let mut ret_array: [u8; BLOOMFILTER_TABLE_SIZE] = [0; BLOOMFILTER_TABLE_SIZE];
+    let mut ret_array: Box<[u8; BLOOMFILTER_TABLE_SIZE]> = Box::new([0; BLOOMFILTER_TABLE_SIZE]);
 
     let file = File::open(path).expect("Error during opening the file");
     let mut reader = faReader::new(file);
@@ -258,7 +260,7 @@ fn counting_bloom_filter(path: &str) -> [u8; BLOOMFILTER_TABLE_SIZE]{
     return ret_array;
 }
 
-fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &[u8; BLOOMFILTER_TABLE_SIZE], query: &[u8;L_LEN + R_LEN]) -> u8{
+fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &Box<[u8; BLOOMFILTER_TABLE_SIZE]>, query: &[u8;L_LEN + R_LEN]) -> u8{
     let indice: [u64; 8] = hasher(query);
     let mut retval: u8 = u8::MAX;
     for index in indice{
