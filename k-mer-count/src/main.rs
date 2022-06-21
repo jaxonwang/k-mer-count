@@ -31,7 +31,7 @@ use rand::prelude::*;
 const L_LEN: usize = 27;
 const R_LEN: usize = 27;
 const TOW_SQ20: u128 = 2_u128.pow(20);
-const BLOOMFILTER_TABLE_SIZE: usize = 73 * 1024 * 1024 * 1024;//u64なら足りるはず。2^6 < 73 < 2^7で、2^37におさまる。
+const BLOOMFILTER_TABLE_SIZE: usize = 73 * 1024 * 1024 * 1024;//indexはu64。2^6 < 73 < 2^7で、2^37におさまる。
 //const BLOOMFILTER_TABLE_SIZE: usize = 1024 * 1024;
 
 /*
@@ -288,6 +288,124 @@ fn hasher(source: &[u8;L_LEN + R_LEN]) -> [u64; 8]{
     return ret_val;
 }
 
+//2週目。出現頻度がある閾値を越えるk-merの個数を返す。
+//3週目ではこの個数を受けて、vecのメモリを確保して出力用vecを用意して、再びファイルを舐める。
+fn number_of_high_occurence_kmer(source_table: &Box<[u8; BLOOMFILTER_TABLE_SIZE]>, path: &str) -> u64{
+    let mut retval: u64 = 0;
+    let mut window_start: usize;
+    let mut l_start: usize;
+    let mut l_end:   usize;
+    let mut r_start: usize;
+    let mut r_end:   usize;
+    let mut m_len:   usize;
+    let mut loop_cnt:usize = 0;
+
+    let file = File::open(path).expect("Error during opening the file");
+    let mut reader = faReader::new(file);
+    let mut record = faRecord::new();
+    let mut buf: u64 = 0;
+    let mut lr_string: [u8;L_LEN + R_LEN] = [64; L_LEN + R_LEN];
+
+    loop {
+        reader.read(&mut record).unwrap();
+        if record.is_empty(){
+            break;
+        }
+        eprintln!("loop: {:09?}, current record id:{:?}\tlength: {:?}", loop_cnt, record.id(), record.seq().len());
+        loop_cnt += 1;
+        for dna_chunk_size in 80..141 {
+            window_start = 0;
+            loop{
+                m_len = dna_chunk_size - L_LEN - R_LEN;
+                l_start = window_start;
+                l_end   = l_start + L_LEN;
+                r_start = l_end + m_len;
+                r_end   = r_start + R_LEN;
+                window_start += 1;
+
+                if r_end > record.seq().len(){
+                    break;
+                }
+                let l = &record.seq()[l_start..l_end];
+                let r = &record.seq()[r_start..r_end];
+                for i in 0..L_LEN{
+                    lr_string[i] = l[i];
+                }
+                for i in 0..R_LEN{
+                    lr_string[i + L_LEN] = r[i];
+                }
+                let table_indice:[u64;8] = hasher(&lr_string);
+                let tmp: u8 = count_occurence_from_counting_bloomfilter_table(&source_table, &lr_string);
+                if tmp >= 10{
+                    retval = retval + 1;
+                }
+            }
+        }
+    }
+    return retval;
+}
+
+//3週目。
+fn pick_up_high_occurence_kmer(source_table: &Box<[u8; BLOOMFILTER_TABLE_SIZE]>, path: &str, max_size_of_vec: u64) -> Vec<u128>{
+    let mut retval: Vec<u128> = vec![0; max_size_of_vec.try_into().unwrap()];
+    let mut retval_index: usize = 0;
+    let mut window_start: usize;
+    let mut l_start: usize;
+    let mut l_end:   usize;
+    let mut r_start: usize;
+    let mut r_end:   usize;
+    let mut m_len:   usize;
+    let mut loop_cnt:usize = 0;
+
+    let file = File::open(path).expect("Error during opening the file");
+    let mut reader = faReader::new(file);
+    let mut record = faRecord::new();
+    let mut buf: u64 = 0;
+    let mut lr_string: [u8;L_LEN + R_LEN] = [64; L_LEN + R_LEN];
+
+    loop {
+        reader.read(&mut record).unwrap();
+        if record.is_empty(){
+            break;
+        }
+        eprintln!("loop: {:09?}, current record id:{:?}\tlength: {:?}", loop_cnt, record.id(), record.seq().len());
+        loop_cnt += 1;
+        for dna_chunk_size in 80..141 {
+            window_start = 0;
+            loop{
+                m_len = dna_chunk_size - L_LEN - R_LEN;
+                l_start = window_start;
+                l_end   = l_start + L_LEN;
+                r_start = l_end + m_len;
+                r_end   = r_start + R_LEN;
+                window_start += 1;
+
+                if r_end > record.seq().len(){
+                    break;
+                }
+                let l = &record.seq()[l_start..l_end];
+                let r = &record.seq()[r_start..r_end];
+                for i in 0..L_LEN{
+                    lr_string[i] = l[i];
+                }
+                for i in 0..R_LEN{
+                    lr_string[i + L_LEN] = r[i];
+                }
+                //ここら辺に、閾値回数以上出現するk-merを処理するコードを書く
+                let table_indice:[u64;8] = hasher(&lr_string);
+                let tmp: u8 = count_occurence_from_counting_bloomfilter_table(&source_table, &lr_string);
+                if tmp >= 10{//2^10相当。本当は引数で基準を変えられるようにしたい。
+                    retval[retval_index] = encode_dna_seq_2_u128(&lr_string);
+                    retval_index += 1;
+                }
+            }
+        }
+    }
+    return retval;
+}
+
+
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let path = &args[1];
@@ -308,7 +426,18 @@ fn main() {
     let mut m_len:   usize;
     let mut loop_cnt:usize = 0;
 
-    counting_bloom_filter(path);
+    //1段目
+    let counting_bloom_filter_table: Box<[u8; BLOOMFILTER_TABLE_SIZE]> = counting_bloom_filter(path);
+    //2段目
+    let high_occr_cnt: u64 = number_of_high_occurence_kmer(&counting_bloom_filter_table, path);
+    //3段目
+    let high_occurence_kmer: Vec<u128> = pick_up_high_occurence_kmer(&counting_bloom_filter_table, path, high_occr_cnt);
+    /*
+    １週目の実装は済んでるので、２、３週目の実装を行う。
+    ２週目ではファイルをもう一度舐めて、出現頻度が閾値(1000など)を越えるk-merが何個あるか調べる。
+    ３週目では、２週目で数えた個数に合わせてメモリを確保して、出力用データを作る。重複しないようにしたい。
+    */
+
 /*
     loop {
         reader.read(&mut record).unwrap();
