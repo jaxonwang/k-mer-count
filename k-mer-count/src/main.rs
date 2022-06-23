@@ -32,6 +32,7 @@ const L_LEN: usize = 27;
 const R_LEN: usize = 27;
 const TOW_SQ20: u128 = 2_u128.pow(20);
 const BLOOMFILTER_TABLE_SIZE: usize = u32::MAX as usize;
+const THRESHOLD_OCCURENCE: u8 = 10;
 //const BLOOMFILTER_TABLE_SIZE: usize = 73 * 1024 * 1024 * 1024;//indexはu64。2^6 < 73 < 2^7で、2^37におさまる。
 //const BLOOMFILTER_TABLE_SIZE: usize = 1024 * 1024;
 
@@ -337,7 +338,7 @@ fn number_of_high_occurence_kmer(source_table: &Box<[u8; BLOOMFILTER_TABLE_SIZE]
                 }
                 let table_indice:[u32;8] = hasher(&lr_string);
                 let tmp: u8 = count_occurence_from_counting_bloomfilter_table(&source_table, &lr_string);
-                if tmp >= 10{
+                if tmp >= THRESHOLD_OCCURENCE{
                     retval = retval + 1;
                 }
             }
@@ -395,7 +396,7 @@ fn pick_up_high_occurence_kmer(source_table: &Box<[u8; BLOOMFILTER_TABLE_SIZE]>,
                 //ここら辺に、閾値回数以上出現するk-merを処理するコードを書く
                 let table_indice:[u32;8] = hasher(&lr_string);
                 let tmp: u8 = count_occurence_from_counting_bloomfilter_table(&source_table, &lr_string);
-                if tmp >= 10{//2^10相当。本当は引数で基準を変えられるようにしたい。
+                if tmp >= THRESHOLD_OCCURENCE{//2^10相当。本当は引数で基準を変えられるようにしたい。
                     retval[retval_index] = encode_dna_seq_2_u128(&lr_string);
                     retval_index += 1;
                 }
@@ -434,7 +435,10 @@ fn main() {
     let high_occurence_kmer: Vec<u128> = pick_up_high_occurence_kmer(&counting_bloom_filter_table, path, high_occr_cnt);
 
     //どんなふうに出力しようか？
-    //high_occurence_kmer.voracious_mt_sort(8);
+    high_occurence_kmer.voracious_mt_sort(8);
+    for each_kmer in high_occurence_kmer{
+        println!("{:?}", each_kmer);
+    }
     //let uniq_high_occurence_kmer: HashSet<u128> = high_occurence_kmer.into_iter().collec();
     /*
     １週目の実装は済んでるので、２、３週目の実装を行う。
