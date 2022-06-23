@@ -31,7 +31,8 @@ use rand::prelude::*;
 const L_LEN: usize = 27;
 const R_LEN: usize = 27;
 const TOW_SQ20: u128 = 2_u128.pow(20);
-const BLOOMFILTER_TABLE_SIZE: usize = 73 * 1024 * 1024 * 1024;//indexはu64。2^6 < 73 < 2^7で、2^37におさまる。
+const BLOOMFILTER_TABLE_SIZE: usize = usize::MAX;
+//const BLOOMFILTER_TABLE_SIZE: usize = 73 * 1024 * 1024 * 1024;//indexはu64。2^6 < 73 < 2^7で、2^37におさまる。
 //const BLOOMFILTER_TABLE_SIZE: usize = 1024 * 1024;
 
 /*
