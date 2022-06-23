@@ -281,7 +281,7 @@ fn hasher(source: &[u8;L_LEN + R_LEN]) -> [u32;8]{
     let result = hasher.finalize();
     let sha512_bit_array = result.as_slice();//&[u8;64]
     for i in 0..8{
-        for j in 0..8{
+        for j in 0..4{
             ret_val[i] += sha512_bit_array[i * 8 + j] as u32;
             ret_val[i] <<= 8;
         }
@@ -406,7 +406,6 @@ fn pick_up_high_occurence_kmer(source_table: &Box<[u8; BLOOMFILTER_TABLE_SIZE]>,
 }
 
 
-
 fn main() {
     let args: Vec<String> = env::args().collect();
     let path = &args[1];
@@ -433,6 +432,10 @@ fn main() {
     let high_occr_cnt: u64 = number_of_high_occurence_kmer(&counting_bloom_filter_table, path);
     //3段目
     let high_occurence_kmer: Vec<u128> = pick_up_high_occurence_kmer(&counting_bloom_filter_table, path, high_occr_cnt);
+
+    //どんなふうに出力しようか？
+    //high_occurence_kmer.voracious_mt_sort(8);
+    //let uniq_high_occurence_kmer: HashSet<u128> = high_occurence_kmer.into_iter().collec();
     /*
     １週目の実装は済んでるので、２、３週目の実装を行う。
     ２週目ではファイルをもう一度舐めて、出現頻度が閾値(1000など)を越えるk-merが何個あるか調べる。
