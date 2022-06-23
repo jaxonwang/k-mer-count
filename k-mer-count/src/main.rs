@@ -226,7 +226,7 @@ fn counting_bloom_filter(path: &str) -> Box<[u8; BLOOMFILTER_TABLE_SIZE]>{
         if record.is_empty(){
             break;
         }
-        eprintln!("loop: {:09?}, current record id:{:?}\tlength: {:?}", loop_cnt, record.id(), record.seq().len());
+        eprintln!("1st loop: {:09?}, current record id:{:?}\tlength: {:?}", loop_cnt, record.id(), record.seq().len());
         loop_cnt += 1;
         for dna_chunk_size in 80..141 {
             window_start = 0;
@@ -313,7 +313,7 @@ fn number_of_high_occurence_kmer(source_table: &Box<[u8; BLOOMFILTER_TABLE_SIZE]
         if record.is_empty(){
             break;
         }
-        eprintln!("loop: {:09?}, current record id:{:?}\tlength: {:?}", loop_cnt, record.id(), record.seq().len());
+        eprintln!("2nd loop: {:09?}, current record id:{:?}\tlength: {:?}", loop_cnt, record.id(), record.seq().len());
         loop_cnt += 1;
         for dna_chunk_size in 80..141 {
             window_start = 0;
@@ -370,7 +370,7 @@ fn pick_up_high_occurence_kmer(source_table: &Box<[u8; BLOOMFILTER_TABLE_SIZE]>,
         if record.is_empty(){
             break;
         }
-        eprintln!("loop: {:09?}, current record id:{:?}\tlength: {:?}", loop_cnt, record.id(), record.seq().len());
+        eprintln!("3rd loop: {:09?}, current record id:{:?}\tlength: {:?}", loop_cnt, record.id(), record.seq().len());
         loop_cnt += 1;
         for dna_chunk_size in 80..141 {
             window_start = 0;
