@@ -432,7 +432,7 @@ fn main() {
     //2段目
     let high_occr_cnt: u64 = number_of_high_occurence_kmer(&counting_bloom_filter_table, path);
     //3段目
-    let high_occurence_kmer: Vec<u128> = pick_up_high_occurence_kmer(&counting_bloom_filter_table, path, high_occr_cnt);
+    let mut high_occurence_kmer: Vec<u128> = pick_up_high_occurence_kmer(&counting_bloom_filter_table, path, high_occr_cnt);
 
     //どんなふうに出力しようか？
     high_occurence_kmer.voracious_mt_sort(8);
