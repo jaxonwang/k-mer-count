@@ -31,7 +31,7 @@ use rand::prelude::*;
 const L_LEN: usize = 27;
 const R_LEN: usize = 27;
 const TOW_SQ20: u128 = 2_u128.pow(20);
-const BLOOMFILTER_TABLE_SIZE: usize = usize::MAX;
+const BLOOMFILTER_TABLE_SIZE: usize = u32::MAX as usize;
 //const BLOOMFILTER_TABLE_SIZE: usize = 73 * 1024 * 1024 * 1024;//indexはu64。2^6 < 73 < 2^7で、2^37におさまる。
 //const BLOOMFILTER_TABLE_SIZE: usize = 1024 * 1024;
 
@@ -248,7 +248,7 @@ fn counting_bloom_filter(path: &str) -> Box<[u8; BLOOMFILTER_TABLE_SIZE]>{
                 for i in 0..R_LEN{
                     lr_string[i + L_LEN] = r[i];
                 }
-                let table_indice:[u64;8] = hasher(&lr_string);
+                let table_indice:[u32;8] = hasher(&lr_string);
                 let tmp: u8 = count_occurence_from_counting_bloomfilter_table(&ret_array, &lr_string);
                 if rand::random::<u8>() < (u8::MAX >> tmp) && tmp != u8::MAX{
                     for i in 0..8{
@@ -262,7 +262,7 @@ fn counting_bloom_filter(path: &str) -> Box<[u8; BLOOMFILTER_TABLE_SIZE]>{
 }
 
 fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &Box<[u8; BLOOMFILTER_TABLE_SIZE]>, query: &[u8;L_LEN + R_LEN]) -> u8{
-    let indice: [u64; 8] = hasher(query);
+    let indice: [u32;8] = hasher(query);
     let mut retval: u8 = u8::MAX;
     for index in indice{
         if counting_bloomfilter_table[index as usize] < retval{
@@ -274,15 +274,15 @@ fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &
 
 
 
-fn hasher(source: &[u8;L_LEN + R_LEN]) -> [u64; 8]{
-    let mut ret_val: [u64; 8] = [0;8];
+fn hasher(source: &[u8;L_LEN + R_LEN]) -> [u32;8]{
+    let mut ret_val: [u32;8] = [0;8];
     let mut hasher = Sha512::new();
     hasher.update(source);
     let result = hasher.finalize();
     let sha512_bit_array = result.as_slice();//&[u8;64]
     for i in 0..8{
         for j in 0..8{
-            ret_val[i] += sha512_bit_array[i * 8 + j] as u64;
+            ret_val[i] += sha512_bit_array[i * 8 + j] as u32;
             ret_val[i] <<= 8;
         }
     }
@@ -335,7 +335,7 @@ fn number_of_high_occurence_kmer(source_table: &Box<[u8; BLOOMFILTER_TABLE_SIZE]
                 for i in 0..R_LEN{
                     lr_string[i + L_LEN] = r[i];
                 }
-                let table_indice:[u64;8] = hasher(&lr_string);
+                let table_indice:[u32;8] = hasher(&lr_string);
                 let tmp: u8 = count_occurence_from_counting_bloomfilter_table(&source_table, &lr_string);
                 if tmp >= 10{
                     retval = retval + 1;
@@ -393,7 +393,7 @@ fn pick_up_high_occurence_kmer(source_table: &Box<[u8; BLOOMFILTER_TABLE_SIZE]>,
                     lr_string[i + L_LEN] = r[i];
                 }
                 //ここら辺に、閾値回数以上出現するk-merを処理するコードを書く
-                let table_indice:[u64;8] = hasher(&lr_string);
+                let table_indice:[u32;8] = hasher(&lr_string);
                 let tmp: u8 = count_occurence_from_counting_bloomfilter_table(&source_table, &lr_string);
                 if tmp >= 10{//2^10相当。本当は引数で基準を変えられるようにしたい。
                     retval[retval_index] = encode_dna_seq_2_u128(&lr_string);
