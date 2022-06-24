@@ -15,3 +15,9 @@ voracious_radix_sort = { version = "1.1.0", features = ["voracious_multithread"]
 #rust-crypto = "*"
 sha2 = "0.10.2"
 rand = "0.8.5"
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 3

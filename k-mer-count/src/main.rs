@@ -307,13 +307,13 @@ fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &
 
 fn hasher(source: &[u8;L_LEN + R_LEN]) -> [u32;8]{
     let mut ret_val: [u32;8] = [0;8];
-    let mut hasher = Sha512::new();
+    let mut hasher = Sha256::new();
     hasher.update(source);
     let result = hasher.finalize();
-    let sha512_bit_array = result.as_slice();//&[u8;64]
+    let sha256_bit_array = result.as_slice();//&[u8;32]
     for i in 0..8{
         for j in 0..4{
-            ret_val[i] += sha512_bit_array[i * 8 + j] as u32;
+            ret_val[i] += sha256_bit_array[i * 8 + j] as u32;
             ret_val[i] <<= 8;
         }
     }
