@@ -242,7 +242,6 @@ fn counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SIZE]>{
                 l_end   = l_start + L_LEN;
                 r_start = l_end + m_len;
                 r_end   = r_start + R_LEN;
-                window_start += 1;
 
                 if r_end > record.seq().len(){
                     break;
@@ -257,11 +256,38 @@ fn counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SIZE]>{
                 }
                 let table_indice:[u32;8] = hasher(&lr_string);
                 let tmp: u64 = count_occurence_from_counting_bloomfilter_table(&ret_array, &lr_string);
-                if tmp != u64::MAX - 1 && rand::random::<u64>() < (u64::MAX >> (tmp as f32).log2().ceil() as u64){
-                    for i in 0..8{
-                        ret_array[table_indice[i] as usize] += 1;
+
+
+                for i in 0..8{
+                    if ret_array[table_indice[i] as usize] == u64::MAX{
+                        //incrementしない
+                    }else{
+                        if rand::random::<u64>() < (u64::MAX >> (64 - ret_array[table_indice[i] as usize].leading_zeros())){
+                            ret_array[table_indice[i] as usize] += 1;
+                        }
                     }
                 }
+
+/*
+                if tmp < u64::MAX{
+                    //incrementしない
+                }else{
+                    if tmp == 0{
+                        //必ずincrementする
+                        for i in 0..8{
+                            ret_array[table_indice[i] as usize] += 1;
+                        }
+                    }else{//0 < tmp < u64::MAX
+                        for i in 0..8{
+                            //ret_array[table_indice[i] as usize]をみて、サイコロと比べる
+                            if rand::random::<u64>() < (u64::MAX >> (64 - ret_array[table_indice[i] as usize].leading_zeros())){
+                                ret_array[table_indice[i] as usize] += 1;
+                            }
+                        }
+                    }
+                }
+*/
+                window_start += 1;
             }
         }
     }
