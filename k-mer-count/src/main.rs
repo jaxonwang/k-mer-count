@@ -32,7 +32,7 @@ const L_LEN: usize = 27;
 const R_LEN: usize = 27;
 const TOW_SQ20: u128 = 2_u128.pow(20);
 const BLOOMFILTER_TABLE_SIZE: usize = u32::MAX as usize;
-const THRESHOLD_OCCURENCE: u8 = 10;
+const THRESHOLD_OCCURENCE: u64 = 100;
 //const BLOOMFILTER_TABLE_SIZE: usize = 73 * 1024 * 1024 * 1024;//indexはu64。2^6 < 73 < 2^7で、2^37におさまる。
 //const BLOOMFILTER_TABLE_SIZE: usize = 1024 * 1024;
 
@@ -205,7 +205,7 @@ pub fn open_with_gz<P: AsRef<Path>>(p: P) -> Result<Box<dyn BufRead>> {
     }
 }
 
-fn counting_bloom_filter(path: &str) -> Box<[u8; BLOOMFILTER_TABLE_SIZE]>{
+fn counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SIZE]>{
     let mut window_start: usize;
     let mut l_start: usize;
     let mut l_end:   usize;
@@ -213,7 +213,7 @@ fn counting_bloom_filter(path: &str) -> Box<[u8; BLOOMFILTER_TABLE_SIZE]>{
     let mut r_end:   usize;
     let mut m_len:   usize;
     let mut loop_cnt:usize = 0;
-    let mut ret_array: Box<[u8; BLOOMFILTER_TABLE_SIZE]> = Box::new([0; BLOOMFILTER_TABLE_SIZE]);
+    let mut ret_array: Box<[u64; BLOOMFILTER_TABLE_SIZE]> = Box::new([0; BLOOMFILTER_TABLE_SIZE]);
 
     let file = File::open(path).expect("Error during opening the file");
     let mut reader = faReader::new(file);
@@ -250,8 +250,8 @@ fn counting_bloom_filter(path: &str) -> Box<[u8; BLOOMFILTER_TABLE_SIZE]>{
                     lr_string[i + L_LEN] = r[i];
                 }
                 let table_indice:[u32;8] = hasher(&lr_string);
-                let tmp: u8 = count_occurence_from_counting_bloomfilter_table(&ret_array, &lr_string);
-                if tmp != u8::MAX - 1 && rand::random::<u8>() < (u8::MAX >> (tmp as f32).log2().ceil() as u8){
+                let tmp: u64 = count_occurence_from_counting_bloomfilter_table(&ret_array, &lr_string);
+                if tmp != u64::MAX - 1 && rand::random::<u64>() < (u64::MAX >> (tmp as f32).log2().ceil() as u64){
                     for i in 0..8{
                         ret_array[table_indice[i] as usize] += 1;
                     }
@@ -262,9 +262,9 @@ fn counting_bloom_filter(path: &str) -> Box<[u8; BLOOMFILTER_TABLE_SIZE]>{
     return ret_array;
 }
 
-fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &Box<[u8; BLOOMFILTER_TABLE_SIZE]>, query: &[u8;L_LEN + R_LEN]) -> u8{
+fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &Box<[u64; BLOOMFILTER_TABLE_SIZE]>, query: &[u8;L_LEN + R_LEN]) -> u64{
     let indice: [u32;8] = hasher(query);
-    let mut retval: u8 = u8::MAX;
+    let mut retval: u64 = u64::MAX;
     for index in indice{
         if counting_bloomfilter_table[index as usize] < retval{
             retval = counting_bloomfilter_table[index as usize];
@@ -272,8 +272,6 @@ fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &
     }
     return retval;
 }
-
-
 
 fn hasher(source: &[u8;L_LEN + R_LEN]) -> [u32;8]{
     let mut ret_val: [u32;8] = [0;8];
@@ -292,7 +290,7 @@ fn hasher(source: &[u8;L_LEN + R_LEN]) -> [u32;8]{
 
 //2週目。出現頻度がある閾値を越えるk-merの個数を返す。
 //3週目ではこの個数を受けて、vecのメモリを確保して出力用vecを用意して、再びファイルを舐める。
-fn number_of_high_occurence_kmer(source_table: &Box<[u8; BLOOMFILTER_TABLE_SIZE]>, path: &str) -> u64{
+fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_SIZE]>, path: &str) -> u64{
     let mut retval: u64 = 0;
     let mut window_start: usize;
     let mut l_start: usize;
@@ -337,7 +335,7 @@ fn number_of_high_occurence_kmer(source_table: &Box<[u8; BLOOMFILTER_TABLE_SIZE]
                     lr_string[i + L_LEN] = r[i];
                 }
                 let table_indice:[u32;8] = hasher(&lr_string);
-                let tmp: u8 = count_occurence_from_counting_bloomfilter_table(&source_table, &lr_string);
+                let tmp: u64 = count_occurence_from_counting_bloomfilter_table(&source_table, &lr_string);
                 if tmp >= THRESHOLD_OCCURENCE{
                     retval = retval + 1;
                 }
@@ -348,7 +346,7 @@ fn number_of_high_occurence_kmer(source_table: &Box<[u8; BLOOMFILTER_TABLE_SIZE]
 }
 
 //3週目。
-fn pick_up_high_occurence_kmer(source_table: &Box<[u8; BLOOMFILTER_TABLE_SIZE]>, path: &str, max_size_of_vec: u64) -> Vec<u128>{
+fn pick_up_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_SIZE]>, path: &str, max_size_of_vec: u64) -> Vec<u128>{
     let mut retval: Vec<u128> = vec![0; max_size_of_vec.try_into().unwrap()];
     let mut retval_index: usize = 0;
     let mut window_start: usize;
@@ -395,7 +393,7 @@ fn pick_up_high_occurence_kmer(source_table: &Box<[u8; BLOOMFILTER_TABLE_SIZE]>,
                 }
                 //ここら辺に、閾値回数以上出現するk-merを処理するコードを書く
                 let table_indice:[u32;8] = hasher(&lr_string);
-                let tmp: u8 = count_occurence_from_counting_bloomfilter_table(&source_table, &lr_string);
+                let tmp: u64 = count_occurence_from_counting_bloomfilter_table(&source_table, &lr_string);
                 if tmp >= THRESHOLD_OCCURENCE{//2^10相当。本当は引数で基準を変えられるようにしたい。
                     retval[retval_index] = encode_dna_seq_2_u128(&lr_string);
                     retval_index += 1;
@@ -428,7 +426,7 @@ fn main() {
     let mut loop_cnt:usize = 0;
 
     //1段目
-    let counting_bloom_filter_table: Box<[u8; BLOOMFILTER_TABLE_SIZE]> = counting_bloom_filter(path);
+    let counting_bloom_filter_table: Box<[u64; BLOOMFILTER_TABLE_SIZE]> = counting_bloom_filter(path);
     //2段目
     let high_occr_cnt: u64 = number_of_high_occurence_kmer(&counting_bloom_filter_table, path);
     //3段目
