@@ -213,21 +213,21 @@ fn counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SIZE]>{
     let mut r_end:   usize;
     let mut m_len:   usize;
     let mut loop_cnt:usize = 0;
-    eprintln!("{}", loop_cnt);
+    println!("{}", loop_cnt);
     let mut ret_array: Box<[u64; BLOOMFILTER_TABLE_SIZE]> = Box::new([0; BLOOMFILTER_TABLE_SIZE]);
-    eprintln!("{}", loop_cnt);
+    println!("{}", loop_cnt);
 
     let file = File::open(path).expect("Error during opening the file");
-    eprintln!("{}", loop_cnt);
+    println!("{}", loop_cnt);
 
     let mut reader = faReader::new(file);
     let mut record = faRecord::new();
     let mut buf: u64 = 0;
     let mut lr_string: [u8;L_LEN + R_LEN] = [64; L_LEN + R_LEN];
-    eprintln!("{}", loop_cnt);
+    println!("{}", loop_cnt);
 
     loop {
-        eprintln!("{}", loop_cnt);
+        println!("{}", loop_cnt);
         reader.read(&mut record).unwrap();
         if record.is_empty(){
             break;
