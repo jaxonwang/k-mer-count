@@ -226,6 +226,8 @@ fn counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SIZE]>{
     let mut lr_string: [u8;L_LEN + R_LEN] = [64; L_LEN + R_LEN];
     println!("{}", loop_cnt);
 
+    let mut rng = rand::thread_rng();
+
     loop {
         println!("{}", loop_cnt);
         reader.read(&mut record).unwrap();
@@ -262,7 +264,7 @@ fn counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SIZE]>{
                     if ret_array[table_indice[i] as usize] == u64::MAX{
                         //incrementしない
                     }else{
-                        if rand::random::<u64>() < (u64::MAX >> (64 - ret_array[table_indice[i] as usize].leading_zeros())){
+                        if rng.gen::<u64>() < (u64::MAX >> (64 - ret_array[table_indice[i] as usize].leading_zeros())){
                             ret_array[table_indice[i] as usize] += 1;
                         }
                     }
