@@ -251,7 +251,7 @@ fn counting_bloom_filter(path: &str) -> Box<[u8; BLOOMFILTER_TABLE_SIZE]>{
                 }
                 let table_indice:[u32;8] = hasher(&lr_string);
                 let tmp: u8 = count_occurence_from_counting_bloomfilter_table(&ret_array, &lr_string);
-                if tmp != u8::MAX && rand::random::<u8>() < (u8::MAX >> (tmp as f32).log2().ceil() as u8){
+                if tmp != u8::MAX - 1 && rand::random::<u8>() < (u8::MAX >> (tmp as f32).log2().ceil() as u8){
                     for i in 0..8{
                         ret_array[table_indice[i] as usize] += 1;
                     }
