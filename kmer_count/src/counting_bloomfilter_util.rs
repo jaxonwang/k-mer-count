@@ -4,6 +4,7 @@ use crate::encoder_util::decode_u128_2_occurence;
 use crate::encoder_util::L_LEN;
 use crate::encoder_util::R_LEN;
 
+use crate::sequence_encoder_util::DnaSequence;
 use rand::Rng;
 use std::fs::File;
 use sha2::Sha256;
@@ -20,14 +21,12 @@ pub const BLOOMFILTER_TABLE_SIZE: usize = u32::MAX as usize + 1;
 pub const THRESHOLD_OCCURENCE: u64 = 100;
 
 
+pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SIZE]>{
+    let mut l_window_start: usize;
+    let mut l_window_end:   usize;
+    let mut r_window_start: usize;
+    let mut r_window_end:   usize;
 
-pub fn counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SIZE]>{
-    let mut window_start: usize;
-    let mut l_start: usize;
-    let mut l_end:   usize;
-    let mut r_start: usize;
-    let mut r_end:   usize;
-    let mut m_len:   usize;
     let mut loop_cnt:usize = 0;
     eprintln!("Allocating Box<[u64; BLOOMFILTER_TABLE_SIZE]> where BLOOMFILTER_TABLE_SIZE = {}", BLOOMFILTER_TABLE_SIZE);
     let mut ret_array: Box<[u64; BLOOMFILTER_TABLE_SIZE]> = Box::new([0; BLOOMFILTER_TABLE_SIZE]);
@@ -40,76 +39,71 @@ pub fn counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SIZE]>{
     let mut lr_string: [u8;L_LEN + R_LEN] = [64; L_LEN + R_LEN];
 
     let mut rng = rand::thread_rng();
-
-
-
-    //まず、今見てるリードをbit列にencodeする。
-    //どうやって表現するんだ？
     loop {
         reader.read(&mut record).unwrap();
         if record.is_empty(){
-            break;
+            continue;
         }
         eprintln!("1st loop: {:09?}, current record id:{:?}\tlength: {:?}", loop_cnt, record.id(), record.seq().len());
         loop_cnt += 1;
+        //recordをVec<u8>に変更して、DNA_sequence.new()に渡す
+        //&[u8] -> Vec<u8>
+        let sequence_as_vec: Vec<u8> = record.seq().to_vec();
+        let current_sequence = DnaSequence::new(&sequence_as_vec);
         for dna_chunk_size in 80..141 {
-            window_start = 0;
+            l_window_start = 0;
             loop{
-                m_len = dna_chunk_size - L_LEN - R_LEN;
-                l_start = window_start;
-                l_end   = l_start + L_LEN;
-                r_start = l_end + m_len;
-                r_end   = r_start + R_LEN;
+                l_window_end   = l_window_start + L_LEN;
+                r_window_start = l_window_end   + dna_chunk_size;
+                r_window_end   = r_window_start + R_LEN;
 
-                if r_end > record.seq().len(){
+                if r_window_end > record.seq().len(){
                     break;
                 }
-                let l = &record.seq()[l_start..l_end];
-                let r = &record.seq()[r_start..r_end];
-                for i in 0..L_LEN{
-                    lr_string[i] = l[i];
-                }
-                for i in 0..R_LEN{
-                    lr_string[i + L_LEN] = r[i];
-                }
-                let table_indice:[u32;8] = hasher(&lr_string);
-                let tmp: u64 = count_occurence_from_counting_bloomfilter_table(&ret_array, &lr_string);
-
-
-                for i in 0..8{
-                    if ret_array[table_indice[i] as usize] == u64::MAX{
-                        //incrementしない
-                    }else{
-                        if rng.gen::<u64>() < (u64::MAX >> (64 - ret_array[table_indice[i] as usize].leading_zeros())){
-                            ret_array[table_indice[i] as usize] += 1;
-                        }
-                    }
-                }
-
-/*
-                if tmp < u64::MAX{
-                    //incrementしない
-                }else{
-                    if tmp == 0{
-                        //必ずincrementする
+                let l_has_poly_base: bool = current_sequence.has_poly_base(l_window_start, l_window_end);
+                if  l_has_poly_base != true{
+                    let r_has_poly_base: bool = current_sequence.has_poly_base(r_window_start, r_window_end);
+                    if r_has_poly_base != true{
+                        //counting bloom_filterに追加する
+                        let lr_string = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [r_window_start, r_window_end]]);
+                        let table_indice:[u32;8] = hash_from_u128(lr_string);//u128を受けてhashを返す関数
                         for i in 0..8{
-                            ret_array[table_indice[i] as usize] += 1;
-                        }
-                    }else{//0 < tmp < u64::MAX
-                        for i in 0..8{
-                            //ret_array[table_indice[i] as usize]をみて、サイコロと比べる
-                            if rand::random::<u64>() < (u64::MAX >> (64 - ret_array[table_indice[i] as usize].leading_zeros())){
-                                ret_array[table_indice[i] as usize] += 1;
+                            if ret_array[table_indice[i] as usize] == u64::MAX{
+                                //incrementしない
+                            }else{
+                                if rng.gen::<u64>() < (u64::MAX >> (64 - ret_array[table_indice[i] as usize].leading_zeros())){
+                                    ret_array[table_indice[i] as usize] += 1;
+                                }
                             }
                         }
                     }
                 }
-*/
-                window_start += 1;
+                l_window_start += 1;
             }
         }
     }
-    return ret_array;
+}
+
+fn hash_from_u128(source: u128) -> [u32; 8]{
+    let mut ret_val: [u32;8] = [0;8];
+    let mut hasher = Sha256::new();
+    let mut u8_array: [u8; 16] = [0; 16];
+    let mut src_copy: u128 = source;
+    for i in 0..16{
+        u8_array[i] = (src_copy & 255).try_into().unwrap();
+        src_copy >> 8;
+    }
+    hasher.update(u8_array);
+    let result = hasher.finalize();
+    let sha256_bit_array = result.as_slice();//&[u8;32]
+    for i in 0..8{
+        for j in 0..4{
+            ret_val[i] += sha256_bit_array[i * 8 + j] as u32;
+            ret_val[i] <<= 8;
+        }
+    }
+    return ret_val;
+
 }
 
 pub fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &Box<[u64; BLOOMFILTER_TABLE_SIZE]>, query: &[u8;L_LEN + R_LEN]) -> u64{

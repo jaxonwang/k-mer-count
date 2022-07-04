@@ -429,6 +429,7 @@ dependencies = [
  "bio",
  "bit_reverse",
  "flate2",
+ "fxhash",
  "rand",
  "rdxsort",
  "sha2",

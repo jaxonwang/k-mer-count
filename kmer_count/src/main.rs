@@ -33,7 +33,7 @@ use voracious_radix_sort::{RadixSort};
 //use kmer_count::encoder_util::L_LEN;
 //use kmer_count::encoder_util::R_LEN;
 use kmer_count::counting_bloomfilter_util::BLOOMFILTER_TABLE_SIZE;
-use kmer_count::counting_bloomfilter_util::{counting_bloom_filter,number_of_high_occurence_kmer,pick_up_high_occurence_kmer};
+use kmer_count::counting_bloomfilter_util::{build_counting_bloom_filter,number_of_high_occurence_kmer,pick_up_high_occurence_kmer};
 
 
 //const TOW_SQ20: u128 = 2_u128.pow(20);
@@ -52,7 +52,7 @@ fn main() {
     eprintln!("loading {:?} done", path);
 
     //1段目
-    let counting_bloom_filter_table: Box<[u64; BLOOMFILTER_TABLE_SIZE]> = counting_bloom_filter(path);
+    let counting_bloom_filter_table: Box<[u64; BLOOMFILTER_TABLE_SIZE]> = build_counting_bloom_filter(path);
     //2段目
     let high_occr_cnt: u64 = number_of_high_occurence_kmer(&counting_bloom_filter_table, path);
     //3段目
