@@ -20,6 +20,7 @@ pub const BLOOMFILTER_TABLE_SIZE: usize = u32::MAX as usize + 1;
 pub const THRESHOLD_OCCURENCE: u64 = 100;
 
 
+
 pub fn counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SIZE]>{
     let mut window_start: usize;
     let mut l_start: usize;
@@ -28,23 +29,23 @@ pub fn counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SIZE]>{
     let mut r_end:   usize;
     let mut m_len:   usize;
     let mut loop_cnt:usize = 0;
-    println!("{}", loop_cnt);
+    eprintln!("Allocating Box<[u64; BLOOMFILTER_TABLE_SIZE]> where BLOOMFILTER_TABLE_SIZE = {}", BLOOMFILTER_TABLE_SIZE);
     let mut ret_array: Box<[u64; BLOOMFILTER_TABLE_SIZE]> = Box::new([0; BLOOMFILTER_TABLE_SIZE]);
-    println!("{}", loop_cnt);
-
+    eprintln!("finish allocating");
     let file = File::open(path).expect("Error during opening the file");
-    println!("{}", loop_cnt);
 
     let mut reader = faReader::new(file);
     let mut record = faRecord::new();
     let mut buf: u64 = 0;
     let mut lr_string: [u8;L_LEN + R_LEN] = [64; L_LEN + R_LEN];
-    println!("{}", loop_cnt);
 
     let mut rng = rand::thread_rng();
 
+
+
+    //まず、今見てるリードをbit列にencodeする。
+    //どうやって表現するんだ？
     loop {
-        println!("{}", loop_cnt);
         reader.read(&mut record).unwrap();
         if record.is_empty(){
             break;

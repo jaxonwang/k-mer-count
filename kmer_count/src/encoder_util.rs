@@ -35,6 +35,21 @@ pub fn encode_dna_seq_2_u128(sequence: &[u8]) -> u128{
     return result;
 }
 
+pub fn encode_dna_seq_2_u8_vec(sequence: &[u8]) -> Vec<u8>{
+    let mut result: Vec<u8> = Vec::new();
+    for i in 0..(sequence.len() as usize){
+        match base{
+            0 => {result.push('A');}
+            1 => {result.push('C');}
+            2 => {result.push('G');}
+            3 => {result.push('T');}
+            _ => {panic!("Never reached!!!tmp: {}", tmp);}
+        }
+    }
+    return result;
+
+}
+
 
 
 pub fn decode_u64_2_dna_seq(source:u64, index: usize, length: usize) ->u8{
