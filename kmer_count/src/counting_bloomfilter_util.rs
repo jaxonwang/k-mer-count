@@ -42,6 +42,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
 
     let mut rng = rand::thread_rng();
     let start = Instant::now();
+    let mut previous_time = start.elapsed();
     loop {
         reader.read(&mut record).unwrap();
         if record.is_empty(){
@@ -85,7 +86,8 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
             }
         }
         let end = start.elapsed();
-        eprintln!("sec: {}", end.as_secs());
+        eprintln!("sec: {}", end.as_secs() - previous_time.as_secs());
+        previous_time = end;
     }
 }
 
