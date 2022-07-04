@@ -62,6 +62,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                 }
                 let l_has_poly_base: bool = current_sequence.has_poly_base(l_window_start, l_window_end);
                 if  l_has_poly_base != true{
+                    eprintln!("{}, {}, {}", dna_chunk_size, r_window_start, r_window_end);
                     let r_has_poly_base: bool = current_sequence.has_poly_base(r_window_start, r_window_end);
                     if r_has_poly_base != true{
                         //counting bloom_filterに追加する
