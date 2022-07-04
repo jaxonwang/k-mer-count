@@ -47,7 +47,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
         if record.is_empty(){
             continue;
         }
-        eprintln!("1st loop: {:09?}, current record id:{:?}\tlength: {:?}", loop_cnt, record.id(), record.seq().len());
+        eprint!("1st loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
         loop_cnt += 1;
         //recordをVec<u8>に変更して、DNA_sequence.new()に渡す
         //&[u8] -> Vec<u8>
