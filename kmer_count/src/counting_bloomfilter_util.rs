@@ -24,7 +24,7 @@ pub const THRESHOLD_OCCURENCE: u64 = 100;
 
 
 pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SIZE]>{
-    let mut l_window_start: usize;
+    let mut l_window_start: usize = 0;
     let mut l_window_end:   usize;
     let mut r_window_start: usize;
     let mut r_window_end:   usize;
@@ -54,36 +54,36 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
         //&[u8] -> Vec<u8>
         let sequence_as_vec: Vec<u8> = record.seq().to_vec();
         let current_sequence = DnaSequence::new(&sequence_as_vec);
-        for dna_chunk_size in 80..141 {
-            l_window_start = 0;
-            loop{
-                l_window_end   = l_window_start + L_LEN;
+        //for dna_chunk_size in 80..141 {
+        loop{
+            l_window_end   = l_window_start + L_LEN;
+            let l_has_poly_base: bool = current_sequence.has_poly_base(l_window_start, l_window_end);
+            if  l_has_poly_base == true{
+                break;
+            }
+            for dna_chunk_size in 80..141 {
                 r_window_start = l_window_end   + dna_chunk_size;
                 r_window_end   = r_window_start + R_LEN;
-
                 if r_window_end >= record.seq().len(){
                     break;
                 }
-                let l_has_poly_base: bool = current_sequence.has_poly_base(l_window_start, l_window_end);
-                if  l_has_poly_base != true{
-                    let r_has_poly_base: bool = current_sequence.has_poly_base(r_window_start, r_window_end);
-                    if r_has_poly_base != true{
-                        //counting bloom_filterに追加する
-                        let lr_string = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [r_window_start, r_window_end]]);
-                        let table_indice:[u32;8] = hash_from_u128(lr_string);//u128を受けてhashを返す関数
-                        for i in 0..8{
-                            if ret_array[table_indice[i] as usize] == u64::MAX{
-                                //incrementしない
-                            }else{
-                                if rng.gen::<u64>() < (u64::MAX >> (64 - ret_array[table_indice[i] as usize].leading_zeros())){
-                                    ret_array[table_indice[i] as usize] += 1;
-                                }
+                let r_has_poly_base: bool = current_sequence.has_poly_base(r_window_start, r_window_end);
+                if r_has_poly_base != true{
+                    //counting bloom_filterに追加する
+                    let lr_string = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [r_window_start, r_window_end]]);
+                    let table_indice:[u32;8] = hash_from_u128(lr_string);//u128を受けてhashを返す関数
+                    for i in 0..8{
+                        if ret_array[table_indice[i] as usize] == u64::MAX{
+                            //incrementしない
+                        }else{
+                            if rng.gen::<u64>() < (u64::MAX >> (64 - ret_array[table_indice[i] as usize].leading_zeros())){
+                                ret_array[table_indice[i] as usize] += 1;
                             }
                         }
                     }
                 }
-                l_window_start += 1;
             }
+            l_window_start += 1;
         }
         let end = start.elapsed();
         eprintln!("sec: {}", end.as_secs() - previous_time.as_secs());
