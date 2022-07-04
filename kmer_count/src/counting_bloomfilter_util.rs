@@ -56,14 +56,13 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
         let current_sequence = DnaSequence::new(&sequence_as_vec);
         //for dna_chunk_size in 80..141 {
         loop{
-            l_window_end   = l_window_start + L_LEN;
+            l_window_end = l_window_start + L_LEN;
             if l_window_end >= current_sequence.len(){
                 break;
             }
-
             let l_has_poly_base: bool = current_sequence.has_poly_base(l_window_start, l_window_end);
             if  l_has_poly_base == true{
-                break;
+                continue;
             }
             for dna_chunk_size in 80..141 {
                 r_window_start = l_window_end   + dna_chunk_size;
