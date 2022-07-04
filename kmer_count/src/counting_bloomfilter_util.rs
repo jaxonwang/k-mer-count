@@ -98,7 +98,7 @@ fn hash_from_u128(source: u128) -> [u32; 8]{
     let sha256_bit_array = result.as_slice();//&[u8;32]
     for i in 0..8{
         for j in 0..4{
-            ret_val[i] += sha256_bit_array[i * 8 + j] as u32;
+            ret_val[i] += sha256_bit_array[i * 4 + j] as u32;
             ret_val[i] <<= 8;
         }
     }
