@@ -10,6 +10,8 @@ use std::fs::File;
 use sha2::Sha256;
 use sha2::Digest;
 
+use std::time::{Duration, Instant};
+
 //use bio::io::fastq::Reader as fqReader;
 //use bio::io::fastq::Record as fqRecord;
 use bio::io::fasta::Reader as faReader;
@@ -39,6 +41,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
     let mut lr_string: [u8;L_LEN + R_LEN] = [64; L_LEN + R_LEN];
 
     let mut rng = rand::thread_rng();
+    let start = Instant::now();
     loop {
         reader.read(&mut record).unwrap();
         if record.is_empty(){
@@ -81,6 +84,8 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                 l_window_start += 1;
             }
         }
+        let end = start.elapsed();
+        eprintln!("sec: {}", end.as_secs());
     }
 }
 
