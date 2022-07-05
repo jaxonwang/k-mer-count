@@ -46,6 +46,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
         if record.is_empty(){
             continue;
         }
+        let mut add_bloom_filter_cnt: usize = 0;
         eprint!("1st loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
         loop_cnt += 1;
         //recordをVec<u8>に変更して、DNA_sequence.new()に渡す
@@ -71,6 +72,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                 }
                 let r_has_poly_base: bool = current_sequence.has_poly_base(r_window_start, r_window_end);
                 if r_has_poly_base != true{
+                    add_bloom_filter_cnt += 1;
                     //counting bloom_filterに追加する
                     let lr_string = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [r_window_start, r_window_end]]);
                     let table_indice:[u32;8] = hash_from_u128(lr_string);//u128を受けてhashを返す関数
@@ -88,7 +90,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
             l_window_start += 1;
         }
         let end = start.elapsed();
-        eprintln!("sec: {}", end.as_secs() - previous_time.as_secs());
+        eprintln!("sec: {}, subject to add bloom filter: {}", end.as_secs() - previous_time.as_secs(), add_bloom_filter_cnt);
         previous_time = end;
     }
 }
