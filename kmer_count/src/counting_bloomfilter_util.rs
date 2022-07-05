@@ -65,7 +65,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                 continue;
             }
             for dna_chunk_size in 80..141 {
-                r_window_start = l_window_end   + dna_chunk_size;
+                r_window_start = l_window_start + dna_chunk_size - R_LEN;
                 r_window_end   = r_window_start + R_LEN;
                 if r_window_end >= current_sequence.len(){
                     continue;
