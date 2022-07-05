@@ -49,7 +49,7 @@ impl DnaSequence{
 
     pub fn decode(&self) -> Vec<u8>{
         let mut retval = Vec::new();
-        let mut buf: u8 = 0;
+        let mut buf: u8;
         for i in 0..self.length{
             buf = ((self.sequence[i / 32] >> (2 * (i % 32))) & 3).try_into().unwrap();
             match buf{
@@ -72,7 +72,7 @@ impl DnaSequence{
             let start: usize = each_range[0];
             let end:   usize = each_range[1];
             assert!(start < end, "DnaSequence::subsequence assertion failed: {} !< {}", start, end);
-            assert!(start >= 0, "DnaSequence::subsequence assertion failed: {} >= 0", start);
+            //assert!(start >= 0, "DnaSequence::subsequence assertion failed: {} >= 0", start);
             assert!(end < self.length, "DnaSequence::subsequence assertion failed: {} < {}", end, self.length);
             length += end - start;
             for i in start..end{
@@ -100,7 +100,7 @@ impl DnaSequence{
             let start: usize = each_range[0];
             let end:   usize = each_range[1];
             assert!(start < end, "DnaSequence::subsequence_as_u128 assertion failed: {} !< {}", start, end);
-            assert!(start >= 0, "DnaSequence::subsequence_as_u128 assertion failed: {} >= 0", start);
+            //assert!(start >= 0, "DnaSequence::subsequence_as_u128 assertion failed: {} >= 0", start);
             assert!(end < self.length, "DnaSequence::subsequence_as_u128 assertion failed: {} < {}", end, self.length);
             for i in start..end{
                 buf += ((self.sequence[i / 32] >> (62 - 2 * (i % 32))) & 3) as u128;

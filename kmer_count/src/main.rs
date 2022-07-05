@@ -23,7 +23,7 @@ use std::env;
 //use anyhow::Result;
 //use flate2::read::MultiGzDecoder;
 
-use voracious_radix_sort::{RadixSort};
+//use voracious_radix_sort::{RadixSort};
 
 //use rand::prelude::*;
 
@@ -33,7 +33,7 @@ use voracious_radix_sort::{RadixSort};
 //use kmer_count::encoder_util::L_LEN;
 //use kmer_count::encoder_util::R_LEN;
 use kmer_count::counting_bloomfilter_util::BLOOMFILTER_TABLE_SIZE;
-use kmer_count::counting_bloomfilter_util::{build_counting_bloom_filter,number_of_high_occurence_kmer,pick_up_high_occurence_kmer};
+use kmer_count::counting_bloomfilter_util::{build_counting_bloom_filter};
 
 
 //const TOW_SQ20: u128 = 2_u128.pow(20);
@@ -54,14 +54,16 @@ fn main() {
     //1段目
     let counting_bloom_filter_table: Box<[u64; BLOOMFILTER_TABLE_SIZE]> = build_counting_bloom_filter(path);
     //2段目
-    let high_occr_cnt: u64 = number_of_high_occurence_kmer(&counting_bloom_filter_table, path);
+    //let high_occr_cnt: u64 = number_of_high_occurence_kmer(&counting_bloom_filter_table, path);
     //3段目
-    let mut high_occurence_kmer: Vec<u128> = pick_up_high_occurence_kmer(&counting_bloom_filter_table, path, high_occr_cnt);
+    //let mut high_occurence_kmer: Vec<u128> = pick_up_high_occurence_kmer(&counting_bloom_filter_table, path, high_occr_cnt);
 
     //どんなふうに出力しようか？
+
+/*
     high_occurence_kmer.voracious_mt_sort(8);
     for each_kmer in high_occurence_kmer{
         println!("{:?}", each_kmer);
     }
-
+*/
 }

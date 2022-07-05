@@ -1,6 +1,3 @@
-pub const L_LEN: usize = 27;
-pub const R_LEN: usize = 27;
-
 
 
 pub fn encode_dna_seq_2_u64(sequence: &[u8]) -> u64{

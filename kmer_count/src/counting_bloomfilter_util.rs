@@ -1,8 +1,8 @@
-use crate::encoder_util::decode_u128_2_dna_seq;
-use crate::encoder_util::encode_dna_seq_2_u128;
-use crate::encoder_util::decode_u128_2_occurence;
-use crate::encoder_util::L_LEN;
-use crate::encoder_util::R_LEN;
+//use crate::encoder_util::decode_u128_2_dna_seq;
+//use crate::encoder_util::encode_dna_seq_2_u128;
+//use crate::encoder_util::decode_u128_2_occurence;
+pub const L_LEN: usize = 27;
+pub const R_LEN: usize = 27;
 
 use crate::sequence_encoder_util::DnaSequence;
 use rand::Rng;
@@ -10,7 +10,7 @@ use std::fs::File;
 use sha2::Sha256;
 use sha2::Digest;
 
-use std::time::{Duration, Instant};
+use std::time::{/*Duration, */Instant};
 
 //use bio::io::fastq::Reader as fqReader;
 //use bio::io::fastq::Record as fqRecord;
@@ -37,8 +37,6 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
 
     let mut reader = faReader::new(file);
     let mut record = faRecord::new();
-    let mut buf: u64 = 0;
-    let mut lr_string: [u8;L_LEN + R_LEN] = [64; L_LEN + R_LEN];
 
     let mut rng = rand::thread_rng();
     let start = Instant::now();
@@ -69,7 +67,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                 r_window_start = l_window_end   + dna_chunk_size;
                 r_window_end   = r_window_start + R_LEN;
                 if r_window_end >= current_sequence.len(){
-                    break;
+                    continue;
                 }
                 let r_has_poly_base: bool = current_sequence.has_poly_base(r_window_start, r_window_end);
                 if r_has_poly_base != true{
@@ -102,7 +100,7 @@ fn hash_from_u128(source: u128) -> [u32; 8]{
     let mut src_copy: u128 = source;
     for i in 0..16{
         u8_array[i] = (src_copy & 255).try_into().unwrap();
-        src_copy >> 8;
+        src_copy >>= 8;
     }
     hasher.update(u8_array);
     let result = hasher.finalize();
@@ -116,7 +114,7 @@ fn hash_from_u128(source: u128) -> [u32; 8]{
     return ret_val;
 
 }
-
+/*
 pub fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &Box<[u64; BLOOMFILTER_TABLE_SIZE]>, query: &[u8;L_LEN + R_LEN]) -> u64{
     let indice: [u32;8] = hasher(query);
     let mut retval: u64 = u64::MAX;
@@ -127,7 +125,9 @@ pub fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_tabl
     }
     return retval;
 }
+*/
 
+/*
 pub fn hasher(source: &[u8;L_LEN + R_LEN]) -> [u32;8]{
     let mut ret_val: [u32;8] = [0;8];
     let mut hasher = Sha256::new();
@@ -142,9 +142,10 @@ pub fn hasher(source: &[u8;L_LEN + R_LEN]) -> [u32;8]{
     }
     return ret_val;
 }
-
+*/
 //2週目。出現頻度がある閾値を越えるk-merの個数を返す。
 //3週目ではこの個数を受けて、vecのメモリを確保して出力用vecを用意して、再びファイルを舐める。
+/*
 pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_SIZE]>, path: &str) -> u64{
     let mut retval: u64 = 0;
     let mut window_start: usize;
@@ -200,7 +201,10 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
     return retval;
 }
 
+*/
 //3週目。
+
+/*
 pub fn pick_up_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_SIZE]>, path: &str, max_size_of_vec: u64) -> Vec<u128>{
     let mut retval: Vec<u128> = vec![0; max_size_of_vec.try_into().unwrap()];
     let mut retval_index: usize = 0;
@@ -258,3 +262,4 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_SI
     }
     return retval;
 }
+*/
