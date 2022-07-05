@@ -62,6 +62,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
             }
             let l_has_poly_base: bool = current_sequence.has_poly_base(l_window_start, l_window_end);
             if  l_has_poly_base == true{
+                l_window_start += 1;
                 continue;
             }
             for dna_chunk_size in 80..141 {
