@@ -62,7 +62,6 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
         let current_sequence = DnaSequence::new(&sequence_as_vec);
         'each_l_window: loop{
             l_window_end = l_window_start + L_LEN;
-            //eprintln!("{}", l_window_end);//l_window_end が0で初期化されてないことが発覚した
             if l_window_end >= current_sequence.len(){
                 break 'each_l_window;
             }
@@ -82,9 +81,9 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                 let r_has_poly_base: bool = current_sequence.has_poly_base(r_window_start, r_window_end);
                 if r_has_poly_base != true{
                     add_bloom_filter_cnt += 1;
-                    //counting bloom_filterに追加する
                     let lr_string = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [r_window_start, r_window_end]]);
                     let table_indice:[u32;8] = hash_from_u128(lr_string);//u128を受けてhashを返す関数
+                    eprintln!("u128: {}\thash: {:?}", lr_string, table_indice);
                     for i in 0..8{
                         if ret_array[table_indice[i] as usize] == u64::MAX{
                             //incrementしない

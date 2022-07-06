@@ -103,13 +103,13 @@ impl DnaSequence{
             let end:   usize = each_range[1];
             assert!(start < end, "DnaSequence::subsequence_as_u128 assertion failed: {} !< {}", start, end);
             //assert!(start >= 0, "DnaSequence::subsequence_as_u128 assertion failed: {} >= 0", start);
-            assert!(end < self.length, "DnaSequence::subsequence_as_u128 assertion failed: {} < {}", end, self.length);
+            assert!(end <= self.length, "DnaSequence::subsequence_as_u128 assertion failed: {} < {}", end, self.length);
             for i in start..end{
-                buf += ((self.sequence[i / 32] >> (62 - 2 * (i % 32))) & 3) as u128;
                 buf <<= 2;
                 cnt += 1;
+                buf += ((self.sequence[i / 32] >> (62 - 2 * (i % 32))) & 3) as u128;
             }
-            assert!(cnt < 64, "DnaSequence::subsequence_as_u128 assertion failed: too many DNA size. cnt reaches {}", cnt);
+            assert!(cnt <= 64, "DnaSequence::subsequence_as_u128 assertion failed: too many DNA size. cnt reaches {}", cnt);
         }
         return buf
     }
@@ -366,11 +366,6 @@ mod tests{
         assert!(obj.has_poly_base(0, 27)   == false, "has_poly_base_test_27N failed: obj.has_poly_base (0, 27)   returns {}", obj.has_poly_base(0, 27));
     }
 
-
-
-
-
-
     #[test]
     fn decode_test_8C(){
         let source: Vec<u8> = vec![b'C', b'C', b'C', b'C', b'C', b'C', b'C', b'C'];
@@ -390,6 +385,24 @@ mod tests{
     }
 
 
+    #[test]
+    fn subsequence_as_u128_test_64G(){
+        let source: String = "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        let retval = obj.subsequence_as_u128(vec![[0 as usize, 64 as usize]]);
+        let expectedvalue: u128 = 0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;
+        assert!(retval == expectedvalue, "subsequence_as_u128_test failed: expected value: {}, returned value: {}", expectedvalue, retval);
+    }
 
+    #[test]
+    fn subsequence_as_u128_test_10G(){
+        let source: String = "GGGGGGGGGG".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        let retval = obj.subsequence_as_u128(vec![[0 as usize, 10 as usize]]);
+        let expectedvalue: u128 = 0b10101010101010101010;
+        assert!(retval == expectedvalue, "subsequence_as_u128_test failed: expected value: {}, returned value: {}", expectedvalue, retval);
+    }
 }
 
