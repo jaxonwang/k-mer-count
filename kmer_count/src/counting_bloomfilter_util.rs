@@ -49,18 +49,19 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
         if record.is_empty(){
             continue 'each_read;
         }
+        l_window_start = 0;
+        l_window_end   = 0;
+        r_window_start = 0;
+        r_window_end   = 0;
         let mut add_bloom_filter_cnt: usize = 0;
         let mut total_window_cnt: usize = 0;
         eprint!("1st loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
         loop_cnt += 1;
-        //recordをVec<u8>に変更して、DNA_sequence.new()に渡す
-        //&[u8] -> Vec<u8>
         let sequence_as_vec: Vec<u8> = record.seq().to_vec();
         let current_sequence = DnaSequence::new(&sequence_as_vec);
-        //for dna_chunk_size in 80..141 {
         'each_l_window: loop{
             l_window_end = l_window_start + L_LEN;
-            eprintln!("{}", l_window_end);
+            //eprintln!("{}", l_window_end);//l_window_end が0で初期化されてないことが発覚した
             if l_window_end >= current_sequence.len(){
                 break 'each_l_window;
             }
