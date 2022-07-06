@@ -54,7 +54,8 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
         r_window_start = 0;
         r_window_end   = 0;
         let mut add_bloom_filter_cnt: usize = 0;
-        let mut total_window_cnt: usize = 0;
+        let mut l_window_cnt: usize = 0;
+
         eprint!("1st loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
         loop_cnt += 1;
         let sequence_as_vec: Vec<u8> = record.seq().to_vec();
@@ -65,7 +66,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
             if l_window_end >= current_sequence.len(){
                 break 'each_l_window;
             }
-            total_window_cnt += 1;
+            l_window_cnt += 1;
             let l_has_poly_base: bool = current_sequence.has_poly_base(l_window_start, l_window_end);
             if  l_has_poly_base == true{
                 l_window_start += 1;
@@ -77,6 +78,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                 if r_window_end >= current_sequence.len(){
                     break 'each_r_window;
                 }
+
                 let r_has_poly_base: bool = current_sequence.has_poly_base(r_window_start, r_window_end);
                 if r_has_poly_base != true{
                     add_bloom_filter_cnt += 1;
@@ -99,9 +101,10 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
             l_window_start += 1;
         }
         let end = start.elapsed();
-        eprintln!("sec: {}\t subject to add bloom filter: {}\ttotal_window_cnt: {}", end.as_secs() - previous_time.as_secs(), add_bloom_filter_cnt, total_window_cnt);
+        eprintln!("sec: {}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(), add_bloom_filter_cnt, l_window_cnt);
         previous_time = end;
     }
+    return ret_array;
 }
 
 fn hash_from_u128(source: u128) -> [u32; 8]{
