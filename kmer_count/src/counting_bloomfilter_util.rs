@@ -50,7 +50,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
             continue;
         }
         let mut add_bloom_filter_cnt: usize = 0;
-        eprintln!("1st loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
+        eprint!("1st loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
         loop_cnt += 1;
         //recordをVec<u8>に変更して、DNA_sequence.new()に渡す
         //&[u8] -> Vec<u8>
@@ -63,7 +63,6 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                 break;
             }
             let l_has_poly_base: bool = current_sequence.has_poly_base(l_window_start, l_window_end);
-            eprintln!("has_poly_base result: {}, input: {:?}", l_has_poly_base, String::from_utf8(current_sequence.decode(l_window_start, l_window_end)).unwrap());
             if  l_has_poly_base == true{
                 l_window_start += 1;
                 continue;
@@ -75,7 +74,6 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                     break;
                 }
                 let r_has_poly_base: bool = current_sequence.has_poly_base(r_window_start, r_window_end);
-                eprintln!("has_poly_base result: {}, input: {:?}", r_has_poly_base, String::from_utf8(current_sequence.decode(r_window_start, r_window_end)).unwrap());
                 if r_has_poly_base != true{
                     add_bloom_filter_cnt += 1;
                     //counting bloom_filterに追加する
