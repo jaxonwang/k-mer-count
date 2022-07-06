@@ -63,6 +63,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                 break;
             }
             let l_has_poly_base: bool = current_sequence.has_poly_base(l_window_start, l_window_end);
+            eprintln!("has_poly_base result: {}, input: {:?}", l_has_poly_base, String::from_utf8(current_sequence.decode(l_window_start, l_window_end)).unwrap());
             if  l_has_poly_base == true{
                 l_window_start += 1;
                 continue;
@@ -74,6 +75,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                     break;
                 }
                 let r_has_poly_base: bool = current_sequence.has_poly_base(r_window_start, r_window_end);
+                eprintln!("has_poly_base result: {}, input: {:?}", r_has_poly_base, String::from_utf8(current_sequence.decode(r_window_start, r_window_end)).unwrap());
                 if r_has_poly_base != true{
                     add_bloom_filter_cnt += 1;
                     //counting bloom_filterに追加する
