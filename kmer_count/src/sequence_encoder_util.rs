@@ -49,10 +49,10 @@ impl DnaSequence{
 
     pub fn decode(&self, start: usize, end: usize) -> Vec<u8>{
         assert!(start < end, "DnaSequence::decode assertion failed: {} !< {}", start, end);
-        assert!(end < self.length, "DnaSequence::decode assertion failed: {} !< {}", end, self.length);
+        assert!(end <= self.length, "DnaSequence::decode assertion failed: {} !< {}", end, self.length);
         let mut retval = Vec::new();
         let mut buf: u8;
-        for i in start..=end{
+        for i in start..end{
             buf = ((self.sequence[i / 32] >> (2 * (31 - i % 32))) & 3).try_into().unwrap();
             match buf{
                 0 => {retval.push('A' as u8);}
@@ -119,7 +119,7 @@ impl DnaSequence{
         assert!(start < end, "DnaSequence::has_poly_base assertion failed: {} !< {}", start, end);
         assert!(end - start > 3, "DnaSequence::has_poly_base assertion failed: {} - {} < 4", end, start);
         assert!(end - start < 32, "DnaSequence::has_poly_base assertion failed: length of the evaluation subject must be shorter than 32");
-        assert!(end < self.length, "DnaSequence::has_poly_base assertion failed: end coordinate must be smaller than length of the sequence. end: {}, self.lngth: {}", end, self.length);
+        assert!(end <= self.length, "DnaSequence::has_poly_base assertion failed: end coordinate must be smaller than length of the sequence. end: {}, self.lngth: {}", end, self.length);
         let mut original:  u64 = 0;
         let mut zero_ichi: u64 = 1;
         for i in start..end{
@@ -134,12 +134,12 @@ impl DnaSequence{
         let val2 = original >> 2;
         let val3 = val1 ^ val2;
         let val4 = val3 >> 1;
-        let val5 = val3 ^ val4;
+        let val5 = val3 | val4;
         let val6 = !val5;
         let val7 = val6 & zero_ichi;
         let val8 = val7 >> 2;
         let val9 = val7 >> 4;
-/*
+        let last = val7 & val8 & val9;
         println!("start:    {}", start);
         println!("end:      {}", end);
         println!("0101: {:064b}", zero_ichi);
@@ -152,8 +152,9 @@ impl DnaSequence{
         println!("val7: {:064b}", val7);
         println!("val8: {:064b}", val8);
         println!("val9: {:064b}", val9);
-*/
-        return val7 & val8 & val9 != 0;
+        println!("last: {:064b}", last);
+
+        return last != 0;
         //shift演算でポリ塩基の情報がおっこちてる
     }
 }
@@ -342,13 +343,40 @@ mod tests{
     }
 
     #[test]
+    fn has_poly_base_test_27N_1(){
+        let source: String = "ATTCATACTTAATACTGTATCAGTTGA".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_poly_base(0, 27)   == false, "has_poly_base_test_27N failed: obj.has_poly_base (0, 27)   returns {}", obj.has_poly_base(0, 27));
+    }
+    #[test]
+    fn has_poly_base_test_27N_2(){
+        let source: String = "TTCATACTTAATACTGTATCAGTTGAG".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_poly_base(0, 27)   == false, "has_poly_base_test_27N failed: obj.has_poly_base (0, 27)   returns {}", obj.has_poly_base(0, 27));
+    }
+    #[test]
+    fn has_poly_base_test_27N_3(){
+        let source: String = "TCATACTTAATACTGTATCAGTTGAGT".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_poly_base(0, 27)   == false, "has_poly_base_test_27N failed: obj.has_poly_base (0, 27)   returns {}", obj.has_poly_base(0, 27));
+    }
+
+
+
+
+
+
+    #[test]
     fn decode_test_8C(){
         let source: Vec<u8> = vec![b'C', b'C', b'C', b'C', b'C', b'C', b'C', b'C'];
         let obj = DnaSequence::new(&source);
-        assert!(obj.decode(0, 4) == vec![67, 67, 67, 67, 67            ], "decode_test_8C failed: obj.decode(0, 4) returns {:?}", obj.decode(0, 4));
-        assert!(obj.decode(0, 5) == vec![67, 67, 67, 67, 67, 67        ], "decode_test_8C failed: obj.decode(0, 5) returns {:?}", obj.decode(0, 5));
-        assert!(obj.decode(0, 6) == vec![67, 67, 67, 67, 67, 67, 67    ], "decode_test_8C failed: obj.decode(0, 6) returns {:?}", obj.decode(0, 6));
-        assert!(obj.decode(0, 7) == vec![67, 67, 67, 67, 67, 67, 67, 67], "decode_test_8C failed: obj.decode(0, 7) returns {:?}", obj.decode(0, 7));
+        assert!(obj.decode(0, 4) == vec![67, 67, 67, 67            ], "decode_test_8C failed: obj.decode(0, 4) returns {:?}", obj.decode(0, 4));
+        assert!(obj.decode(0, 5) == vec![67, 67, 67, 67, 67        ], "decode_test_8C failed: obj.decode(0, 5) returns {:?}", obj.decode(0, 5));
+        assert!(obj.decode(0, 6) == vec![67, 67, 67, 67, 67, 67    ], "decode_test_8C failed: obj.decode(0, 6) returns {:?}", obj.decode(0, 6));
+        assert!(obj.decode(0, 7) == vec![67, 67, 67, 67, 67, 67, 67], "decode_test_8C failed: obj.decode(0, 7) returns {:?}", obj.decode(0, 7));
     }
 
     #[test]
@@ -356,7 +384,7 @@ mod tests{
         let source: String = "GAACGACTGTTTTTACTATAAATCCTTCCTTCCTAGCCTATCATTTCTGGAGTCCTTGGTGAACTGTAGGAAGCTCTGAACACACACGTTCCCTTGGATTCGTACCTATGAATACTCCGT".to_string();
         let v: Vec<u8> = source.into_bytes();
         let obj = DnaSequence::new(&v);
-        assert!(obj.decode(0, 119) == v, "decode_test_120N failed: obj.decode(0, 120)\nv:      {:?}\nretval: {:?}", String::from_utf8(v).unwrap(), String::from_utf8(obj.decode(0, 119)).unwrap());
+        assert!(obj.decode(0, 120) == v, "decode_test_120N failed: obj.decode(0, 120)\nv:      {:?}\nretval: {:?}", String::from_utf8(v).unwrap(), String::from_utf8(obj.decode(0, 120)).unwrap());
     }
 
 
