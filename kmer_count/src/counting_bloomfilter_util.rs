@@ -47,7 +47,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
     'each_read: loop {
         reader.read(&mut record).unwrap();
         if record.is_empty(){
-            continue 'each_read;
+            break 'each_read;
         }
         l_window_start = 0;
         l_window_end   = 0;
