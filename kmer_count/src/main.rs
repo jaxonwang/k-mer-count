@@ -57,9 +57,9 @@ fn main() {
     eprintln!("finish calling build_counting_bloom_filter");
 
     //2段目
-    eprintln!("start calling build_counting_bloom_filter");
+    eprintln!("start calling number_of_high_occurence_kmer");
     let high_occr_bloomfilter_table: Box<[bool; BLOOMFILTER_TABLE_SIZE]> = number_of_high_occurence_kmer(&counting_bloom_filter_table, path);
-    eprintln!("finish calling build_counting_bloom_filter");
+    eprintln!("finish calling number_of_high_occurence_kmer");
     //3段目
     //let mut high_occurence_kmer: Vec<u128> = pick_up_high_occurence_kmer(&counting_bloom_filter_table, path, high_occr_cnt);
 
