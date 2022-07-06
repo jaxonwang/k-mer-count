@@ -27,7 +27,7 @@ pub const THRESHOLD_OCCURENCE: u64 = 100;
 //全てのL, Rと、hash値を出力する
 //部分配列のdecoderを書き、テストする
 pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SIZE]>{
-    let mut l_window_start: usize = 0;
+    let mut l_window_start: usize;
     let mut l_window_end:   usize;
     let mut r_window_start: usize;
     let mut r_window_end:   usize;
@@ -77,19 +77,18 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                 if r_window_end >= current_sequence.len(){
                     break 'each_r_window;
                 }
-
                 let r_has_poly_base: bool = current_sequence.has_poly_base(r_window_start, r_window_end);
                 if r_has_poly_base != true{
                     add_bloom_filter_cnt += 1;
                     let lr_string = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [r_window_start, r_window_end]]);
                     let table_indice:[u32;8] = hash_from_u128(lr_string);//u128を受けてhashを返す関数
-                    eprintln!("u128: {}\thash: {:?}", lr_string, table_indice);
                     for i in 0..8{
-                        if ret_array[table_indice[i] as usize] == u64::MAX{
+                        let idx: usize = table_indice[i] as usize;
+                        if ret_array[idx] == u64::MAX{
                             //incrementしない
                         }else{
-                            if rng.gen::<u64>() < (u64::MAX >> (64 - ret_array[table_indice[i] as usize].leading_zeros())){
-                                ret_array[table_indice[i] as usize] += 1;
+                            if rng.gen::<u64>() < (u64::MAX >> (64 - ret_array[idx].leading_zeros())){
+                                ret_array[idx] += 1;
                             }
                         }
                     }
@@ -127,9 +126,9 @@ fn hash_from_u128(source: u128) -> [u32; 8]{
     return ret_val;
 
 }
-/*
-pub fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &Box<[u64; BLOOMFILTER_TABLE_SIZE]>, query: &[u8;L_LEN + R_LEN]) -> u64{
-    let indice: [u32;8] = hasher(query);
+
+fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &Box<[u64; BLOOMFILTER_TABLE_SIZE]>, query: u128) -> u64{
+    let indice: [u32;8] = hash_from_u128(query);
     let mut retval: u64 = u64::MAX;
     for index in indice{
         if counting_bloomfilter_table[index as usize] < retval{
@@ -138,83 +137,76 @@ pub fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_tabl
     }
     return retval;
 }
-*/
 
-/*
-pub fn hasher(source: &[u8;L_LEN + R_LEN]) -> [u32;8]{
-    let mut ret_val: [u32;8] = [0;8];
-    let mut hasher = Sha256::new();
-    hasher.update(source);
-    let result = hasher.finalize();
-    let sha256_bit_array = result.as_slice();//&[u8;32]
-    for i in 0..8{
-        for j in 0..4{
-            ret_val[i] += sha256_bit_array[i * 8 + j] as u32;
-            ret_val[i] <<= 8;
-        }
-    }
-    return ret_val;
-}
-*/
-//2週目。出現頻度がある閾値を越えるk-merの個数を返す。
-//3週目ではこの個数を受けて、vecのメモリを確保して出力用vecを用意して、再びファイルを舐める。
-/*
-pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_SIZE]>, path: &str) -> u64{
-    let mut retval: u64 = 0;
-    let mut window_start: usize;
-    let mut l_start: usize;
-    let mut l_end:   usize;
-    let mut r_start: usize;
-    let mut r_end:   usize;
-    let mut m_len:   usize;
+
+pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_SIZE]>, path: &str) -> Box<[bool; BLOOMFILTER_TABLE_SIZE]>{
+    let mut retval: Box<[bool; BLOOMFILTER_TABLE_SIZE]> = Box::new([false; BLOOMFILTER_TABLE_SIZE]);
+    let mut l_window_start: usize;
+    let mut l_window_end:   usize;
+    let mut r_window_start: usize;
+    let mut r_window_end:   usize;
     let mut loop_cnt:usize = 0;
-
     let file = File::open(path).expect("Error during opening the file");
+
     let mut reader = faReader::new(file);
     let mut record = faRecord::new();
-    let mut buf: u64 = 0;
-    let mut lr_string: [u8;L_LEN + R_LEN] = [64; L_LEN + R_LEN];
 
-    loop {
+    let start = Instant::now();
+    let mut previous_time = start.elapsed();
+    'each_read: loop {
         reader.read(&mut record).unwrap();
         if record.is_empty(){
-            break;
+            break 'each_read;
         }
-        eprintln!("2nd loop: {:09?}, current record id:{:?}\tlength: {:?}", loop_cnt, record.id(), record.seq().len());
-        loop_cnt += 1;
-        for dna_chunk_size in 80..141 {
-            window_start = 0;
-            loop{
-                m_len = dna_chunk_size - L_LEN - R_LEN;
-                l_start = window_start;
-                l_end   = l_start + L_LEN;
-                r_start = l_end + m_len;
-                r_end   = r_start + R_LEN;
-                window_start += 1;
+        l_window_start = 0;
+        l_window_end   = 0;
+        r_window_start = 0;
+        r_window_end   = 0;
 
-                if r_end > record.seq().len(){
-                    break;
+        eprint!("2nd loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
+        loop_cnt += 1;
+        let sequence_as_vec: Vec<u8> = record.seq().to_vec();
+        let current_sequence = DnaSequence::new(&sequence_as_vec);
+        'each_l_window: loop{
+            l_window_end = l_window_start + L_LEN;
+            if l_window_end >= current_sequence.len(){
+                break 'each_l_window;
+            }
+            let l_has_poly_base: bool = current_sequence.has_poly_base(l_window_start, l_window_end);
+            if  l_has_poly_base == true{
+                l_window_start += 1;
+                continue 'each_l_window;
+            }
+            'each_r_window: for dna_chunk_size in 80..141 {
+                r_window_start = l_window_start + dna_chunk_size - R_LEN;
+                r_window_end   = r_window_start + R_LEN;
+                if r_window_end >= current_sequence.len(){
+                    break 'each_r_window;
                 }
-                let l = &record.seq()[l_start..l_end];
-                let r = &record.seq()[r_start..r_end];
-                for i in 0..L_LEN{
-                    lr_string[i] = l[i];
-                }
-                for i in 0..R_LEN{
-                    lr_string[i + L_LEN] = r[i];
-                }
-                let table_indice:[u32;8] = hasher(&lr_string);
-                let tmp: u64 = count_occurence_from_counting_bloomfilter_table(&source_table, &lr_string);
-                if tmp >= THRESHOLD_OCCURENCE{
-                    retval = retval + 1;
+                let r_has_poly_base: bool = current_sequence.has_poly_base(r_window_start, r_window_end);
+                if r_has_poly_base != true{
+                    let lr_string: u128 = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [r_window_start, r_window_end]]);
+                    let table_indice:[u32;8] = hash_from_u128(lr_string);
+                    let occurence: u64 = count_occurence_from_counting_bloomfilter_table(source_table, lr_string);
+                    if occurence >= 12{ //2^12回以上出てる時
+                        for i in 0..8{
+                            let idx: usize = table_indice[i] as usize;
+                            retval[idx] = true;
+                        }
+                    }
+                }else{//ポリ塩基を持ってるとき
+                    continue 'each_r_window;
                 }
             }
+            l_window_start += 1;
         }
+        let end = start.elapsed();
+        eprintln!("sec: {}\t", end.as_secs() - previous_time.as_secs());
+        previous_time = end;
     }
     return retval;
 }
 
-*/
 //3週目。
 
 /*

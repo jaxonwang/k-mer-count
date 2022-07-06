@@ -33,7 +33,7 @@ use std::env;
 //use kmer_count::encoder_util::L_LEN;
 //use kmer_count::encoder_util::R_LEN;
 use kmer_count::counting_bloomfilter_util::BLOOMFILTER_TABLE_SIZE;
-use kmer_count::counting_bloomfilter_util::{build_counting_bloom_filter};
+use kmer_count::counting_bloomfilter_util::{build_counting_bloom_filter, number_of_high_occurence_kmer};
 
 
 //const TOW_SQ20: u128 = 2_u128.pow(20);
@@ -57,7 +57,9 @@ fn main() {
     eprintln!("finish calling build_counting_bloom_filter");
 
     //2段目
-    //let high_occr_cnt: u64 = number_of_high_occurence_kmer(&counting_bloom_filter_table, path);
+    eprintln!("start calling build_counting_bloom_filter");
+    let high_occr_bloomfilter_table: Box<[bool; BLOOMFILTER_TABLE_SIZE]> = number_of_high_occurence_kmer(&counting_bloom_filter_table, path);
+    eprintln!("finish calling build_counting_bloom_filter");
     //3段目
     //let mut high_occurence_kmer: Vec<u128> = pick_up_high_occurence_kmer(&counting_bloom_filter_table, path, high_occr_cnt);
 
