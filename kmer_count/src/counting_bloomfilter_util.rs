@@ -23,6 +23,9 @@ pub const BLOOMFILTER_TABLE_SIZE: usize = u32::MAX as usize + 1;
 pub const THRESHOLD_OCCURENCE: u64 = 100;
 
 
+
+//全てのL, Rと、hash値を出力する
+//部分配列のdecoderを書き、テストする
 pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SIZE]>{
     let mut l_window_start: usize = 0;
     let mut l_window_end:   usize;
@@ -47,7 +50,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
             continue;
         }
         let mut add_bloom_filter_cnt: usize = 0;
-        eprint!("1st loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
+        eprintln!("1st loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
         loop_cnt += 1;
         //recordをVec<u8>に変更して、DNA_sequence.new()に渡す
         //&[u8] -> Vec<u8>
@@ -68,7 +71,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                 r_window_start = l_window_start + dna_chunk_size - R_LEN;
                 r_window_end   = r_window_start + R_LEN;
                 if r_window_end >= current_sequence.len(){
-                    continue;
+                    break;
                 }
                 let r_has_poly_base: bool = current_sequence.has_poly_base(r_window_start, r_window_end);
                 if r_has_poly_base != true{
@@ -85,6 +88,8 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                             }
                         }
                     }
+                }else{//ポリ塩基を持ってるとき
+                    continue;
                 }
             }
             l_window_start += 1;

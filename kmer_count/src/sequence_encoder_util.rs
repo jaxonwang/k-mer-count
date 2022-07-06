@@ -47,11 +47,13 @@ impl DnaSequence{
         return self.length;
     }
 
-    pub fn decode(&self) -> Vec<u8>{
+    pub fn decode(&self, start: usize, end: usize) -> Vec<u8>{
+        assert!(start < end, "DnaSequence::decode assertion failed: {} !< {}", start, end);
+        assert!(end < self.length, "DnaSequence::decode assertion failed: {} !< {}", end, self.length);
         let mut retval = Vec::new();
         let mut buf: u8;
-        for i in 0..self.length{
-            buf = ((self.sequence[i / 32] >> (2 * (i % 32))) & 3).try_into().unwrap();
+        for i in start..=end{
+            buf = ((self.sequence[i / 32] >> (2 * (31 - i % 32))) & 3).try_into().unwrap();
             match buf{
                 0 => {retval.push('A' as u8);}
                 1 => {retval.push('C' as u8);}
@@ -339,6 +341,23 @@ mod tests{
         assert!(obj.has_poly_base(28, 39) == false, "has_poly_base_test_120N failed: obj.has_poly_base (28, 39) returns {}", obj.has_poly_base(0, 7));
     }
 
+    #[test]
+    fn decode_test_8C(){
+        let source: Vec<u8> = vec![b'C', b'C', b'C', b'C', b'C', b'C', b'C', b'C'];
+        let obj = DnaSequence::new(&source);
+        assert!(obj.decode(0, 4) == vec![67, 67, 67, 67, 67            ], "decode_test_8C failed: obj.decode(0, 4) returns {:?}", obj.decode(0, 4));
+        assert!(obj.decode(0, 5) == vec![67, 67, 67, 67, 67, 67        ], "decode_test_8C failed: obj.decode(0, 5) returns {:?}", obj.decode(0, 5));
+        assert!(obj.decode(0, 6) == vec![67, 67, 67, 67, 67, 67, 67    ], "decode_test_8C failed: obj.decode(0, 6) returns {:?}", obj.decode(0, 6));
+        assert!(obj.decode(0, 7) == vec![67, 67, 67, 67, 67, 67, 67, 67], "decode_test_8C failed: obj.decode(0, 7) returns {:?}", obj.decode(0, 7));
+    }
+
+    #[test]
+    fn decode_test_120N(){
+        let source: String = "GAACGACTGTTTTTACTATAAATCCTTCCTTCCTAGCCTATCATTTCTGGAGTCCTTGGTGAACTGTAGGAAGCTCTGAACACACACGTTCCCTTGGATTCGTACCTATGAATACTCCGT".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.decode(0, 119) == v, "decode_test_120N failed: obj.decode(0, 120)\nv:      {:?}\nretval: {:?}", String::from_utf8(v).unwrap(), String::from_utf8(obj.decode(0, 119)).unwrap());
+    }
 
 
 

@@ -52,7 +52,10 @@ fn main() {
     eprintln!("loading {:?} done", path);
 
     //1段目
+    eprintln!("start calling build_counting_bloom_filter");
     let counting_bloom_filter_table: Box<[u64; BLOOMFILTER_TABLE_SIZE]> = build_counting_bloom_filter(path);
+    eprintln!("finish calling build_counting_bloom_filter");
+
     //2段目
     //let high_occr_cnt: u64 = number_of_high_occurence_kmer(&counting_bloom_filter_table, path);
     //3段目
