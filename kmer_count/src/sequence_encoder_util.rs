@@ -140,6 +140,7 @@ impl DnaSequence{
         let val8 = val7 >> 2;
         let val9 = val7 >> 4;
         let last = val7 & val8 & val9;
+/*
         println!("start:    {}", start);
         println!("end:      {}", end);
         println!("0101: {:064b}", zero_ichi);
@@ -154,6 +155,7 @@ impl DnaSequence{
         println!("val9: {:064b}", val9);
         println!("last: {:064b}", last);
 
+*/
         return last != 0;
         //shift演算でポリ塩基の情報がおっこちてる
     }
