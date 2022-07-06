@@ -60,8 +60,9 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
         //for dna_chunk_size in 80..141 {
         'each_l_window: loop{
             l_window_end = l_window_start + L_LEN;
+            eprintln!("{}", l_window_end);
             if l_window_end >= current_sequence.len(){
-                break;
+                break 'each_l_window;
             }
             total_window_cnt += 1;
             let l_has_poly_base: bool = current_sequence.has_poly_base(l_window_start, l_window_end);
