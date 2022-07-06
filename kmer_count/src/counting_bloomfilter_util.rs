@@ -44,10 +44,10 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
     let mut rng = rand::thread_rng();
     let start = Instant::now();
     let mut previous_time = start.elapsed();
-    loop {
+    'each_read: loop {
         reader.read(&mut record).unwrap();
         if record.is_empty(){
-            continue;
+            continue 'each_read;
         }
         let mut add_bloom_filter_cnt: usize = 0;
         let mut total_window_cnt: usize = 0;
@@ -58,7 +58,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
         let sequence_as_vec: Vec<u8> = record.seq().to_vec();
         let current_sequence = DnaSequence::new(&sequence_as_vec);
         //for dna_chunk_size in 80..141 {
-        loop{
+        'each_l_window: loop{
             l_window_end = l_window_start + L_LEN;
             if l_window_end >= current_sequence.len(){
                 break;
@@ -67,13 +67,13 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
             let l_has_poly_base: bool = current_sequence.has_poly_base(l_window_start, l_window_end);
             if  l_has_poly_base == true{
                 l_window_start += 1;
-                continue;
+                continue 'each_l_window;
             }
-            for dna_chunk_size in 80..141 {
+            'each_r_window: for dna_chunk_size in 80..141 {
                 r_window_start = l_window_start + dna_chunk_size - R_LEN;
                 r_window_end   = r_window_start + R_LEN;
                 if r_window_end >= current_sequence.len(){
-                    break;
+                    break 'each_r_window;
                 }
                 let r_has_poly_base: bool = current_sequence.has_poly_base(r_window_start, r_window_end);
                 if r_has_poly_base != true{
@@ -91,7 +91,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                         }
                     }
                 }else{//ポリ塩基を持ってるとき
-                    continue;
+                    continue 'each_r_window;
                 }
             }
             l_window_start += 1;
