@@ -50,9 +50,6 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
             break 'each_read;
         }
         l_window_start = 0;
-        l_window_end   = 0;
-        r_window_start = 0;
-        r_window_end   = 0;
         let mut add_bloom_filter_cnt: usize = 0;
         let mut l_window_cnt: usize = 0;
 
@@ -139,8 +136,9 @@ fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &
 }
 
 
-pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_SIZE]>, path: &str) -> Box<[bool; BLOOMFILTER_TABLE_SIZE]>{
-    let mut retval: Box<[bool; BLOOMFILTER_TABLE_SIZE]> = Box::new([false; BLOOMFILTER_TABLE_SIZE]);
+pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_SIZE]>, path: &str) -> (Box<[bool; BLOOMFILTER_TABLE_SIZE]>, usize){
+    let mut ret_table: Box<[bool; BLOOMFILTER_TABLE_SIZE]> = Box::new([false; BLOOMFILTER_TABLE_SIZE]);
+    let mut ret_val: usize = 0;
     let mut l_window_start: usize;
     let mut l_window_end:   usize;
     let mut r_window_start: usize;
@@ -159,9 +157,6 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
             break 'each_read;
         }
         l_window_start = 0;
-        l_window_end   = 0;
-        r_window_start = 0;
-        r_window_end   = 0;
 
         eprint!("2nd loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
         loop_cnt += 1;
@@ -189,9 +184,10 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
                     let table_indice:[u32;8] = hash_from_u128(lr_string);
                     let occurence: u64 = count_occurence_from_counting_bloomfilter_table(source_table, lr_string);
                     if occurence >= 12{ //2^12回以上出てる時
+                        ret_val += 1;
                         for i in 0..8{
                             let idx: usize = table_indice[i] as usize;
-                            retval[idx] = true;
+                            ret_table[idx] = true;
                         }
                     }
                 }else{//ポリ塩基を持ってるとき
@@ -204,67 +200,89 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
         eprintln!("sec: {}\t", end.as_secs() - previous_time.as_secs());
         previous_time = end;
     }
-    return retval;
+    return (ret_table, ret_val);
 }
 
-//3週目。
 
-/*
-pub fn pick_up_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_SIZE]>, path: &str, max_size_of_vec: u64) -> Vec<u128>{
-    let mut retval: Vec<u128> = vec![0; max_size_of_vec.try_into().unwrap()];
-    let mut retval_index: usize = 0;
-    let mut window_start: usize;
-    let mut l_start: usize;
-    let mut l_end:   usize;
-    let mut r_start: usize;
-    let mut r_end:   usize;
-    let mut m_len:   usize;
-    let mut loop_cnt:usize = 0;
 
-    let file = File::open(path).expect("Error during opening the file");
-    let mut reader = faReader::new(file);
-    let mut record = faRecord::new();
-    let mut buf: u64 = 0;
-    let mut lr_string: [u8;L_LEN + R_LEN] = [64; L_LEN + R_LEN];
-
-    loop {
-        reader.read(&mut record).unwrap();
-        if record.is_empty(){
-            break;
-        }
-        eprintln!("3rd loop: {:09?}, current record id:{:?}\tlength: {:?}", loop_cnt, record.id(), record.seq().len());
-        loop_cnt += 1;
-        for dna_chunk_size in 80..141 {
-            window_start = 0;
-            loop{
-                m_len = dna_chunk_size - L_LEN - R_LEN;
-                l_start = window_start;
-                l_end   = l_start + L_LEN;
-                r_start = l_end + m_len;
-                r_end   = r_start + R_LEN;
-                window_start += 1;
-
-                if r_end > record.seq().len(){
-                    break;
-                }
-                let l = &record.seq()[l_start..l_end];
-                let r = &record.seq()[r_start..r_end];
-                for i in 0..L_LEN{
-                    lr_string[i] = l[i];
-                }
-                for i in 0..R_LEN{
-                    lr_string[i + L_LEN] = r[i];
-                }
-                //ここら辺に、閾値回数以上出現するk-merを処理するコードを書く
-                let table_indice:[u32;8] = hasher(&lr_string);
-                let tmp: u64 = count_occurence_from_counting_bloomfilter_table(&source_table, &lr_string);
-                if tmp >= THRESHOLD_OCCURENCE{//2^10相当。本当は引数で基準を変えられるようにしたい。
-                    retval[retval_index] = encode_dna_seq_2_u128(&lr_string);
-                    retval_index += 1;
-                }
-            }
-        }
+fn refer_bloom_filter_table(bloomfilter_table: &Box<[bool; BLOOMFILTER_TABLE_SIZE]>, query: u128) -> bool {
+    let indice: [u32;8] = hash_from_u128(query);
+    let mut retval: bool = false;
+    for index in indice{
+        retval |= bloomfilter_table[index as usize]
     }
     return retval;
 }
+
+
+//3週目。
+/*
+ファイルを舐めて、個数を確定させてからVecを確保する。
 */
+
+pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_SIZE]>, path: &str, max_size_of_list: usize) -> Vec<u128>{
+    let mut ret_table: Box<[bool; BLOOMFILTER_TABLE_SIZE]> = Box::new([false; BLOOMFILTER_TABLE_SIZE]);
+    let mut ret_val: usize = 0;
+    let mut l_window_start: usize;
+    let mut l_window_end:   usize;
+    let mut r_window_start: usize;
+    let mut r_window_end:   usize;
+    let mut loop_cnt:usize = 0;
+    let file = File::open(path).expect("Error during opening the file");
+
+    let mut ret_vec = vec![0 as u128; max_size_of_list];
+    let mut ret_vec_cnt: usize = 0;
+
+    let mut reader = faReader::new(file);
+    let mut record = faRecord::new();
+
+    let start = Instant::now();
+    let mut previous_time = start.elapsed();
+    'each_read: loop {
+        reader.read(&mut record).unwrap();
+        if record.is_empty(){
+            break 'each_read;
+        }
+        l_window_start = 0;
+
+        eprint!("3rd loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
+        loop_cnt += 1;
+        let sequence_as_vec: Vec<u8> = record.seq().to_vec();
+        let current_sequence = DnaSequence::new(&sequence_as_vec);
+        'each_l_window: loop{
+            l_window_end = l_window_start + L_LEN;
+            if l_window_end >= current_sequence.len(){
+                break 'each_l_window;
+            }
+            let l_has_poly_base: bool = current_sequence.has_poly_base(l_window_start, l_window_end);
+            if  l_has_poly_base == true{
+                l_window_start += 1;
+                continue 'each_l_window;
+            }
+            'each_r_window: for dna_chunk_size in 80..141 {
+                r_window_start = l_window_start + dna_chunk_size - R_LEN;
+                r_window_end   = r_window_start + R_LEN;
+                if r_window_end >= current_sequence.len(){
+                    break 'each_r_window;
+                }
+                let r_has_poly_base: bool = current_sequence.has_poly_base(r_window_start, r_window_end);
+                if r_has_poly_base != true{
+                    let lr_string: u128         = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [r_window_start, r_window_end]]);
+                    let table_indice:[u32;8]    = hash_from_u128(lr_string);
+                    let is_high_occr_kmer: bool = refer_bloom_filter_table(source_table, lr_string);
+                    if is_high_occr_kmer == true{
+                        ret_vec[ret_vec_cnt] = lr_string;
+                        ret_vec_cnt += 1;
+                    }
+                }else{//ポリ塩基を持ってるとき
+                    continue 'each_r_window;
+                }
+            }
+            l_window_start += 1;
+        }
+        let end = start.elapsed();
+        eprintln!("sec: {}\t", end.as_secs() - previous_time.as_secs());
+        previous_time = end;
+    }
+    return ret_vec;
+}
