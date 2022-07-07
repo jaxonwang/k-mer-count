@@ -95,6 +95,7 @@ impl DnaSequence{
         return DnaSequence{sequence: retval, length: length}
     }
 
+//subsequence_as_u128は右詰め
     pub fn subsequence_as_u128(&self, ranges: Vec<[usize; 2]>) -> u128{
         let mut buf: u128 = 0;
         let mut cnt: usize = 0;

@@ -83,9 +83,9 @@ fn main() {
     let mut high_occurence_kmer: Vec<u128> = pick_up_high_occurence_kmer(&high_occr_bloomfilter_table, path, occr_with_mergin);
     eprintln!("finish calling pick_up_high_occurence_kmer");
 
+
     high_occurence_kmer.voracious_mt_sort(8);
     for each_kmer in high_occurence_kmer{
-        println!("{:?}", decode_u128_2_dna_seq(&each_kmer, 54));
+        println!("{:?}\t{:0128b}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap(), each_kmer);
     }
-
 }
