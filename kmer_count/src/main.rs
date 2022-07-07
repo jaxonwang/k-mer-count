@@ -85,7 +85,11 @@ fn main() {
 
 
     high_occurence_kmer.voracious_mt_sort(8);
+    let mut previous_kmer: u128 = 0;
     for each_kmer in high_occurence_kmer{
-        println!("{:?}\t{:0128b}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap(), each_kmer);
+        if previous_kmer != each_kmer{
+            println!("{:?}\t{:0128b}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap(), each_kmer);
+        }
+        previous_kmer = each_kmer;
     }
 }
