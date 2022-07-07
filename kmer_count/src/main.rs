@@ -62,7 +62,7 @@ fn main() {
     //let output_path = &args[2];
 
     eprintln!("input  file: {:?}",  input_path);
-    eprintln!("output file: {:?}", output_path);
+    //eprintln!("output file: {:?}", output_path);
 
 //    let file = File::open(input_path).expect("Error during opening the file");
 //    let mut reader = faReader::new(file);
