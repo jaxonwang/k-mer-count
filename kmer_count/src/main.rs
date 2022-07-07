@@ -59,7 +59,7 @@ fn decode_u128_2_dna_seq(source:&u128, char_size: usize) -> Vec<u8>{
 fn main() {
     let args: Vec<String> = env::args().collect();
     let  input_path = &args[1];
-    let output_path = &args[2];
+    //let output_path = &args[2];
 
     eprintln!("input  file: {:?}",  input_path);
     eprintln!("output file: {:?}", output_path);
