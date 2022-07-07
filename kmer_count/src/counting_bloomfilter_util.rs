@@ -53,7 +53,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
         let mut add_bloom_filter_cnt: usize = 0;
         let mut l_window_cnt: usize = 0;
 
-        eprint!("\r1st loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
+        eprint!("1st loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
         loop_cnt += 1;
         let sequence_as_vec: Vec<u8> = record.seq().to_vec();
         let current_sequence = DnaSequence::new(&sequence_as_vec);
@@ -96,7 +96,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
             l_window_start += 1;
         }
         let end = start.elapsed();
-        eprint!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
+        eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
         previous_time = end;
     }
     return ret_array;
@@ -158,7 +158,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
         }
         l_window_start = 0;
 
-        eprint!("\r1st loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
+        eprint!("2nd loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
         loop_cnt += 1;
         let sequence_as_vec: Vec<u8> = record.seq().to_vec();
         let current_sequence = DnaSequence::new(&sequence_as_vec);
@@ -197,7 +197,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
             l_window_start += 1;
         }
         let end = start.elapsed();
-        eprint!("sec: {}.{:03}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos());
+        eprintln!("sec: {}.{:03}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos());
         previous_time = end;
     }
     return (ret_table, ret_val);
@@ -207,9 +207,9 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
 
 fn refer_bloom_filter_table(bloomfilter_table: &Box<[bool; BLOOMFILTER_TABLE_SIZE]>, query: u128) -> bool {
     let indice: [u32;8] = hash_from_u128(query);
-    let mut retval: bool = false;
+    let mut retval: bool = true;
     for index in indice{
-        retval |= bloomfilter_table[index as usize]
+        retval &= bloomfilter_table[index as usize]
     }
     return retval;
 }
@@ -245,7 +245,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
         }
         l_window_start = 0;
 
-        eprint!("\r1st loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
+        eprint!("3rd loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
         loop_cnt += 1;
         let sequence_as_vec: Vec<u8> = record.seq().to_vec();
         let current_sequence = DnaSequence::new(&sequence_as_vec);
@@ -281,7 +281,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
             l_window_start += 1;
         }
         let end = start.elapsed();
-        eprint!("sec: {}.{:03}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos());
+        eprintln!("sec: {}.{:03}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos());
         previous_time = end;
     }
     return ret_vec;
