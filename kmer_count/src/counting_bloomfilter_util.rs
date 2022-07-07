@@ -187,11 +187,11 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
                     let lr_string: u128 = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [r_window_start, r_window_end]]);
                     let table_indice:[u32;8] = hash_from_u128(lr_string);
                     let occurence: u64 = count_occurence_from_counting_bloomfilter_table(source_table, table_indice);
-                    if occurence >= 12{ //2^12回以上出てる時
+                    if occurence >= 20{ //2^12回以上出てる時
                         ret_val += 1;
                         for i in 0..8{
                             let idx: usize = table_indice[i] as usize;
-                            ret_table[idx] = true;
+                            ret_table[idx] |= true;
                         }
                     }
                 }else{//ポリ塩基を持ってるとき
@@ -226,7 +226,6 @@ fn refer_bloom_filter_table(bloomfilter_table: &Box<[bool; BLOOMFILTER_TABLE_SIZ
 
 pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_SIZE]>, path: &str, max_size_of_list: usize) -> Vec<u128>{
     let mut ret_table: Box<[bool; BLOOMFILTER_TABLE_SIZE]> = Box::new([false; BLOOMFILTER_TABLE_SIZE]);
-    let mut ret_val: usize = 0;
     let mut l_window_start: usize;
     let mut l_window_end:   usize;
     let mut r_window_start: usize;

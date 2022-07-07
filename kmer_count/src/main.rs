@@ -41,7 +41,7 @@ use kmer_count::counting_bloomfilter_util::{build_counting_bloom_filter, number_
 
 fn decode_u128_2_dna_seq(source:&u128, char_size: usize) -> Vec<u8>{
     let mut result: Vec<u8> = Vec::new();
-    let mut base = 0;
+    let mut base;
     for i in 0..char_size{
         base = source >> 2 * (char_size - 1 - i) & 3;
         match base{
@@ -92,7 +92,7 @@ fn main() {
     let mut previous_kmer: u128 = 0;
     for each_kmer in high_occurence_kmer{
         if previous_kmer != each_kmer{
-            println!("{:?}\t{:0128b}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap(), each_kmer);
+            println!("{:?}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap());
         }
         previous_kmer = each_kmer;
     }
