@@ -230,7 +230,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
     let mut loop_cnt:usize = 0;
     let file = File::open(path).expect("Error during opening the file");
 
-    let mut ret_vec = vec![0 as u128; max_size_of_list];
+    let mut ret_vec = vec![0 as u128; max_size_of_list + 1];
     let mut ret_vec_cnt: usize = 0;
 
     let mut reader = faReader::new(file);

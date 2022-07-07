@@ -61,6 +61,7 @@ fn main() {
     let (high_occr_bloomfilter_table, occurence) = number_of_high_occurence_kmer(&counting_bloom_filter_table, path);
     eprintln!("finish calling number_of_high_occurence_kmer");
     //3段目
+    eprintln!("Vec size is {}", occurence);
     let occr_with_mergin = ((occurence as f64) * 1.2).ceil() as usize;
     let high_occurence_kmer: Vec<u128> = pick_up_high_occurence_kmer(&high_occr_bloomfilter_table, path, occr_with_mergin);
 
