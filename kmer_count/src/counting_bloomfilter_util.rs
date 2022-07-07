@@ -19,6 +19,10 @@ use bio::io::fasta::Record as faRecord;
 //use bio::io::fastq::FastqRead;
 use bio::io::fasta::FastaRead;
 
+
+use std::io::{self, Read, Write, BufReader, BufWriter};
+
+
 pub const BLOOMFILTER_TABLE_SIZE: usize = u32::MAX as usize + 1;
 pub const THRESHOLD_OCCURENCE: u64 = 100;
 
@@ -79,12 +83,13 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                     add_bloom_filter_cnt += 1;
                     let lr_string = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [r_window_start, r_window_end]]);
                     let table_indice:[u32;8] = hash_from_u128(lr_string);//u128を受けてhashを返す関数
-                    for i in 0..8{
-                        let idx: usize = table_indice[i] as usize;
-                        if ret_array[idx] == u64::MAX{
-                            //incrementしない
-                        }else{
-                            if rng.gen::<u64>() < (u64::MAX >> (64 - ret_array[idx].leading_zeros())){
+                    let occurence = count_occurence_from_counting_bloomfilter_table(&ret_array, table_indice);
+                    if rng.gen::<u64>() < (u64::MAX >> (64 - occurence.leading_zeros())){
+                        for i in 0..8{
+                            let idx: usize = table_indice[i] as usize;
+                            if ret_array[idx] == u64::MAX{
+                                //incrementしない
+                            }else{
                                 ret_array[idx] += 1;
                             }
                         }
@@ -124,8 +129,7 @@ fn hash_from_u128(source: u128) -> [u32; 8]{
 
 }
 
-fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &Box<[u64; BLOOMFILTER_TABLE_SIZE]>, query: u128) -> u64{
-    let indice: [u32;8] = hash_from_u128(query);
+fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &Box<[u64; BLOOMFILTER_TABLE_SIZE]>, indice: [u32; 8]) -> u64{
     let mut retval: u64 = u64::MAX;
     for index in indice{
         if counting_bloomfilter_table[index as usize] < retval{
@@ -182,7 +186,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
                 if r_has_poly_base != true{
                     let lr_string: u128 = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [r_window_start, r_window_end]]);
                     let table_indice:[u32;8] = hash_from_u128(lr_string);
-                    let occurence: u64 = count_occurence_from_counting_bloomfilter_table(source_table, lr_string);
+                    let occurence: u64 = count_occurence_from_counting_bloomfilter_table(source_table, table_indice);
                     if occurence >= 12{ //2^12回以上出てる時
                         ret_val += 1;
                         for i in 0..8{
@@ -286,3 +290,27 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
     }
     return ret_vec;
 }
+
+/*
+pub fn write_to_file_as_binary(sorted_source: Vec<u128>, path: &str) -> (){
+    let mut writer = BufWriter::new(File::create(path));
+    let mut previous_kmer: u128 = 0;
+    for each_kmer in sorted_source{
+        if previous_kmer != each_kmer{
+            writer.write_all(each_kmer);
+            //println!("{:?}\t{:0128b}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap(), each_kmer);
+        }
+        previous_kmer = each_kmer;
+    }
+}
+*/
+
+
+
+
+
+
+
+
+
+

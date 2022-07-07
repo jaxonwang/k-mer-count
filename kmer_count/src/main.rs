@@ -38,6 +38,7 @@ use kmer_count::counting_bloomfilter_util::{build_counting_bloom_filter, number_
 
 //const TOW_SQ20: u128 = 2_u128.pow(20);
 
+
 fn decode_u128_2_dna_seq(source:&u128, char_size: usize) -> Vec<u8>{
     let mut result: Vec<u8> = Vec::new();
     let mut base = 0;
@@ -55,32 +56,35 @@ fn decode_u128_2_dna_seq(source:&u128, char_size: usize) -> Vec<u8>{
 }
 
 
-
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let path = &args[1];
-    eprintln!("input {:?}", path);
-//    let file = File::open(path).expect("Error during opening the file");
+    let  input_path = &args[1];
+    let output_path = &args[2];
+
+    eprintln!("input  file: {:?}",  input_path);
+    eprintln!("output file: {:?}", output_path);
+
+//    let file = File::open(input_path).expect("Error during opening the file");
 //    let mut reader = faReader::new(file);
 //    let mut record = faRecord::new();
 
-    eprintln!("loading {:?} done", path);
+    eprintln!("loading {:?} done", input_path);
 
     //1段目
     eprintln!("start calling build_counting_bloom_filter");
-    let counting_bloom_filter_table: Box<[u64; BLOOMFILTER_TABLE_SIZE]> = build_counting_bloom_filter(path);
+    let counting_bloom_filter_table: Box<[u64; BLOOMFILTER_TABLE_SIZE]> = build_counting_bloom_filter(input_path);
     eprintln!("finish calling build_counting_bloom_filter");
 
     //2段目
     eprintln!("start calling number_of_high_occurence_kmer");
-    let (high_occr_bloomfilter_table, occurence) = number_of_high_occurence_kmer(&counting_bloom_filter_table, path);
+    let (high_occr_bloomfilter_table, occurence) = number_of_high_occurence_kmer(&counting_bloom_filter_table, input_path);
     eprintln!("finish calling number_of_high_occurence_kmer");
     //3段目
 
     eprintln!("Vec size is {}", occurence);
     eprintln!("start calling pick_up_high_occurence_kmer");
     let occr_with_mergin = ((occurence as f64) * 1.2).ceil() as usize;
-    let mut high_occurence_kmer: Vec<u128> = pick_up_high_occurence_kmer(&high_occr_bloomfilter_table, path, occr_with_mergin);
+    let mut high_occurence_kmer: Vec<u128> = pick_up_high_occurence_kmer(&high_occr_bloomfilter_table, input_path, occr_with_mergin);
     eprintln!("finish calling pick_up_high_occurence_kmer");
 
 
@@ -92,4 +96,5 @@ fn main() {
         }
         previous_kmer = each_kmer;
     }
+
 }
