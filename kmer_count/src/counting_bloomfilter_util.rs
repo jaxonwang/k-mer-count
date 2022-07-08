@@ -140,7 +140,7 @@ fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &
 }
 
 
-pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_SIZE]>, path: &str) -> (Box<[bool; BLOOMFILTER_TABLE_SIZE]>, usize){
+pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_SIZE]>, path: &str, threshold: u64) -> (Box<[bool; BLOOMFILTER_TABLE_SIZE]>, usize){
     let mut ret_table: Box<[bool; BLOOMFILTER_TABLE_SIZE]> = Box::new([false; BLOOMFILTER_TABLE_SIZE]);
     let mut ret_val: usize = 0;
     let mut l_window_start: usize;
@@ -187,7 +187,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
                     let lr_string: u128 = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [r_window_start, r_window_end]]);
                     let table_indice:[u32;8] = hash_from_u128(lr_string);
                     let occurence: u64 = count_occurence_from_counting_bloomfilter_table(source_table, table_indice);
-                    if occurence >= 20{ //2^12回以上出てる時
+                    if occurence >= threshold{
                         ret_val += 1;
                         for i in 0..8{
                             let idx: usize = table_indice[i] as usize;

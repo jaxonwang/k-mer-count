@@ -77,7 +77,7 @@ fn main() {
 
     //2段目
     eprintln!("start calling number_of_high_occurence_kmer");
-    let (high_occr_bloomfilter_table, occurence) = number_of_high_occurence_kmer(&counting_bloom_filter_table, input_path);
+    let (high_occr_bloomfilter_table, occurence) = number_of_high_occurence_kmer(&counting_bloom_filter_table, input_path, 8);
     eprintln!("finish calling number_of_high_occurence_kmer");
     //3段目
 
