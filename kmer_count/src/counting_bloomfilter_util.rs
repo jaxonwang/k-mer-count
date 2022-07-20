@@ -69,7 +69,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
             l_window_cnt += 1;
             let l_has_poly_base: bool = current_sequence.has_poly_base(l_window_start, l_window_end);
             if  l_has_poly_base == true{
-                l_window_start += 1;
+                l_window_start += L_LEN - 4;
                 continue 'each_l_window;
             }
             'each_r_window: for dna_chunk_size in 80..141 {
@@ -79,7 +79,10 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                     break 'each_r_window;
                 }
                 let r_has_poly_base: bool = current_sequence.has_poly_base(r_window_start, r_window_end);
-                if r_has_poly_base != true{
+                if r_has_poly_base == true{
+                    r_window_start += R_LEN - 4;
+                    continue 'each_r_window;
+                }else{
                     add_bloom_filter_cnt += 1;
                     let lr_string = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [r_window_start, r_window_end]]);
                     let table_indice:[u32;8] = hash_from_u128(lr_string);//u128を受けてhashを返す関数
@@ -94,8 +97,6 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                             }
                         }
                     }
-                }else{//ポリ塩基を持ってるとき
-                    continue 'each_r_window;
                 }
             }
             l_window_start += 1;
