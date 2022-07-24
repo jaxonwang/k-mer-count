@@ -30,8 +30,8 @@ use voracious_radix_sort::{RadixSort};
 //use kmer_count::encoder_util::decode_u128_2_dna_seq;
 //use kmer_count::encoder_util::encode_dna_seq_2_u128;
 //use kmer_count::encoder_util::decode_u128_2_occurence;
-//use kmer_count::encoder_util::L_LEN;
-//use kmer_count::encoder_util::R_LEN;
+use kmer_count::counting_bloomfilter_util::L_LEN;
+use kmer_count::counting_bloomfilter_util::R_LEN;
 use kmer_count::counting_bloomfilter_util::BLOOMFILTER_TABLE_SIZE;
 use kmer_count::counting_bloomfilter_util::{build_counting_bloom_filter, number_of_high_occurence_kmer, pick_up_high_occurence_kmer};
 
@@ -54,6 +54,39 @@ fn decode_u128_2_dna_seq(source:&u128, char_size: usize) -> Vec<u8>{
     }
     return result;
 }
+
+fn decode_u128_l(source: &u128) -> [char; L_LEN]{
+    let mut result: [char; L_LEN] = ['X'; L_LEN];
+    let mut base;
+    for i in 0..L_LEN{
+        base = source >> ((R_LEN + i) * 2) & 3;
+        match base{
+            0 => {result[i] = 'A';}
+            1 => {result[i] = 'C';}
+            2 => {result[i] = 'G';}
+            3 => {result[i] = 'T';}
+            _ => {panic!("Never reached!!!base: {}", base);}
+        }
+    }
+    return result;
+}
+
+fn decode_u128_r(source: &u128) -> [char; R_LEN]{
+    let mut result: [char; R_LEN] = ['X'; R_LEN];
+    let mut base;
+    for i in 0..R_LEN{
+        base = source >> (i * 2) & 3;
+        match base{
+            0 => {result[i] = 'A';}
+            1 => {result[i] = 'C';}
+            2 => {result[i] = 'G';}
+            3 => {result[i] = 'T';}
+            _ => {panic!("Never reached!!!base: {}", base);}
+        }
+    }
+    return result;
+}
+
 
 
 fn main() {
@@ -93,11 +126,14 @@ fn main() {
     let mut cnt = 0;
     for each_kmer in high_occurence_kmer{
         if previous_kmer != each_kmer{
-            println!("{:?}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap());
+            println!("{:?}", decode_u128_l(&previous_kmer));
+            //println!("{:?}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap());
+/*
             cnt += 1;
             if cnt >= 1000{
                 break;
             }
+*/
         }
         previous_kmer = each_kmer;
     }
