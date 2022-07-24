@@ -140,7 +140,7 @@ impl DnaSequence{
         let val7 = val6 & zero_ichi;
         let val8 = val7 >> 2;
         let val9 = val7 >> 4;
-        let last = val7 & val8 & val9;
+        let last = val7 & val8;// & val9;
 /*
         println!("start:    {}", start);
         println!("end:      {}", end);
