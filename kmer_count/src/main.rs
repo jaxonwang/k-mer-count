@@ -129,7 +129,7 @@ fn main() {
     for each_kmer in high_occurence_kmer{
         current_l_kmer = decode_u128_l(&each_kmer);
         if current_l_kmer != previous_l_kmer{
-            println!("{:?}", current_l_kmer);
+            println!("{:?}", String::from_utf8(current_l_kmer.to_vec()).unwrap());
         }
         previous_l_kmer = current_l_kmer;
 
