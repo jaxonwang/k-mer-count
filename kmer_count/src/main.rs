@@ -88,7 +88,7 @@ fn main() {
     eprintln!("finish calling pick_up_high_occurence_kmer");
 
 
-    high_occurence_kmer.voracious_mt_sort(16);
+    high_occurence_kmer.voracious_mt_sort(8);
     let mut previous_kmer: u128 = 0;
     let mut cnt = 0;
     for each_kmer in high_occurence_kmer{
