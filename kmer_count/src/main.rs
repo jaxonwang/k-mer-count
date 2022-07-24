@@ -55,32 +55,32 @@ fn decode_u128_2_dna_seq(source:&u128, char_size: usize) -> Vec<u8>{
     return result;
 }
 
-fn decode_u128_l(source: &u128) -> [char; L_LEN]{
-    let mut result: [char; L_LEN] = ['X'; L_LEN];
+fn decode_u128_l(source: &u128) -> [u8; L_LEN]{
+    let mut result: [u8; L_LEN] = [b'X'; L_LEN];
     let mut base;
     for i in 0..L_LEN{
         base = source >> ((R_LEN + i) * 2) & 3;
         match base{
-            0 => {result[i] = 'A';}
-            1 => {result[i] = 'C';}
-            2 => {result[i] = 'G';}
-            3 => {result[i] = 'T';}
+            0 => {result[i] = b'A';}
+            1 => {result[i] = b'C';}
+            2 => {result[i] = b'G';}
+            3 => {result[i] = b'T';}
             _ => {panic!("Never reached!!!base: {}", base);}
         }
     }
     return result;
 }
 
-fn decode_u128_r(source: &u128) -> [char; R_LEN]{
-    let mut result: [char; R_LEN] = ['X'; R_LEN];
+fn decode_u128_r(source: &u128) -> [u8; R_LEN]{
+    let mut result: [u8; R_LEN] = [b'X'; R_LEN];
     let mut base;
     for i in 0..R_LEN{
         base = source >> (i * 2) & 3;
         match base{
-            0 => {result[i] = 'A';}
-            1 => {result[i] = 'C';}
-            2 => {result[i] = 'G';}
-            3 => {result[i] = 'T';}
+            0 => {result[i] = b'A';}
+            1 => {result[i] = b'C';}
+            2 => {result[i] = b'G';}
+            3 => {result[i] = b'T';}
             _ => {panic!("Never reached!!!base: {}", base);}
         }
     }
@@ -123,18 +123,32 @@ fn main() {
 
     high_occurence_kmer.voracious_mt_sort(8);
     let mut previous_kmer: u128 = 0;
+    let mut previous_l_kmer: [u8; L_LEN] = [b'X'; L_LEN];
+    let mut current_l_kmer:  [u8; L_LEN] = [b'X'; L_LEN];
+
+    for each_kmer in high_occurence_kmer{
+        current_l_kmer = decode_u128_l(&each_kmer);
+        if current_l_kmer != previous_l_kmer{
+            println!("{:?}", current_l_kmer);
+        }
+        previous_l_kmer = current_l_kmer;
+
+    }
+
+
     let mut cnt = 0;
+/*
     for each_kmer in high_occurence_kmer{
         if previous_kmer != each_kmer{
-            println!("{:?}", decode_u128_l(&previous_kmer));
-            //println!("{:?}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap());
-/*
+            println!("{:?}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap());
             cnt += 1;
             if cnt >= 1000{
                 break;
             }
-*/
         }
         previous_kmer = each_kmer;
     }
+*/
+
+
 }
