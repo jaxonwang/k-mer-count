@@ -59,7 +59,7 @@ fn decode_u128_l(source: &u128) -> [u8; L_LEN]{
     let mut result: [u8; L_LEN] = [b'X'; L_LEN];
     let mut base;
     for i in 0..L_LEN{
-        base = source >> ((R_LEN + i) * 2) & 3;
+        base = source >> ((R_LEN + L_LEN - i) * 2) & 3;
         match base{
             0 => {result[i] = b'A';}
             1 => {result[i] = b'C';}
@@ -75,7 +75,7 @@ fn decode_u128_r(source: &u128) -> [u8; R_LEN]{
     let mut result: [u8; R_LEN] = [b'X'; R_LEN];
     let mut base;
     for i in 0..R_LEN{
-        base = source >> (i * 2) & 3;
+        base = source >> ((R_LEN - i) * 2) & 3;
         match base{
             0 => {result[i] = b'A';}
             1 => {result[i] = b'C';}

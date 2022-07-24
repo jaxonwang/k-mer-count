@@ -405,5 +405,16 @@ mod tests{
         let expectedvalue: u128 = 0b10101010101010101010;
         assert!(retval == expectedvalue, "subsequence_as_u128_test failed: expected value: {}, returned value: {}", expectedvalue, retval);
     }
+
+    #[test]
+    fn subsequence_as_u128_test_12N(){
+        let source: String = "ACGTAACCGGTT".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        let retval = obj.subsequence_as_u128(vec![[0 as usize, 12 as usize]]);
+        let expectedvalue: u128 = 0b000110110000010110101111;
+        assert!(retval == expectedvalue, "subsequence_as_u128_test failed: expected value: {}, returned value: {}", expectedvalue, retval);
+    }
+
 }
 
