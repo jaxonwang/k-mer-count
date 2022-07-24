@@ -59,7 +59,7 @@ fn decode_u128_l(source: &u128) -> [u8; L_LEN]{
     let mut result: [u8; L_LEN] = [b'X'; L_LEN];
     let mut base;
     for i in 0..L_LEN{
-        base = source >> ((R_LEN + L_LEN - i) * 2) & 3;
+        base = source >> ((R_LEN + L_LEN - i - 1) * 2) & 3;
         match base{
             0 => {result[i] = b'A';}
             1 => {result[i] = b'C';}
@@ -75,7 +75,7 @@ fn decode_u128_r(source: &u128) -> [u8; R_LEN]{
     let mut result: [u8; R_LEN] = [b'X'; R_LEN];
     let mut base;
     for i in 0..R_LEN{
-        base = source >> ((R_LEN - i) * 2) & 3;
+        base = source >> ((R_LEN - i - 1) * 2) & 3;
         match base{
             0 => {result[i] = b'A';}
             1 => {result[i] = b'C';}
@@ -123,8 +123,8 @@ fn main() {
 
     high_occurence_kmer.voracious_mt_sort(8);
     let mut previous_kmer: u128 = 0;
-    let mut previous_l_kmer: [u8; L_LEN] = [b'X'; L_LEN];
-    let mut current_l_kmer:  [u8; L_LEN] = [b'X'; L_LEN];
+    let mut previous_l_kmer: [u8; L_LEN] = [b'A'; L_LEN];
+    let mut current_l_kmer:  [u8; L_LEN] = [b'A'; L_LEN];
 
     for each_kmer in high_occurence_kmer{
         current_l_kmer = decode_u128_l(&each_kmer);
@@ -132,7 +132,6 @@ fn main() {
             println!("{:?}", String::from_utf8(current_l_kmer.to_vec()).unwrap());
         }
         previous_l_kmer = current_l_kmer;
-
     }
 
 
