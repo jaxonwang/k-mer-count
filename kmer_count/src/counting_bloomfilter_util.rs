@@ -226,7 +226,7 @@ fn refer_bloom_filter_table(bloomfilter_table: &Box<[bool; BLOOMFILTER_TABLE_SIZ
 */
 
 pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_SIZE]>, path: &str, max_size_of_list: usize) -> Vec<u128>{
-    let mut ret_table: Box<[bool; BLOOMFILTER_TABLE_SIZE]> = Box::new([false; BLOOMFILTER_TABLE_SIZE]);
+    //let mut ret_table: Box<[bool; BLOOMFILTER_TABLE_SIZE]> = Box::new([false; BLOOMFILTER_TABLE_SIZE]);
     let mut l_window_start: usize;
     let mut l_window_end:   usize;
     let mut r_window_start: usize;
@@ -272,7 +272,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                 let r_has_poly_base: bool = current_sequence.has_poly_base(r_window_start, r_window_end);
                 if r_has_poly_base != true{
                     let lr_string: u128         = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [r_window_start, r_window_end]]);
-                    let table_indice:[u32;8]    = hash_from_u128(lr_string);
+                    //let table_indice:[u32;8]    = hash_from_u128(lr_string);
                     let is_high_occr_kmer: bool = refer_bloom_filter_table(source_table, lr_string);
                     if is_high_occr_kmer == true{
                         ret_vec[ret_vec_cnt] = lr_string;

@@ -88,13 +88,17 @@ fn main() {
     eprintln!("finish calling pick_up_high_occurence_kmer");
 
 
-    high_occurence_kmer.voracious_mt_sort(8);
+    high_occurence_kmer.voracious_mt_sort(16);
     let mut previous_kmer: u128 = 0;
+    let mut cnt = 0;
     for each_kmer in high_occurence_kmer{
         if previous_kmer != each_kmer{
             println!("{:?}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap());
+            cnt += 1;
+            if cnt >= 1000{
+                break;
+            }
         }
         previous_kmer = each_kmer;
     }
-
 }
