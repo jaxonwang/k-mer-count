@@ -133,7 +133,9 @@ fn main() {
     eprintln!("finish calling pick_up_high_occurence_kmer");
 
     //sortする
+    eprintln!("start voracious_mt_sort({})", threads);
     high_occurence_kmer.voracious_mt_sort(threads);
+    eprintln!("finish voracious_mt_sort({})", threads);
 
 /*
     let mut previous_l_kmer: [u8; L_LEN] = [b'A'; L_LEN];
@@ -146,8 +148,9 @@ fn main() {
         previous_l_kmer = current_l_kmer;
     }
 */
+    eprintln!("start writing to output file: {:?}", &output_file);
 
-    let mut w = File::create(output_file).unwrap();
+    let mut w = File::create(&output_file).unwrap();
     let mut previous_kmer: u128 = 0;
     let mut cnt = 0;
     for each_kmer in high_occurence_kmer{
@@ -162,6 +165,7 @@ fn main() {
         }
         previous_kmer = each_kmer;
     }
+    eprintln!("finish writing to output file: {:?}", &output_file);
 
 
 
