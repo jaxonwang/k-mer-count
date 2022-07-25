@@ -2,7 +2,8 @@ extern crate bio;
 extern crate rdxsort;
 extern crate getopts;
 use getopts::Options;
-
+use std::fs::File;
+use std::io::Write;
 use std::{env, process};
 use voracious_radix_sort::{RadixSort};
 use kmer_count::counting_bloomfilter_util::L_LEN;
@@ -72,8 +73,8 @@ fn main() {
 
     let mut opts = Options::new();
     opts.optopt("o", "output", "set output file name", "NAME");
-    opts.optopt("t", "thread", "number of threads to use for radix sort", "THREAD");
-    opts.optopt("a", "threshold", "threshold for hyper log counter", "THRESHOLD");
+    opts.optopt("t", "thread", "number of threads to use for radix sort. default value is 8.", "THREAD");
+    opts.optopt("a", "threshold", "threshold for hyper log counter. default value is 8.", "THRESHOLD");
     opts.optflag("h", "help", "print this help menu");
 
     let matches = match opts.parse(&args[1..]) {
@@ -85,14 +86,12 @@ fn main() {
         return;
     }
 
-    let input_file  = if !matches.free.is_empty() {
+    let input_file = if !matches.free.is_empty() {
         matches.free[0].clone()
     } else {
         print_usage(&program, &opts);
         return;
     };
-
-    let output_file = matches.opt_str("o");
 
     let threads = if matches.opt_present("t") {
         matches.opt_str("t").unwrap().parse::<usize>().unwrap()
@@ -104,6 +103,12 @@ fn main() {
         matches.opt_str("a").unwrap().parse::<u64>().unwrap()
     }else{
         8
+    };
+
+    let output_file = if matches.opt_present("o") {
+        matches.opt_str("o").unwrap()
+    }else{
+        format!("{:?}_threshold{}_threads{}.out", input_file, threshold, threads)
     };
 
 
@@ -141,11 +146,13 @@ fn main() {
         previous_l_kmer = current_l_kmer;
     }
 */
+
+    let mut w = File::create(output_file).unwrap();
     let mut previous_kmer: u128 = 0;
     let mut cnt = 0;
     for each_kmer in high_occurence_kmer{
         if previous_kmer != each_kmer{
-            println!("{:?}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap());
+            writeln!(&mut w, "{:?}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap()).unwrap();
             cnt += 1;
 /*
             if cnt >= 1000{
