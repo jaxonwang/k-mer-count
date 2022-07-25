@@ -67,8 +67,8 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                 break 'each_l_window;
             }
             l_window_cnt += 1;
-            let l_has_poly_base: bool = current_sequence.has_poly_base(l_window_start, l_window_end);
-            if  l_has_poly_base == true{
+            let l_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(l_window_start, l_window_end);
+            if  l_has_poly_base_or_simple_repeat == true{
                 l_window_start += L_LEN - 4;
                 continue 'each_l_window;
             }
@@ -78,8 +78,8 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                 if r_window_end >= current_sequence.len(){
                     break 'each_r_window;
                 }
-                let r_has_poly_base: bool = current_sequence.has_poly_base(r_window_start, r_window_end);
-                if r_has_poly_base == true{
+                let r_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(r_window_start, r_window_end);
+                if r_has_poly_base_or_simple_repeat == true{
                     r_window_start += R_LEN - 4;
                     continue 'each_r_window;
                 }else{
@@ -172,8 +172,8 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
             if l_window_end >= current_sequence.len(){
                 break 'each_l_window;
             }
-            let l_has_poly_base: bool = current_sequence.has_poly_base(l_window_start, l_window_end);
-            if  l_has_poly_base == true{
+            let l_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(l_window_start, l_window_end);
+            if  l_has_poly_base_or_simple_repeat == true{
                 l_window_start += 1;
                 continue 'each_l_window;
             }
@@ -183,8 +183,8 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
                 if r_window_end >= current_sequence.len(){
                     break 'each_r_window;
                 }
-                let r_has_poly_base: bool = current_sequence.has_poly_base(r_window_start, r_window_end);
-                if r_has_poly_base != true{
+                let r_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(r_window_start, r_window_end);
+                if r_has_poly_base_or_simple_repeat != true{
                     let lr_string: u128 = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [r_window_start, r_window_end]]);
                     let table_indice:[u32;8] = hash_from_u128(lr_string);
                     let occurence: u64 = count_occurence_from_counting_bloomfilter_table(source_table, table_indice);
@@ -258,8 +258,8 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
             if l_window_end >= current_sequence.len(){
                 break 'each_l_window;
             }
-            let l_has_poly_base: bool = current_sequence.has_poly_base(l_window_start, l_window_end);
-            if  l_has_poly_base == true{
+            let l_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(l_window_start, l_window_end);
+            if  l_has_poly_base_or_simple_repeat == true{
                 l_window_start += 1;
                 continue 'each_l_window;
             }
@@ -269,8 +269,8 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                 if r_window_end >= current_sequence.len(){
                     break 'each_r_window;
                 }
-                let r_has_poly_base: bool = current_sequence.has_poly_base(r_window_start, r_window_end);
-                if r_has_poly_base != true{
+                let r_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(r_window_start, r_window_end);
+                if r_has_poly_base_or_simple_repeat != true{
                     let lr_string: u128         = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [r_window_start, r_window_end]]);
                     //let table_indice:[u32;8]    = hash_from_u128(lr_string);
                     let is_high_occr_kmer: bool = refer_bloom_filter_table(source_table, lr_string);
