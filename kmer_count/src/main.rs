@@ -155,7 +155,7 @@ fn main() {
     let mut cnt = 0;
     for each_kmer in high_occurence_kmer{
         if previous_kmer != each_kmer{
-            //writeln!(&mut w, "{:?}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap()).unwrap();
+            writeln!(&mut w, "{:?}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap()).unwrap();
             cnt += 1;
 /*
             if cnt >= 1000{
@@ -167,6 +167,4 @@ fn main() {
     }
     eprintln!("finish writing to output file: {:?}", &output_file);
     eprintln!("total cardinarity of 54-mer: {}", cnt);
-
-
 }
