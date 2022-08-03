@@ -75,6 +75,7 @@ fn main() {
     opts.optopt("o", "output", "set output file name", "NAME");
     opts.optopt("t", "thread", "number of threads to use for radix sort. default value is 8.", "THREAD");
     opts.optopt("a", "threshold", "threshold for hyper log counter. default value is 8.", "THRESHOLD");
+    opts.optflag("r", "only-num", "outputs only total number of k-mer");
     opts.optflag("h", "help", "print this help menu");
 
     let matches = match opts.parse(&args[1..]) {
@@ -153,18 +154,25 @@ fn main() {
     let mut w = File::create(&output_file).unwrap();
     let mut previous_kmer: u128 = 0;
     let mut cnt = 0;
-    for each_kmer in high_occurence_kmer{
-        if previous_kmer != each_kmer{
-            writeln!(&mut w, "{:?}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap()).unwrap();
-            cnt += 1;
-/*
-            if cnt >= 1000{
-                break;
+
+    if matches.opt_present("r") {
+        for each_kmer in high_occurence_kmer{
+            if previous_kmer != each_kmer{
+                cnt += 1;
             }
-*/
+            previous_kmer = each_kmer;
         }
-        previous_kmer = each_kmer;
+        writeln!(&mut w, "k-mer count: {}\tthreshold: {}\tinput file {:?}", cnt, threshold, &output_file).unwrap();
+    }else{
+        for each_kmer in high_occurence_kmer{
+            if previous_kmer != each_kmer{
+                writeln!(&mut w, "{:?}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap()).unwrap();
+            }
+            previous_kmer = each_kmer;
+        }
     }
+
+
     eprintln!("finish writing to output file: {:?}", &output_file);
     eprintln!("total cardinarity of 54-mer: {}", cnt);
 }
