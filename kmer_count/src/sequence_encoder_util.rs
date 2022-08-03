@@ -116,7 +116,7 @@ impl DnaSequence{
     }
 
     pub fn has_poly_base_or_simple_repeat(&self, start: usize, end: usize) -> bool {
-        return self.has_poly_base(start, end) | self.has_simple_repeat(start, end);
+        return self.has_poly_base(start, end) | self.has_simple_repeat(start, end) | self.has_2base_repeat(start, end);
     }
 
     pub fn has_poly_base(&self, start: usize, end: usize) -> bool {
@@ -172,7 +172,7 @@ impl DnaSequence{
         let mut zero_ichi: u64 = 1;
         for i in start..end{
             original += (self.sequence[i / 32] >> (62 - 2 * (i % 32))) & 3;
-            if i != end -1{
+            if i != end - 1{
                 original <<= 2;
                 zero_ichi <<= 2;
                 zero_ichi += 1;
@@ -213,6 +213,48 @@ impl DnaSequence{
         return last != 0;
         //shift演算でポリ塩基の情報がおっこちてる
     }
+
+    pub fn has_2base_repeat(&self, start: usize, end: usize) -> bool {
+        assert!(start < end, "DnaSequence::has_poly_base assertion failed: {} !< {}", start, end);
+        assert!(end - start > 3, "DnaSequence::has_poly_base assertion failed: {} - {} < 4", end, start);
+        assert!(end - start < 32, "DnaSequence::has_poly_base assertion failed: length of the evaluation subject must be shorter than 32");
+        assert!(end <= self.length, "DnaSequence::has_poly_base assertion failed: end coordinate must be smaller than length of the sequence. end: {}, self.lngth: {}", end, self.length);
+        let mut original:  u64 = 0;
+        let mut zero_ichi: u64 = 1;
+        for i in start..end{
+            original += (self.sequence[i / 32] >> (62 - 2 * (i % 32))) & 3;
+            if i != end - 1{
+                original <<= 2;
+                zero_ichi <<= 2;
+                zero_ichi += 1;
+            }
+        }//ここまでで、originalに右詰で対象の領域がコピーされる。
+        let val1 = original;
+        let val2 = original >> 4;
+        let mut val3 = val1 ^ val2;//val3で0が20個並んでるのを検出したい。これで2x6の単調反復を検出できる
+        let mut ret_flag = false;
+        #[cfg(test)]{
+            println!("start: {}", start);
+            println!("end:   {}", end);
+            println!("0101:  {:064b}", zero_ichi);
+            println!("val1:  {:064b}", val1);
+            println!("val2:  {:064b}", val2);
+            println!("val3:  {:064b}", val3);
+        }
+        val3 <<= 2 * (32 - (end - start));
+        for i in 0..(end - start){
+            #[cfg(test)]{
+                println!("val3:  {:064b}", val3);
+            }
+            if val3.leading_zeros() >= 20{
+                ret_flag = true;
+                break;
+            }
+            val3 <<= 2;
+        }
+        return ret_flag;
+    }
+
 
 
 }
@@ -421,6 +463,34 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_simple_repeat(0, 27) == false, "has_simple_repeat_27N_1 failed: obj.has_simple_repeat (0, 27)   returns {}", obj.has_simple_repeat(0, 27));
     }
+
+
+    #[test]
+    fn has_2base_repeat_27N_1(){
+        let source: String = "TCATATGCTACAACAACTCATACTTAA".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_2base_repeat(0, 27) == false, "has_2base_repeat_27N_1 failed: obj.has_2base_repeat (0, 27)   returns {}", obj.has_2base_repeat(0, 27));
+    }
+
+
+    #[test]
+    fn has_2base_repeat_27N_2(){
+        let source: String = "CGTACGCTTATATATATATATACCGCA".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_2base_repeat(0, 27) == true, "has_2base_repeat_27N_1 failed: obj.has_2base_repeat (0, 27)   returns {}", obj.has_2base_repeat(0, 27));
+    }
+
+    #[test]
+    fn has_2base_repeat_27N_3(){
+        let source: String = "TATATATATATATACCGCACGTACGCT".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_2base_repeat(0, 27) == true, "has_2base_repeat_27N_1 failed: obj.has_2base_repeat (0, 27)   returns {}", obj.has_2base_repeat(0, 27));
+    }
+
+
 
 
 //Decode test
