@@ -156,7 +156,7 @@ fn main() {
     let mut w = BufWriter::new(fs::File::create(&output_file).unwrap());
     let mut previous_kmer: u128 = 0;
     let mut cnt = 0;
-    let mut buf_array: [u8; 17] = [0; 17];
+    let mut buf_array: [u8; 16] = [0; 16];
     let mut buf_num: u128;
 
     if matches.opt_present("r") {
@@ -176,7 +176,6 @@ fn main() {
                         buf_array[15 - i] = u8::try_from(buf_num & 0xFF).unwrap();
                         buf_num >>= 8;
                     }
-                    buf_array[16] = b'\n';
                     w.write(&buf_array).unwrap();
                 }else{
                     writeln!(&mut w, "{:?}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap()).unwrap();
