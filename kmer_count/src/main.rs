@@ -170,7 +170,7 @@ fn main() {
     }else{
         for each_kmer in high_occurence_kmer{
             if previous_kmer != each_kmer{
-                if matches.opt_present("r") {
+                if matches.opt_present("b") {
                     buf_num = each_kmer;
                     for i in 0..16{
                         buf_array[15 - i] = u8::try_from(buf_num & 0xFF).unwrap();
