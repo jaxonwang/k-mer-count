@@ -11,55 +11,8 @@ use kmer_count::counting_bloomfilter_util::L_LEN;
 use kmer_count::counting_bloomfilter_util::R_LEN;
 use kmer_count::counting_bloomfilter_util::BLOOMFILTER_TABLE_SIZE;
 use kmer_count::counting_bloomfilter_util::{build_counting_bloom_filter, number_of_high_occurence_kmer, pick_up_high_occurence_kmer};
+use kmer_count::sequence_encoder_util::{decode_u128_l, decode_u128_r, decode_u128_2_dna_seq};
 
-
-fn decode_u128_2_dna_seq(source:&u128, char_size: usize) -> Vec<u8>{
-    let mut result: Vec<u8> = Vec::new();
-    let mut base;
-    for i in 0..char_size{
-        base = source >> 2 * (char_size - 1 - i) & 3;
-        match base{
-            0 => {result.push(b'A');}
-            1 => {result.push(b'C');}
-            2 => {result.push(b'G');}
-            3 => {result.push(b'T');}
-            _ => {panic!("Never reached!!!base: {}", base);}
-        }
-    }
-    return result;
-}
-
-fn decode_u128_l(source: &u128) -> [u8; L_LEN]{
-    let mut result: [u8; L_LEN] = [b'X'; L_LEN];
-    let mut base;
-    for i in 0..L_LEN{
-        base = source >> ((R_LEN + L_LEN - i - 1) * 2) & 3;
-        match base{
-            0 => {result[i] = b'A';}
-            1 => {result[i] = b'C';}
-            2 => {result[i] = b'G';}
-            3 => {result[i] = b'T';}
-            _ => {panic!("Never reached!!!base: {}", base);}
-        }
-    }
-    return result;
-}
-
-fn decode_u128_r(source: &u128) -> [u8; R_LEN]{
-    let mut result: [u8; R_LEN] = [b'X'; R_LEN];
-    let mut base;
-    for i in 0..R_LEN{
-        base = source >> ((R_LEN - i - 1) * 2) & 3;
-        match base{
-            0 => {result[i] = b'A';}
-            1 => {result[i] = b'C';}
-            2 => {result[i] = b'G';}
-            3 => {result[i] = b'T';}
-            _ => {panic!("Never reached!!!base: {}", base);}
-        }
-    }
-    return result;
-}
 
 fn print_usage(program: &str, opts: &Options) {
     let brief = format!("Usage: {} FILE [options]", program);
@@ -159,32 +112,41 @@ fn main() {
     let mut buf_array: [u8; 16] = [0; 16];
     let mut buf_num: u128;
 
+
+
+
+
     if matches.opt_present("r") {
-        for each_kmer in high_occurence_kmer{
-            if previous_kmer != each_kmer{
+        for each_kmer in &high_occurence_kmer{
+            if previous_kmer != *each_kmer{
                 cnt += 1;
             }
-            previous_kmer = each_kmer;
+            previous_kmer = *each_kmer;
         }
         writeln!(&mut w, "k-mer count: {}\tthreshold: {}\tinput file {:?}", cnt, threshold, &input_file).unwrap();
-    }else{
-        for each_kmer in high_occurence_kmer{
-            if previous_kmer != each_kmer{
-                if matches.opt_present("b") {
-                    buf_num = each_kmer;
-                    for i in 0..16{
-                        buf_array[15 - i] = u8::try_from(buf_num & 0xFF).unwrap();
-                        buf_num >>= 8;
-                    }
-                    w.write(&buf_array).unwrap();
-                }else{
-                    writeln!(&mut w, "{:?}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap()).unwrap();
+    }
+    if !matches.opt_present("r") && matches.opt_present("b"){
+        for each_kmer in &high_occurence_kmer{
+            if previous_kmer != *each_kmer{
+                buf_num = *each_kmer;
+                for i in 0..16{
+                    buf_array[15 - i] = u8::try_from(buf_num & 0xFF).unwrap();
+                    buf_num >>= 8;
                 }
-                cnt += 1;
+                w.write(&buf_array).unwrap();
             }
-            previous_kmer = each_kmer;
+            previous_kmer = *each_kmer;
         }
     }
+    if !matches.opt_present("r") && !matches.opt_present("b"){
+        for each_kmer in &high_occurence_kmer{
+            if previous_kmer != *each_kmer{
+                writeln!(&mut w, "{:?}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap()).unwrap();
+            }
+            previous_kmer = *each_kmer;
+        }
+    }
+
 
 
     eprintln!("finish writing to output file: {:?}", &output_file);
