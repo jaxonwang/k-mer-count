@@ -47,13 +47,14 @@ fn main() {
         print_usage(&program, &opts);
         return;
     };
-
+/*
     let threads = if matches.opt_present("t") {
         matches.opt_str("t").unwrap().parse::<usize>().unwrap()
     }else{
         8
     };
-
+    */
+    let threads = 1;
     let threshold = if matches.opt_present("a") {
         matches.opt_str("a").unwrap().parse::<u64>().unwrap()
     }else{
