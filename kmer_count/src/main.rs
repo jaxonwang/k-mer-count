@@ -113,6 +113,7 @@ fn main() {
     let mut buf_num: u128;
 
     if matches.opt_present("r") {
+        eprintln!("matches.opt_present('r'): {}\tmatches.opt_present('b'): {}", matches.opt_present("r"), matches.opt_present("b"));
         for each_kmer in &high_occurence_kmer{
             if previous_kmer != *each_kmer{
                 cnt += 1;
@@ -122,6 +123,7 @@ fn main() {
         writeln!(&mut w, "k-mer count: {}\tthreshold: {}\tinput file {:?}", cnt, threshold, &input_file).unwrap();
     }
     if !matches.opt_present("r") && matches.opt_present("b"){
+        eprintln!("matches.opt_present('r'): {}\tmatches.opt_present('b'): {}", matches.opt_present("r"), matches.opt_present("b"));
         for each_kmer in &high_occurence_kmer{
             if previous_kmer != *each_kmer{
                 cnt += 1;
@@ -136,6 +138,7 @@ fn main() {
         }
     }
     if !matches.opt_present("r") && !matches.opt_present("b"){
+        eprintln!("matches.opt_present('r'): {}\tmatches.opt_present('b'): {}", matches.opt_present("r"), matches.opt_present("b"));
         for each_kmer in &high_occurence_kmer{
             if previous_kmer != *each_kmer{
                 cnt += 1;
@@ -149,4 +152,6 @@ fn main() {
 
     eprintln!("finish writing to output file: {:?}", &output_file);
     eprintln!("total cardinarity of 54-mer: {}", cnt);
+    eprintln!("threads: {}\tthreshold: {}\tinput file {:?}", threads, threshold, &input_file);
+
 }
