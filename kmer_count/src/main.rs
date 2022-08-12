@@ -116,7 +116,6 @@ fn main() {
 
 
 
-
     for each_kmer in &high_occurence_kmer{
         if previous_kmer != *each_kmer{
             cnt += 1;
@@ -126,7 +125,7 @@ fn main() {
     //writeln!(&mut w, "k-mer count: {}\tthreshold: {}\tinput file {:?}", cnt, threshold, &input_file).unwrap();
     eprintln!("cnt = {}", cnt);
     cnt = 0;
-
+    previous_kmer = 0;
     for each_kmer in &high_occurence_kmer{
         if previous_kmer != *each_kmer{
             cnt += 1;
@@ -141,7 +140,7 @@ fn main() {
     }
     eprintln!("cnt = {}", cnt);
     cnt = 0;
-
+    previous_kmer = 0;
     for each_kmer in &high_occurence_kmer{
         if previous_kmer != *each_kmer{
             cnt += 1;
