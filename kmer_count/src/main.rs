@@ -103,7 +103,7 @@ fn main() {
         previous_l_kmer = current_l_kmer;
     }
 */
-    eprintln!("start writing to output file: {:?}", &output_file);
+    eprintln!("start  writing to output file: {:?}", &output_file);
 
     //let mut w = File::create(&output_file).unwrap();
     let mut w = BufWriter::new(fs::File::create(&output_file).unwrap());
