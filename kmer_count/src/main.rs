@@ -47,14 +47,13 @@ fn main() {
         print_usage(&program, &opts);
         return;
     };
-/*
+
     let threads = if matches.opt_present("t") {
         matches.opt_str("t").unwrap().parse::<usize>().unwrap()
     }else{
         8
     };
-    */
-    let threads = 1;
+
     let threshold = if matches.opt_present("a") {
         matches.opt_str("a").unwrap().parse::<u64>().unwrap()
     }else{
@@ -108,55 +107,13 @@ fn main() {
 
     //let mut w = File::create(&output_file).unwrap();
     let mut w = BufWriter::new(fs::File::create(&output_file).unwrap());
+    let mut w_kensho = BufWriter::new(fs::File::create("kensho_out").unwrap());
+
     let mut previous_kmer: u128 = 0;
     let mut cnt = 0;
     let mut buf_array: [u8; 16] = [0; 16];
     let mut buf_num: u128;
 
-
-
-
-
-    for each_kmer in &high_occurence_kmer{
-        if previous_kmer != *each_kmer{
-            cnt += 1;
-        }
-        previous_kmer = *each_kmer;
-    }
-    //writeln!(&mut w, "k-mer count: {}\tthreshold: {}\tinput file {:?}", cnt, threshold, &input_file).unwrap();
-    eprintln!("cnt = {}", cnt);
-    cnt = 0;
-    previous_kmer = 0;
-    for each_kmer in &high_occurence_kmer{
-        if previous_kmer != *each_kmer{
-            cnt += 1;
-            buf_num = *each_kmer;
-            for i in 0..16{
-                buf_array[15 - i] = u8::try_from(buf_num & 0xFF).unwrap();//ここで失敗してる可能性
-                buf_num >>= 8;
-            }
-            w.write(&buf_array).unwrap();//ここで失敗してる可能性
-        }
-        previous_kmer = *each_kmer;
-    }
-    eprintln!("cnt = {}", cnt);
-    cnt = 0;
-    previous_kmer = 0;
-    for each_kmer in &high_occurence_kmer{
-        if previous_kmer != *each_kmer{
-            cnt += 1;
-            writeln!(&mut w, "{:?}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap()).unwrap();//ここで失敗してる可能性
-        }
-        previous_kmer = *each_kmer;
-    }
-    eprintln!("cnt = {}", cnt);
-
-
-
-
-
-
-/*
     if matches.opt_present("r") {
         eprintln!("matches.opt_present('r'): {}\tmatches.opt_present('b'): {}", matches.opt_present("r"), matches.opt_present("b"));
         for each_kmer in &high_occurence_kmer{
@@ -178,6 +135,7 @@ fn main() {
                     buf_num >>= 8;
                 }
                 w.write(&buf_array).unwrap();//ここで失敗してる可能性
+                writeln!(&mut w_kensho, "{:?}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap()).unwrap();//ここで失敗してる可能性
             }
             previous_kmer = *each_kmer;
         }
@@ -193,7 +151,7 @@ fn main() {
         }
     }
 
-*/
+
 
     eprintln!("finish writing to output file: {:?}", &output_file);
     eprintln!("total cardinarity of 54-mer: {}", cnt);
