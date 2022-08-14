@@ -135,7 +135,6 @@ fn main() {
                     buf_num >>= 8;
                 }
                 w.write(&buf_array).unwrap();
-                writeln!(&mut w_kensho, "{:?}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap()).unwrap();
             }
             previous_kmer = *each_kmer;
         }
