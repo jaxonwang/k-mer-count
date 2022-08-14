@@ -107,7 +107,7 @@ fn main() {
 
     //let mut w = File::create(&output_file).unwrap();
     let mut w = BufWriter::new(fs::File::create(&output_file).unwrap());
-    let mut w_kensho = BufWriter::new(fs::File::create("./kensho_out").unwrap());
+    //let mut w_kensho = BufWriter::new(fs::File::create("./kensho_out").unwrap());
 
     let mut previous_kmer: u128 = 0;
     let mut cnt = 0;
