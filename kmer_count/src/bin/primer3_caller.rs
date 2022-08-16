@@ -8,7 +8,11 @@ use std::error::Error;
 use std::process::{Command, Stdio};
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::thread;
+use std::sync::Arc;
+use std::sync::Mutex;
 use getopts::Options;
+
 use kmer_count::sequence_encoder_util::{decode_u128_l, decode_u128_r, decode_u128_2_dna_seq};
 
 
@@ -264,7 +268,7 @@ fn primer3_result_parser(source: String) -> Vec<Candidate>{
 
 
 fn print_usage(program: &str, opts: &Options) {
-    let brief = format!("Usage: {} FILE [options]", program);
+    let brief = format!("Usage: {} FILE ", program);
     print!("{}", opts.usage(&brief));
     process::exit(0);
 }
@@ -274,9 +278,9 @@ fn main(){
     let program = args[0].clone();
 
     let mut opts = Options::new();
-    opts.optopt("o", "output", "set output file name", "NAME");
-    opts.optopt("t", "thread", "number of threads to use for radix sort. default value is 8.", "THREAD");
     opts.optflag("h", "help", "print this help menu");
+    opts.optopt("t", "thread", "number of thread to use for radix sort. default value is 8.", "THREAD");
+
 
     let matches = match opts.parse(&args[1..]) {
         Ok(m) => { m }
@@ -286,6 +290,12 @@ fn main(){
         print_usage(&program, &opts);
         return;
     }
+
+    let thread_number: usize = if matches.opt_present("t") {
+        matches.opt_str("t").unwrap().parse::<usize>().unwrap()
+    }else{
+        4
+    };
 
     let input_file = if !matches.free.is_empty() {
         matches.free[0].clone()
@@ -312,9 +322,75 @@ fn main(){
             }
         }
     }
+
+    let primer3_fmt_string: Vec<String> = primer3_core_input_sequence(&candidates);
+
+    let mut chunks_of_input: Vec<String> = Vec::new();
+    for i in 0..thread_number{
+        chunks_of_input.push(String::new());
+    }
+    for (index, string) in primer3_fmt_string.iter().enumerate(){
+        chunks_of_input[index % thread_number] += string;
+        chunks_of_input[index % thread_number] += "\n";
+    }
+
+    let arc_chunks_of_input: Arc<Vec<String>> = Arc::new(chunks_of_input);
+    let mut final_result: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
+    let mut children = Vec::new();
+    for i in 0..thread_number{
+        let chunks_of_input  = Arc::clone(&arc_chunks_of_input);
+        let arc_final_result = Arc::clone(&final_result);
+        children.push(
+            thread::spawn(move|| {
+                let primer3_results: String = execute_primer3((*chunks_of_input[i]).to_string());
+                arc_final_result.lock().unwrap().push(primer3_results);
+        })
+        );
+    }
+    for child in children{
+        let _ = child.join();
+    }
+    for i in final_result.lock().unwrap().iter(){
+        println!("{}", i);
+    }
+/*
+    let arc_primer3_fmt_string = Arc::new(primer3_fmt_string);
+    let arc_thread_number = Arc::new(thread_number);
+
+    let mut children = vec![];
+    //let mut final_result: std::sync::Arc<Vec<String>> = Vec::new();
+    let final_result = Arc::new(Mutex::new(vec![]));
+    for _ in 0..thread_number {
+        let primer3_fmt_string = Arc::clone(&arc_primer3_fmt_string);
+        let thread_number = Arc::clone(&arc_thread_number);
+        children.push(thread_number::spawn(move|| {
+            let mut local_str = String::new();
+            let mut index: usize = 1;
+            for item in primer3_fmt_string.lock(){
+                if index % thread_number == 0 {
+                    local_str += &item;
+                    local_str += "\n";
+                }
+                index += 1;
+            }
+            let primer3_results: String = execute_primer3(local_str);
+            final_result.lock().unwrap().push(primer3_results);
+        }));
+    }
+
+    for child in children {
+        let _ = child.join();
+    }
+    for i in final_result.iter(){
+        print!("{}", i);
+    }
+
+*/
+/*
     let primer3_fmt_string: Vec<String> = primer3_core_input_sequence(&candidates);
     let stdin_txt: String = primer3_fmt_string.join("\n");
     //println!("{}", stdin_txt);
     let primer3_results: String = execute_primer3(stdin_txt);
     print!("{}", primer3_results);
+*/
 }
