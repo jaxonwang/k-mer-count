@@ -1,8 +1,9 @@
 //use crate::encoder_util::decode_u128_2_dna_seq;
 //use crate::encoder_util::encode_dna_seq_2_u128;
 //use crate::encoder_util::decode_u128_2_occurence;
-pub const L_LEN: usize = 27;
-pub const R_LEN: usize = 27;
+pub const L_LEN: usize = 21;
+pub const M_LEN: usize = 22;
+pub const R_LEN: usize = 21;
 
 use crate::sequence_encoder_util::DnaSequence;
 use rand::Rng;
@@ -33,6 +34,8 @@ pub const THRESHOLD_OCCURENCE: u64 = 100;
 pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SIZE]>{
     let mut l_window_start: usize;
     let mut l_window_end:   usize;
+    let mut m_window_start: usize;
+    let mut m_window_end:   usize;
     let mut r_window_start: usize;
     let mut r_window_end:   usize;
 
@@ -82,10 +85,21 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                 if r_has_poly_base_or_simple_repeat == true{
                     r_window_start += R_LEN - 4;
                     continue 'each_r_window;
-                }else{
+                }
+                m_window_start = l_window_end + 1;
+                'each_m_window: loop{
+                    m_window_end   = m_window_start + M_LEN;
+                    if m_window_end >= r_window_start{
+                        break 'each_m_window;
+                    }
+                    let m_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(m_window_start, m_window_end);
+                    if m_has_poly_base_or_simple_repeat == true{
+                        m_window_start += M_LEN - 4;
+                        continue 'each_m_window;
+                    }
                     add_bloom_filter_cnt += 1;
-                    let lr_string = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [r_window_start, r_window_end]]);
-                    let table_indice:[u32;8] = hash_from_u128(lr_string);//u128を受けてhashを返す関数
+                    let lmr_string = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [m_window_start, m_window_end], [r_window_start, r_window_end]]);
+                    let table_indice:[u32;8] = hash_from_u128(lmr_string);//u128を受けてhashを返す関数
                     let occurence = count_occurence_from_counting_bloomfilter_table(&ret_array, table_indice);
                     if rng.gen::<u64>() < (u64::MAX >> (64 - occurence.leading_zeros())){
                         for i in 0..8{
@@ -96,6 +110,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                                 ret_array[idx] += 1;
                             }
                         }
+                        m_window_start += 1;
                     }
                 }
             }
@@ -146,6 +161,8 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
     let mut ret_val: usize = 0;
     let mut l_window_start: usize;
     let mut l_window_end:   usize;
+    let mut m_window_start: usize;
+    let mut m_window_end:   usize;
     let mut r_window_start: usize;
     let mut r_window_end:   usize;
     let mut loop_cnt:usize = 0;
@@ -184,8 +201,23 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
                     break 'each_r_window;
                 }
                 let r_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(r_window_start, r_window_end);
-                if r_has_poly_base_or_simple_repeat != true{
-                    let lr_string: u128 = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [r_window_start, r_window_end]]);
+                if r_has_poly_base_or_simple_repeat == true{
+                    r_window_start += R_LEN - 4;
+                    continue 'each_r_window;
+                }
+                m_window_start = l_window_end + 1;
+                'each_m_window: loop{
+                    m_window_end   = m_window_start + M_LEN;
+                    if m_window_end >= r_window_start{
+                        break 'each_m_window;
+                    }
+                    let m_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(m_window_start, m_window_end);
+                    if m_has_poly_base_or_simple_repeat == true{
+                        m_window_start += M_LEN - 4;
+                        continue 'each_m_window;
+                    }
+
+                    let lr_string: u128 = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end],[m_window_start, m_window_end], [r_window_start, r_window_end]]);
                     let table_indice:[u32;8] = hash_from_u128(lr_string);
                     let occurence: u64 = count_occurence_from_counting_bloomfilter_table(source_table, table_indice);
                     if occurence >= threshold{
@@ -195,8 +227,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
                             ret_table[idx] |= true;
                         }
                     }
-                }else{//ポリ塩基を持ってるとき
-                    continue 'each_r_window;
+                    m_window_start += 1;
                 }
             }
             l_window_start += 1;
@@ -229,6 +260,8 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
     //let mut ret_table: Box<[bool; BLOOMFILTER_TABLE_SIZE]> = Box::new([false; BLOOMFILTER_TABLE_SIZE]);
     let mut l_window_start: usize;
     let mut l_window_end:   usize;
+    let mut m_window_start: usize;
+    let mut m_window_end:   usize;
     let mut r_window_start: usize;
     let mut r_window_end:   usize;
     let mut loop_cnt:usize = 0;
@@ -270,16 +303,31 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                     break 'each_r_window;
                 }
                 let r_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(r_window_start, r_window_end);
-                if r_has_poly_base_or_simple_repeat != true{
-                    let lr_string: u128         = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [r_window_start, r_window_end]]);
-                    //let table_indice:[u32;8]    = hash_from_u128(lr_string);
-                    let is_high_occr_kmer: bool = refer_bloom_filter_table(source_table, lr_string);
-                    if is_high_occr_kmer == true{
-                        ret_vec[ret_vec_cnt] = lr_string;
-                        ret_vec_cnt += 1;
-                    }
-                }else{//ポリ塩基を持ってるとき
+                if r_has_poly_base_or_simple_repeat == true{
+                    r_window_start += R_LEN - 4;
                     continue 'each_r_window;
+                }
+                m_window_start = l_window_end + 1;
+                'each_m_window: loop{
+                    m_window_end   = m_window_start + M_LEN;
+                    if m_window_end >= r_window_start{
+                        break 'each_m_window;
+                    }
+                    let m_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(m_window_start, m_window_end);
+                    if m_has_poly_base_or_simple_repeat == true{
+                        m_window_start += M_LEN - 4;
+                        continue 'each_m_window;
+                    }
+                    let r_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(r_window_start, r_window_end);
+                    if r_has_poly_base_or_simple_repeat != true{
+                        let lr_string: u128         = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end],[m_window_start, m_window_end], [r_window_start, r_window_end]]);
+                        let is_high_occr_kmer: bool = refer_bloom_filter_table(source_table, lr_string);
+                        if is_high_occr_kmer == true{
+                            ret_vec[ret_vec_cnt] = lr_string;
+                            ret_vec_cnt += 1;
+                        }
+                    }
+                    m_window_start += 1;
                 }
             }
             l_window_start += 1;
@@ -290,27 +338,3 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
     }
     return ret_vec;
 }
-
-/*
-pub fn write_to_file_as_binary(sorted_source: Vec<u128>, path: &str) -> (){
-    let mut writer = BufWriter::new(File::create(path));
-    let mut previous_kmer: u128 = 0;
-    for each_kmer in sorted_source{
-        if previous_kmer != each_kmer{
-            writer.write_all(each_kmer);
-            //println!("{:?}\t{:0128b}", String::from_utf8(decode_u128_2_dna_seq(&each_kmer, 54)).unwrap(), each_kmer);
-        }
-        previous_kmer = each_kmer;
-    }
-}
-*/
-
-
-
-
-
-
-
-
-
-

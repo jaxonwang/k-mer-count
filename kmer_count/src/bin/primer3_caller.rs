@@ -142,122 +142,6 @@ fn execute_primer3(formatted_string: String) -> String{
     //println!("{}", result);
     return result;
 }
-/*
-struct Candidate{
-    SEQUENCE_ID                  : String,
-    SEQUENCE_TEMPLATE            : String,
-    PRIMER_TASK                  : String,
-    PRIMER_PICK_LEFT_PRIMER      : u8,
-    PRIMER_PICK_INTERNAL_OLIGO   : u8,
-    PRIMER_PICK_RIGHT_PRIMER     : u8,
-    PRIMER_OPT_SIZE              : u8,
-    PRIMER_MIN_SIZE              : u8,
-    PRIMER_MAX_SIZE              : u8,
-    PRIMER_PRODUCT_SIZE_RANGE    : Vec<[u8; 2]>,
-    P3_FILE_FLAG                 : bool,
-    PRIMER_EXPLAIN_FLAG          : bool,
-    PRIMER_LEFT_EXPLAIN          : String,
-    PRIMER_RIGHT_EXPLAIN         : String,
-    PRIMER_PAIR_EXPLAIN          : String,
-    PRIMER_LEFT_NUM_RETURNED     : u8,
-    PRIMER_RIGHT_NUM_RETURNED    : u8,
-    PRIMER_INTERNAL_NUM_RETURNED : u8,
-    PRIMER_PAIR_NUM_RETURNED     : u8
-}
-
-impl Candidate{
-    fn new(source: String) -> Candidate{
-
-        /*
-        タグごとに処理が変わる
-        _4_みたいなのは同じグループにしたい。
-        Pythonで書きたい......。
-        */
-
-
-        //println!("Candidate::new() recieved \n{}\n\n\n1", source);
-        let mut dict = HashMap::new();
-        for each_line in source.split("\n"){
-            if each_line == ""{continue}
-            let key = each_line.split("=").collect::<Vec<&str>>()[0];
-            let val = each_line.split("=").collect::<Vec<&str>>()[1];
-            dict.insert(key, val);
-        }
-        return Candidate{
-SEQUENCE_ID                  : "example1".to_string(),
-SEQUENCE_TEMPLATE            : "agtcgacagagttta".to_string(),
-PRIMER_TASK                  : "generic".to_string(),
-PRIMER_PICK_LEFT_PRIMER      : 1,
-PRIMER_PICK_INTERNAL_OLIGO   : 0,
-PRIMER_PICK_RIGHT_PRIMER     : 1,
-PRIMER_OPT_SIZE              : 20,
-PRIMER_MIN_SIZE              : 18,
-PRIMER_MAX_SIZE              : 22,
-PRIMER_PRODUCT_SIZE_RANGE    : vec![[75, 150]],
-P3_FILE_FLAG                 : false,
-PRIMER_EXPLAIN_FLAG          : false,
-PRIMER_LEFT_EXPLAIN          : "considered 195, low tm 122, high tm 6, ok 67".to_string(),
-PRIMER_RIGHT_EXPLAIN         : "considered 195, low tm 47, high tm 51, high hairpin stability 26, ok 71".to_string(),
-PRIMER_PAIR_EXPLAIN          : "considered 7, unacceptable product size 2, ok 5".to_string(),
-PRIMER_LEFT_NUM_RETURNED     : 5,
-PRIMER_RIGHT_NUM_RETURNED    : 5,
-PRIMER_INTERNAL_NUM_RETURNED : 0,
-PRIMER_PAIR_NUM_RETURNED     : 5,
-            }
-        /*
-            Candidate１個分のStringを入力とする
-            末尾に"="は含まれない
-        */
-    }
-}
-
-
-
-struct PrimerPair{
-    primer_pair_penalty        : String,
-    primer_left_penalty        : String,
-    primer_right_penalty       : String,
-    primer_left_sequence       : String,
-    primer_right_sequence      : String,
-    primer_left                : String,
-    primer_right               : String,
-    primer_left_tm             : String,
-    primer_right_tm            : String,
-    primer_left_gc_percent     : String,
-    primer_right_gc_percent    : String,
-    primer_left_self_any_th    : String,
-    primer_right_self_any_th   : String,
-    primer_left_self_end_th    : String,
-    primer_right_self_end_th   : String,
-    primer_left_hairpin_th     : String,
-    primer_right_hairpin_th    : String,
-    primer_left_end_stability  : String,
-    primer_right_end_stability : String,
-    primer_pair_compl_any_th   : String,
-    primer_pair_compl_end_th   : String,
-    primer_pair_product_size   : String,
-    primer_pair_product_tm     : String
-}
-
-
-
-fn primer3_result_parser(source: String) -> Vec<Candidate>{
-    let mut ret_val: Vec<Candidate> = Vec::new();
-    let mut buf_str: String = String::new();
-    for each_line in source.split("\n") {
-        if each_line != "="{
-            buf_str += each_line;
-            buf_str += "\n";
-        }else{
-            //println!("{}\n\n", buf_str);
-            ret_val.push(Candidate::new(buf_str));
-            buf_str = String::new();
-        }
-    }
-    return ret_val
-}
-*/
-
 
 
 
@@ -328,18 +212,19 @@ fn main(){
         chunks_of_input[index % thread_number] += "\n";
     }
 
+
     let arc_chunks_of_input: Arc<Vec<String>> = Arc::new(chunks_of_input);
     let mut final_result: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
     let mut children = Vec::new();
     for i in 0..thread_number{
         let chunks_of_input  = Arc::clone(&arc_chunks_of_input);
         let arc_final_result = Arc::clone(&final_result);
-        eprintln!("about to spawn thread {}", i);
+        //eprintln!("about to spawn thread {}", i);
         children.push(
             thread::spawn(move|| {
-                eprintln!("thread {}: ready to run primer3", i);
+                //eprintln!("thread {}: ready to run primer3", i);
                 let primer3_results: String = execute_primer3((*chunks_of_input[i]).to_string());
-                eprintln!("thread {}: finish primer3", i);
+                //eprintln!("thread {}: finish primer3", i);
                 arc_final_result.lock().unwrap().push(primer3_results);
         })
         );
