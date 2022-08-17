@@ -142,12 +142,6 @@ fn execute_primer3(formatted_string: String) -> String{
     //println!("{}", result);
     return result;
 }
-
-/*
-まず構造体を定義する
-candidate１本ごとにまとめる構造体
-primer pairを保持する構造体
-*/
 /*
 struct Candidate{
     SEQUENCE_ID                  : String,
@@ -340,9 +334,12 @@ fn main(){
     for i in 0..thread_number{
         let chunks_of_input  = Arc::clone(&arc_chunks_of_input);
         let arc_final_result = Arc::clone(&final_result);
+        eprintln!("about to spawn thread {}", i);
         children.push(
             thread::spawn(move|| {
+                eprintln!("thread {}: ready to run primer3", i);
                 let primer3_results: String = execute_primer3((*chunks_of_input[i]).to_string());
+                eprintln!("thread {}: finish primer3", i);
                 arc_final_result.lock().unwrap().push(primer3_results);
         })
         );
@@ -353,39 +350,6 @@ fn main(){
     for i in final_result.lock().unwrap().iter(){
         println!("{}", i);
     }
-/*
-    let arc_primer3_fmt_string = Arc::new(primer3_fmt_string);
-    let arc_thread_number = Arc::new(thread_number);
-
-    let mut children = vec![];
-    //let mut final_result: std::sync::Arc<Vec<String>> = Vec::new();
-    let final_result = Arc::new(Mutex::new(vec![]));
-    for _ in 0..thread_number {
-        let primer3_fmt_string = Arc::clone(&arc_primer3_fmt_string);
-        let thread_number = Arc::clone(&arc_thread_number);
-        children.push(thread_number::spawn(move|| {
-            let mut local_str = String::new();
-            let mut index: usize = 1;
-            for item in primer3_fmt_string.lock(){
-                if index % thread_number == 0 {
-                    local_str += &item;
-                    local_str += "\n";
-                }
-                index += 1;
-            }
-            let primer3_results: String = execute_primer3(local_str);
-            final_result.lock().unwrap().push(primer3_results);
-        }));
-    }
-
-    for child in children {
-        let _ = child.join();
-    }
-    for i in final_result.iter(){
-        print!("{}", i);
-    }
-
-*/
 /*
     let primer3_fmt_string: Vec<String> = primer3_core_input_sequence(&candidates);
     let stdin_txt: String = primer3_fmt_string.join("\n");
