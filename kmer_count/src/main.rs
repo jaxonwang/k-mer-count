@@ -153,7 +153,7 @@ fn main() {
 
 
     eprintln!("finish writing to output file: {:?}", &output_file);
-    eprintln!("total cardinarity of 54-mer: {}", cnt);
+    eprintln!("total cardinarity: {}", cnt);
     eprintln!("threads: {}\tthreshold: {}\tinput file {:?}", threads, threshold, &input_file);
 
 }
