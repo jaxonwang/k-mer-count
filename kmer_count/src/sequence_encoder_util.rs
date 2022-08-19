@@ -1,4 +1,5 @@
 use crate::counting_bloomfilter_util::L_LEN;
+use crate::counting_bloomfilter_util::M_LEN;
 use crate::counting_bloomfilter_util::R_LEN;
 
 
@@ -22,7 +23,23 @@ pub fn decode_u128_l(source: &u128) -> [u8; L_LEN]{
     let mut result: [u8; L_LEN] = [b'X'; L_LEN];
     let mut base;
     for i in 0..L_LEN{
-        base = source >> ((R_LEN + L_LEN - i - 1) * 2) & 3;
+        base = source >> (((L_LEN + M_LEN + R_LEN) - i - 1) * 2) & 3;
+        match base{
+            0 => {result[i] = b'A';}
+            1 => {result[i] = b'C';}
+            2 => {result[i] = b'G';}
+            3 => {result[i] = b'T';}
+            _ => {panic!("Never reached!!!base: {}", base);}
+        }
+    }
+    return result;
+}
+
+pub fn decode_u128_m(source: &u128) -> [u8; M_LEN]{
+    let mut result: [u8; M_LEN] = [b'X'; M_LEN];
+    let mut base;
+    for i in 0..L_LEN{
+        base = source >> (((M_LEN + R_LEN) - i - 1) * 2) & 3;
         match base{
             0 => {result[i] = b'A';}
             1 => {result[i] = b'C';}

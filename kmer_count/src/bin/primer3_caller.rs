@@ -13,7 +13,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use getopts::Options;
 
-use kmer_count::sequence_encoder_util::{decode_u128_l, decode_u128_r, decode_u128_2_dna_seq};
+use kmer_count::sequence_encoder_util::{decode_u128_l, decode_u128_m, decode_u128_r, decode_u128_2_dna_seq};
 
 
 
@@ -98,18 +98,20 @@ PRIMER_PAIR_0_PRODUCT_TM=84.0
 
 fn primer3_core_input_sequence(sequences: &Vec<u128>) -> Vec<String>{
     let mut str_vec: Vec<String> = Vec::new();
-    let many_n = "N".to_string().repeat(86);
+    let many_n = "N".to_string().repeat(38);
 
     for each_seq in sequences {
         let l_u8_array = decode_u128_l(&each_seq);
+        let m_u8_array = decode_u128_m(&each_seq);
         let r_u8_array = decode_u128_r(&each_seq);
         let l_str: &str = std::str::from_utf8(&l_u8_array).unwrap();
+        let m_str: &str = std::str::from_utf8(&m_u8_array).unwrap();
         let r_str: &str = std::str::from_utf8(&r_u8_array).unwrap();
-        let sequence_with_internal_n = format!("{}{}{}", l_str, many_n, r_str);
+        let sequence_with_internal_n = format!("{}{}{}{}{}", l_str, many_n, m_str, many_n, r_str);
         let primer3_fmt_str = format!("SEQUENCE_ID={:0x}
 SEQUENCE_TEMPLATE={}
 SEQUENCE_TARGET=28,86
-PRIMER_TASK=pick_pcr_primers
+PRIMER_TASK=pick_pcr_primers_and_hyb_probe
 PRIMER_OPT_SIZE=18
 PRIMER_MIN_SIZE=15
 PRIMER_MAX_SIZE=21
@@ -214,7 +216,7 @@ fn main(){
 
 
     let arc_chunks_of_input: Arc<Vec<String>> = Arc::new(chunks_of_input);
-    let mut final_result: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
+    let final_result: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
     let mut children = Vec::new();
     for i in 0..thread_number{
         let chunks_of_input  = Arc::clone(&arc_chunks_of_input);
