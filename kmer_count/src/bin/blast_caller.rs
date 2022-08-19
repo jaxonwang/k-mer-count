@@ -17,10 +17,9 @@ fn print_usage(program: &str, opts: &Options) {
     print!("{}", opts.usage(&brief));
     process::exit(0);
 }
-
+/*
 fn blast_formatter(sequences: &Vec<u128>) -> Vec<String>{
     let mut str_vec: Vec<String> = Vec::new();
-
     for each_seq in sequences {
         let l_u8_array = decode_u128_l(&each_seq);
         let m_u8_array = decode_u128_m(&each_seq);
@@ -34,6 +33,19 @@ fn blast_formatter(sequences: &Vec<u128>) -> Vec<String>{
     return str_vec;
 }
 
+*/
+fn blast_formatter(sequence: &u128) -> String{
+    let l_u8_array = decode_u128_l(sequence);
+    let m_u8_array = decode_u128_m(sequence);
+    let r_u8_array = decode_u128_r(sequence);
+    let l_str: &str = std::str::from_utf8(&l_u8_array).unwrap();
+    let m_str: &str = std::str::from_utf8(&m_u8_array).unwrap();
+    let r_str: &str = std::str::from_utf8(&r_u8_array).unwrap();
+    let fasta_fmt = format!(">{:0x}-L\n{}\n>{:0x}-M\n{}\n>{:0x}-R\n{}\n", sequence, l_str, sequence, m_str, sequence, r_str);
+    return fasta_fmt;
+}
+
+
 
 fn main(){
     let args: Vec<String> = env::args().collect();
@@ -41,7 +53,6 @@ fn main(){
 
     let mut opts = Options::new();
     opts.optopt("o", "output", "set output file name", "NAME");
-    opts.optopt("t", "thread", "number of threads to use for radix sort. default value is 8.", "THREAD");
     opts.optflag("h", "help", "print this help menu");
 
     let matches = match opts.parse(&args[1..]) {
@@ -63,7 +74,6 @@ fn main(){
     let mut reader = BufReader::new(f);
     let mut buf: [u8; 16] = [0; 16];
     let mut tmp_seq_as_u128: u128 = 0;
-    let mut candidates: Vec<u128> = Vec::new();
 
     loop {
         match reader.read(&mut buf).unwrap() {
@@ -74,12 +84,8 @@ fn main(){
                     tmp_seq_as_u128 <<= 8;
                     tmp_seq_as_u128 += u128::from(buf[i]);
                 }
-                candidates.push(tmp_seq_as_u128);
+                println!("{}", blast_formatter(&tmp_seq_as_u128));
             }
         }
-    }
-    let fasta_fmt_records = blast_formatter(&candidates);
-    for each_fasta in fasta_fmt_records{
-        print!("{}", each_fasta);
     }
 }
