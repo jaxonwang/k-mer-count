@@ -9,16 +9,8 @@ use std::process::{Command, Stdio};
 use std::borrow::Cow;
 use std::collections::HashMap;
 use getopts::Options;
-use kmer_count::sequence_encoder_util::{decode_u128_l, decode_u128_r, decode_u128_2_dna_seq};
+use kmer_count::sequence_encoder_util::{decode_u128_l, decode_u128_m, decode_u128_r, decode_u128_2_dna_seq};
 
-/*
-blast検索...
-1. L-27-merの完全マッチを探す-> L-hit
-2. R-27-merの完全マッチを探す-> R-hit
-L-hit., R-hitが同じ染色体にある場合、両者の距離を比較する
-近いとアニーリングしちゃうかも
-（Pythonでよくないか？）
-*/
 
 fn print_usage(program: &str, opts: &Options) {
     let brief = format!("Usage: {} FILE [options]", program);
@@ -26,16 +18,17 @@ fn print_usage(program: &str, opts: &Options) {
     process::exit(0);
 }
 
-
 fn blast_formatter(sequences: &Vec<u128>) -> Vec<String>{
     let mut str_vec: Vec<String> = Vec::new();
 
     for each_seq in sequences {
         let l_u8_array = decode_u128_l(&each_seq);
+        let m_u8_array = decode_u128_m(&each_seq);
         let r_u8_array = decode_u128_r(&each_seq);
         let l_str: &str = std::str::from_utf8(&l_u8_array).unwrap();
+        let m_str: &str = std::str::from_utf8(&m_u8_array).unwrap();
         let r_str: &str = std::str::from_utf8(&r_u8_array).unwrap();
-        let fasta_fmt = format!(">{:0x}-L\n{}\n>{:0x}-R\n{}\n", each_seq, l_str, each_seq, r_str);
+        let fasta_fmt = format!(">{:0x}-L\n{}\n>{:0x}-M\n{}\n>{:0x}-R\n{}\n", each_seq, l_str, each_seq, m_str, each_seq, r_str);
         str_vec.push(fasta_fmt);
     }
     return str_vec;
