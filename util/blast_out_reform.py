@@ -77,7 +77,7 @@ def main():
 
 	for i in primer_candidates_set - discarded_primer_pairs:
 		print(f'{hex(i).replace("0x", "")}')
-	print(f"{primer_candidates_set} - {discarded_primer_pairs} = {primer_candidates_set - discarded_primer_pairs} ({discarded_primer_pairs / (primer_candidates_set - discarded_primer_pairs)})", file = sys.stderr)
+	print(f"{len(primer_candidates_set)} - {len(discarded_primer_pairs)} = {len(primer_candidates_set - discarded_primer_pairs)} ({len(discarded_primer_pairs) / len(primer_candidates_set - discarded_primer_pairs)})", file = sys.stderr)
 
 
 
