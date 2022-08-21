@@ -1,6 +1,7 @@
 extern crate kmer_count;
 extern crate getopts;
 use std::{env, process};
+use std::fs::File;
 use std::io::{Write, BufWriter};
 use std::io::{Read,  BufReader};
 use std::io::prelude::*;
@@ -54,8 +55,8 @@ fn main(){
     let program = args[0].clone();
 
     let mut opts = Options::new();
-    opts.optopt("a", "output1", "sequence.fasta", "FILENAME");
-    opts.optopt("b", "output2", "namelist.txt", "FILENAME");
+    opts.optopt("o1", "output1", "sequence.fasta", "FILENAME");
+    opts.optopt("o2", "output2", "namelist.txt", "FILENAME");
 
     opts.optflag("h", "help", "print this help menu");
 
@@ -76,12 +77,12 @@ fn main(){
     };
 
     let output_file_1 = if matches.opt_present("o1") {
-        matches.opt_str("o").unwrap()
+        matches.opt_str("o1").unwrap()
     }else{
         "out_1.fasta".to_string()
     };
     let output_file_2 = if matches.opt_present("o2") {
-        matches.opt_str("o").unwrap()
+        matches.opt_str("o2").unwrap()
     }else{
         "out_2.txt".to_string()
     };
