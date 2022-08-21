@@ -54,8 +54,8 @@ fn main(){
     let program = args[0].clone();
 
     let mut opts = Options::new();
-    opts.optopt("o1", "output1", "sequence.fasta", "FILENAME");
-    opts.optopt("o2", "output2", "namelist.txt", "FILENAME");
+    opts.optopt("a", "output1", "sequence.fasta", "FILENAME");
+    opts.optopt("b", "output2", "namelist.txt", "FILENAME");
 
     opts.optflag("h", "help", "print this help menu");
 
