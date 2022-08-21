@@ -76,7 +76,7 @@ def main():
 			primer_candidates_set.add(int(line, 16))
 
 	for i in primer_candidates_set - discarded_primer_pairs:
-		print(f"{hex(i)}")
+		print(f'{hex(i).replace("0x", "")}')
 
 
 
