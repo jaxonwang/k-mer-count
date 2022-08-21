@@ -1,13 +1,15 @@
 extern crate kmer_count;
 extern crate getopts;
 use std::{env, process};
-use std::fs::File;
-use std::io::{Read, BufReader};
+use std::io::{Write, BufWriter};
+use std::io::{Read,  BufReader};
 use std::io::prelude::*;
 use std::error::Error;
 use std::process::{Command, Stdio};
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::fs;
+use std::fs::File;
 use getopts::Options;
 use kmer_count::sequence_encoder_util::{decode_u128_l, decode_u128_m, decode_u128_r, decode_u128_2_dna_seq};
 
@@ -52,7 +54,9 @@ fn main(){
     let program = args[0].clone();
 
     let mut opts = Options::new();
-    opts.optopt("o", "output", "set output file name", "NAME");
+    opts.optopt("o1", "output1", "sequence.fasta", "FILENAME");
+    opts.optopt("o2", "output2", "namelist.txt", "FILENAME");
+
     opts.optflag("h", "help", "print this help menu");
 
     let matches = match opts.parse(&args[1..]) {
@@ -70,6 +74,22 @@ fn main(){
         print_usage(&program, &opts);
         return;
     };
+
+    let output_file_1 = if matches.opt_present("o1") {
+        matches.opt_str("o").unwrap()
+    }else{
+        "out_1.fasta".to_string()
+    };
+    let output_file_2 = if matches.opt_present("o2") {
+        matches.opt_str("o").unwrap()
+    }else{
+        "out_2.txt".to_string()
+    };
+
+    let mut w1 = BufWriter::new(fs::File::create(&output_file_1).unwrap());
+    let mut w2 = BufWriter::new(fs::File::create(&output_file_2).unwrap());
+
+
     let f: File = File::open(&input_file).unwrap();
     let mut reader = BufReader::new(f);
     let mut buf: [u8; 16] = [0; 16];
@@ -84,7 +104,8 @@ fn main(){
                     tmp_seq_as_u128 <<= 8;
                     tmp_seq_as_u128 += u128::from(buf[i]);
                 }
-                println!("{}", blast_formatter(&tmp_seq_as_u128));
+                writeln!(&mut w1, "{}", blast_formatter(&tmp_seq_as_u128)).unwrap();
+                writeln!(&mut w2, "{:0x}", tmp_seq_as_u128).unwrap();
             }
         }
     }
