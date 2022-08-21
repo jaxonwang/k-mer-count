@@ -54,8 +54,8 @@ fn main(){
     let program = args[0].clone();
 
     let mut opts = Options::new();
-    opts.optopt("o1", "output1", "sequence.fasta", "FILENAME");
-    opts.optopt("o2", "output2", "namelist.txt", "FILENAME");
+    opts.optopt("a", "output1", "sequence.fasta", "FILENAME");
+    opts.optopt("b", "output2", "namelist.txt", "FILENAME");
 
     opts.optflag("h", "help", "print this help menu");
 
@@ -75,13 +75,13 @@ fn main(){
         return;
     };
 
-    let output_file_1 = if matches.opt_present("o1") {
-        matches.opt_str("o1").unwrap()
+    let output_file_1 = if matches.opt_present("a") {
+        matches.opt_str("a").unwrap()
     }else{
         "out_1.fasta".to_string()
     };
-    let output_file_2 = if matches.opt_present("o2") {
-        matches.opt_str("o2").unwrap()
+    let output_file_2 = if matches.opt_present("b") {
+        matches.opt_str("b").unwrap()
     }else{
         "out_2.txt".to_string()
     };
