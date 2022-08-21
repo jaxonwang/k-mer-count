@@ -1,7 +1,6 @@
 extern crate kmer_count;
 extern crate getopts;
 use std::{env, process};
-use std::fs::File;
 use std::io::{Write, BufWriter};
 use std::io::{Read,  BufReader};
 use std::io::prelude::*;
