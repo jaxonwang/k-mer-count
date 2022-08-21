@@ -38,7 +38,7 @@ pub fn decode_u128_l(source: &u128) -> [u8; L_LEN]{
 pub fn decode_u128_m(source: &u128) -> [u8; M_LEN]{
     let mut result: [u8; M_LEN] = [b'X'; M_LEN];
     let mut base;
-    for i in 0..L_LEN{
+    for i in 0..M_LEN{
         base = source >> (((M_LEN + R_LEN) - i - 1) * 2) & 3;
         match base{
             0 => {result[i] = b'A';}
