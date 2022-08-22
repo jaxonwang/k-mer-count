@@ -55,43 +55,51 @@ def blast_checker_2(records):
 
 def main():
 	parser = argparse.ArgumentParser(description = "blastn-short result reformer")
-	parser.add_argument("blast_result", type=str, metavar="Blast result", help="Blast results file (outfmt 6)")
-	parser.add_argument("primer_candidates", type=str, metavar="Primer candidates", help="Primer candidate name list file. One candidate in u128 in a line.")
+	parser.add_argument("-b", "--blast_result", required=True, nargs="+", type=str, metavar="Blast result", help="Blast results file (outfmt 6)")
+	parser.add_argument("-p", "--primer_candidates",required=True, type=str, metavar="Primer candidates", help="Primer candidate name list file. One candidate in u128 in a line.")
 	args = parser.parse_args()
-	filename = args.blast_result
-	candidates_pack_raw = []
-	records = []
-	primer_pairs = set()
-	with open(filename) as f:
-		for line in f:
-			elm = line.strip().split("\t")
-			seqid = int(elm[0].split("-")[0], 16)
-			role = elm[0].split("-")[1]
-			qseqid,sseqid,pident,length,mismatch,gapopen,qstart,qend,sstart,send,evalue,bitscore = elm
-			pident   = float(pident)
-			length   = int(length)
-			mismatch = int(mismatch)
-			gapopen  = int(gapopen)
-			qstart   = int(qstart)
-			qend     = int(qend)
-			sstart   = int(sstart)
-			send     = int(send)
-			primer_pairs.add(seqid)
-			records.append(Record(seqid, role, qseqid, sseqid, pident, length, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore))
+	filenames = args.blast_result
+	discarded_primer_pairs = set()
 
-	#discarded_primer_pairs = blast_checker_1(primer_pairs, records)
-	discarded_primer_pairs = blast_checker_2(records)
 	primer_candidates_set = set()
 	with open(args.primer_candidates) as f:
 		for line in f:
 			primer_candidates_set.add(int(line, 16))
 
-	for i in primer_candidates_set - discarded_primer_pairs:
-		print(f'{hex(i).replace("0x", "")}')
-	print(f"input file: {filename}", file = sys.stderr)
-	print(f"# of records in the inout file: {len(records)}", file = sys.stderr)
-	print(f"{len(primer_candidates_set)} - {len(discarded_primer_pairs)} = {len(primer_candidates_set - discarded_primer_pairs)}", file = sys.stderr)
-	print(f"{len(primer_candidates_set - discarded_primer_pairs)/len(primer_candidates_set)}", file = sys.stderr)
+	for each_db in filenames:
+		records = []
+		with open(each_db) as f:
+			for line in f:
+				elm = line.strip().split("\t")
+				seqid = int(elm[0].split("-")[0], 16)
+				role = elm[0].split("-")[1]
+				qseqid,sseqid,pident,length,mismatch,gapopen,qstart,qend,sstart,send,evalue,bitscore = elm
+				pident   = float(pident)
+				length   = int(length)
+				mismatch = int(mismatch)
+				gapopen  = int(gapopen)
+				qstart   = int(qstart)
+				qend     = int(qend)
+				sstart   = int(sstart)
+				send     = int(send)
+				records.append(Record(seqid, role, qseqid, sseqid, pident, length, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore))
+
+			#discarded_primer_pairs = blast_checker_1(primer_pairs, records)
+			discarded_primer_pairs = discarded_primer_pairs | blast_checker_2(records)
+
+
+
+	remained = primer_candidates_set - discarded_primer_pairs
+	print(f"candidates: {len(primer_candidates_set)}", file = sys.stderr)
+	print(f"discarded:  {len(discarded_primer_pairs)}", file = sys.stderr)
+	print(f"remained:   {len(remained)}", file = sys.stderr)
+
+	# for i in primer_candidates_set - discarded_primer_pairs:
+	# 	print(f'{hex(i).replace("0x", "")}')
+	# print(f"input file: {filename}", file = sys.stderr)
+	# print(f"# of records in the inout file: {len(records)}", file = sys.stderr)
+	# print(f"{len(primer_candidates_set)} - {len(discarded_primer_pairs)} = {len(primer_candidates_set - discarded_primer_pairs)}", file = sys.stderr)
+	# print(f"{len(primer_candidates_set - discarded_primer_pairs)/len(primer_candidates_set)}", file = sys.stderr)
 
 
 
