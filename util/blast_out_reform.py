@@ -94,6 +94,8 @@ def main():
 	print(f"discarded:  {len(discarded_primer_pairs)}", file = sys.stderr)
 	print(f"remained:   {len(remained)}", file = sys.stderr)
 
+	for i in remained:
+		print(hex(i).replace("0x", ""))
 	# for i in primer_candidates_set - discarded_primer_pairs:
 	# 	print(f'{hex(i).replace("0x", "")}')
 	# print(f"input file: {filename}", file = sys.stderr)
