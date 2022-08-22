@@ -90,7 +90,8 @@ def main():
 		print(f'{hex(i).replace("0x", "")}')
 	print(f"input file: {filename}", file = sys.stderr)
 	print(f"# of records in the inout file: {len(records)}", file = sys.stderr)
-	print(f"{len(primer_candidates_set)} - {len(discarded_primer_pairs)} = {len(primer_candidates_set - discarded_primer_pairs)} ({len(discarded_primer_pairs) / len(primer_candidates_set - discarded_primer_pairs)})", file = sys.stderr)
+	print(f"{len(primer_candidates_set)} - {len(discarded_primer_pairs)} = {len(primer_candidates_set - discarded_primer_pairs)}", file = sys.stderr)
+	print(f"{len(primer_candidates_set - discarded_primer_pairs)/len(primer_candidates_set)}", file = sys.stderr)
 
 
 
