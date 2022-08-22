@@ -23,6 +23,36 @@ class Record(ABC):
 	evalue   : str
 	bitscore : str
 
+
+def blast_checker_1(primer_pairs, records):
+	discarded_primer_pairs = set()
+	for each_primer_pair in primer_pairs:
+		subject_to_be_checked = list(filter(lambda x: x.seqid == each_primer_pair, records))
+		roles_in_each_primer_pair = set()
+		for i in subject_to_be_checked:
+			roles_in_each_primer_pair.add(i.role)
+		if len(roles_in_each_primer_pair) == 3:
+			sseqids = set([x.sseqid for x in subject_to_be_checked])
+			for each_sseqid in sseqids:
+				role_L_coverage = [(x.sstart, x.send) for x in subject_to_be_checked if x.role == "L" and x.sseqid == each_sseqid]
+				role_M_coverage = [(x.sstart, x.send) for x in subject_to_be_checked if x.role == "M" and x.sseqid == each_sseqid]
+				role_R_coverage = [(x.sstart, x.send) for x in subject_to_be_checked if x.role == "R" and x.sseqid == each_sseqid]
+				if role_L_coverage != [] and role_M_coverage != [] and role_R_coverage != []:
+					# test all combination
+					for l in role_L_coverage:
+						for m in role_M_coverage:
+							for r in role_R_coverage:
+								if 0 < m[0] - l[1] < 76 and 0 < r[0] - m[1] < 76:
+									discarded_primer_pairs.add(each_primer_pair)
+	return discarded_primer_pairs
+
+
+def blast_checker_2(records):
+	return set([x.seqid for x in records])
+
+
+
+
 def main():
 	parser = argparse.ArgumentParser(description = "blastn-short result reformer")
 	parser.add_argument("blast_result", type=str, metavar="Blast result", help="Blast results file (outfmt 6)")
@@ -49,26 +79,8 @@ def main():
 			primer_pairs.add(seqid)
 			records.append(Record(seqid, role, qseqid, sseqid, pident, length, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore))
 
-	discarded_primer_pairs = set()
-	for each_primer_pair in primer_pairs:
-		subject_to_be_checked = list(filter(lambda x: x.seqid == each_primer_pair, records))
-		roles_in_each_primer_pair = set()
-		for i in subject_to_be_checked:
-			roles_in_each_primer_pair.add(i.role)
-		if len(roles_in_each_primer_pair) == 3:
-			sseqids = set([x.sseqid for x in subject_to_be_checked])
-			for each_sseqid in sseqids:
-				role_L_coverage = [(x.sstart, x.send) for x in subject_to_be_checked if x.role == "L" and x.sseqid == each_sseqid]
-				role_M_coverage = [(x.sstart, x.send) for x in subject_to_be_checked if x.role == "M" and x.sseqid == each_sseqid]
-				role_R_coverage = [(x.sstart, x.send) for x in subject_to_be_checked if x.role == "R" and x.sseqid == each_sseqid]
-				if role_L_coverage != [] and role_M_coverage != [] and role_R_coverage != []:
-					# test all combination
-					for l in role_L_coverage:
-						for m in role_M_coverage:
-							for r in role_R_coverage:
-								if 0 < m[0] - l[1] < 76 and 0 < r[0] - m[1] < 76:
-									discarded_primer_pairs.add(each_primer_pair)
-
+	#discarded_primer_pairs = blast_checker_1(primer_pairs, records)
+	discarded_primer_pairs = blast_checker_2(records)
 	primer_candidates_set = set()
 	with open(args.primer_candidates) as f:
 		for line in f:
