@@ -25,7 +25,7 @@ def main():
 			print(line.strip(), end = "\t")
 			print(title_text, end = "\t")
 			print(url)
-			time.sleep(5)
+			time.sleep(10)
 
 
 if __name__ == "__main__":
