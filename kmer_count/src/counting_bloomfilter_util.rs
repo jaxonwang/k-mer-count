@@ -117,13 +117,29 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                     add_bloom_filter_cnt += 1;
                     let lmr_string = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [m_window_start, m_window_end], [r_window_start, r_window_end]]);
                     let table_indice:[u32;8] = hash_from_u128(lmr_string);//u128を受けてhashを返す関数
+
+
                     for i in 0..8{
                         let idx: usize = table_indice[i] as usize;
-                        if rng.gen::<u64>() < (u64::MAX >> (64 - ret_array[idx].leading_zeros())){
+                        if ret_array[idx] == u64::MAX{
+                            eprintln!("index {} reaches u64::MAX", idx);
+                        }else{
                             ret_array[idx] += 1;
                         }
                     }
 
+/*
+                    for i in 0..8{
+                        let idx: usize = table_indice[i] as usize;
+                        if rng.gen::<u64>() < (u64::MAX >> (64 - ret_array[idx].leading_zeros())){
+                            if ret_array[idx] == u64::MAX{
+                                eprintln!("index {} reaches u64::MAX", idx);
+                            }else{
+                                ret_array[idx] += 1;
+                            }
+                        }
+                    }
+*/
 /*
                     let occurence = count_occurence_from_counting_bloomfilter_table(&ret_array, table_indice);
                     if rng.gen::<u64>() < (u64::MAX >> (64 - occurence.leading_zeros())){
