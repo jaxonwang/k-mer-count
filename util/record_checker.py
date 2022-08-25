@@ -20,6 +20,7 @@ def main():
 		for line in f:
 			url = prefix + line.strip()
 			res = requests.get(prefix + line.strip())
+			
 			soup = BeautifulSoup(res.text, 'html.parser')
 			title_text = soup.find('title').get_text()
 			print(line.strip(), end = "\t")
