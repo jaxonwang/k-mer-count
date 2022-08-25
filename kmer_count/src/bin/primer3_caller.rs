@@ -4,15 +4,12 @@ use std::{env, process};
 use std::fs::File;
 use std::io::{Read, BufReader};
 use std::io::prelude::*;
-use std::error::Error;
 use std::process::{Command, Stdio};
-use std::borrow::Cow;
-use std::collections::HashMap;
 use std::thread;
 use std::sync::Arc;
 use std::sync::Mutex;
 use getopts::Options;
-use kmer_count::sequence_encoder_util::{decode_u128_l, decode_u128_m, decode_u128_r, decode_u128_2_dna_seq};
+use kmer_count::sequence_encoder_util::{decode_u128_l, decode_u128_m, decode_u128_r};
 
 
 
@@ -126,7 +123,7 @@ fn main(){
     let primer3_fmt_string: Vec<String> = primer3_core_input_sequence(&candidates);
 
     let mut chunks_of_input: Vec<String> = Vec::new();
-    for i in 0..thread_number{
+    for _i in 0..thread_number{
         chunks_of_input.push(String::new());
     }
     for (index, string) in primer3_fmt_string.iter().enumerate(){

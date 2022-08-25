@@ -4,14 +4,11 @@ extern crate getopts;
 use getopts::Options;
 use std::{env, process};
 use std::fs;
-use std::fs::File;
 use std::io::{BufWriter, Write};
 use voracious_radix_sort::{RadixSort};
-use kmer_count::counting_bloomfilter_util::L_LEN;
-use kmer_count::counting_bloomfilter_util::R_LEN;
 use kmer_count::counting_bloomfilter_util::BLOOMFILTER_TABLE_SIZE;
 use kmer_count::counting_bloomfilter_util::{build_counting_bloom_filter, number_of_high_occurence_kmer, pick_up_high_occurence_kmer};
-use kmer_count::sequence_encoder_util::{decode_u128_l, decode_u128_r, decode_u128_2_dna_seq};
+use kmer_count::sequence_encoder_util::{decode_u128_2_dna_seq};
 
 
 fn print_usage(program: &str, opts: &Options) {

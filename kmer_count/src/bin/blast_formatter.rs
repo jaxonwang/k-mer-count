@@ -3,15 +3,10 @@ extern crate getopts;
 use std::{env, process};
 use std::io::{Write, BufWriter};
 use std::io::{Read,  BufReader};
-use std::io::prelude::*;
-use std::error::Error;
-use std::process::{Command, Stdio};
-use std::borrow::Cow;
-use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
 use getopts::Options;
-use kmer_count::sequence_encoder_util::{decode_u128_l, decode_u128_m, decode_u128_r, decode_u128_2_dna_seq};
+use kmer_count::sequence_encoder_util::{decode_u128_l, decode_u128_m, decode_u128_r};
 
 
 fn print_usage(program: &str, opts: &Options) {

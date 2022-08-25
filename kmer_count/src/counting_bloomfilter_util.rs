@@ -6,7 +6,7 @@ pub const M_LEN: usize = 22;
 pub const R_LEN: usize = 21;
 
 use crate::sequence_encoder_util::DnaSequence;
-use rand::Rng;
+//use rand::Rng;
 use std::fs::File;
 use sha2::Sha256;
 use sha2::Digest;
@@ -21,7 +21,6 @@ use bio::io::fasta::Record as faRecord;
 use bio::io::fasta::FastaRead;
 
 
-use std::io::{self, Read, Write, BufReader, BufWriter};
 
 
 pub const BLOOMFILTER_TABLE_SIZE: usize = u32::MAX as usize + 1;
@@ -65,7 +64,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
     let mut reader = faReader::new(file);
     let mut record = faRecord::new();
 
-    let mut rng = rand::thread_rng();
+    //let rng = rand::thread_rng();
     let start = Instant::now();
     let mut previous_time = start.elapsed();
     'each_read: loop {
@@ -89,7 +88,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
             l_window_cnt += 1;
             let l_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(l_window_start, l_window_end);
             if  l_has_poly_base_or_simple_repeat == true{
-                l_window_start += L_LEN - 4;
+                //l_window_start += L_LEN - 4;
                 continue 'each_l_window;
             }
             'each_r_window: for dna_chunk_size in 80..141 {
@@ -100,7 +99,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                 }
                 let r_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(r_window_start, r_window_end);
                 if r_has_poly_base_or_simple_repeat == true{
-                    r_window_start += R_LEN - 4;
+                    //r_window_start += R_LEN - 4;
                     continue 'each_r_window;
                 }
                 m_window_start = l_window_end + 1;
@@ -111,7 +110,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                     }
                     let m_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(m_window_start, m_window_end);
                     if m_has_poly_base_or_simple_repeat == true{
-                        m_window_start += M_LEN - 4;
+                        //m_window_start += M_LEN - 4;
                         continue 'each_m_window;
                     }
                     add_bloom_filter_cnt += 1;
@@ -245,7 +244,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
                 }
                 let r_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(r_window_start, r_window_end);
                 if r_has_poly_base_or_simple_repeat == true{
-                    r_window_start += R_LEN - 4;
+                    //r_window_start += R_LEN - 4;
                     continue 'each_r_window;
                 }
                 m_window_start = l_window_end + 1;
@@ -256,7 +255,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
                     }
                     let m_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(m_window_start, m_window_end);
                     if m_has_poly_base_or_simple_repeat == true{
-                        m_window_start += M_LEN - 4;
+                        //m_window_start += M_LEN - 4;
                         continue 'each_m_window;
                     }
 
@@ -347,7 +346,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                 }
                 let r_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(r_window_start, r_window_end);
                 if r_has_poly_base_or_simple_repeat == true{
-                    r_window_start += R_LEN - 4;
+                    //r_window_start += R_LEN - 4;
                     continue 'each_r_window;
                 }
                 m_window_start = l_window_end + 1;
@@ -358,7 +357,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                     }
                     let m_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(m_window_start, m_window_end);
                     if m_has_poly_base_or_simple_repeat == true{
-                        m_window_start += M_LEN - 4;
+                        //m_window_start += M_LEN - 4;
                         continue 'each_m_window;
                     }
                     let r_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(r_window_start, r_window_end);

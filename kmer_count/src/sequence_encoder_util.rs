@@ -214,7 +214,7 @@ impl DnaSequence{
         let val6 = !val5;
         let val7 = val6 & zero_ichi;
         let val8 = val7 >> 2;
-        let val9 = val7 >> 4;
+        //let val9 = val7 >> 4;
         let last = val7 & val8;// & val9;
         #[cfg(test)]{
             println!("start:    {}", start);
@@ -292,13 +292,13 @@ impl DnaSequence{
         assert!(end - start < 32, "DnaSequence::has_poly_base assertion failed: length of the evaluation subject must be shorter than 32");
         assert!(end <= self.length, "DnaSequence::has_poly_base assertion failed: end coordinate must be smaller than length of the sequence. end: {}, self.lngth: {}", end, self.length);
         let mut original:  u64 = 0;
-        let mut zero_ichi: u64 = 1;
+        //let mut zero_ichi: u64 = 1;
         for i in start..end{
             original += (self.sequence[i / 32] >> (62 - 2 * (i % 32))) & 3;
             if i != end - 1{
                 original <<= 2;
-                zero_ichi <<= 2;
-                zero_ichi += 1;
+                //zero_ichi <<= 2;
+                //zero_ichi += 1;
             }
         }//ここまでで、originalに右詰で対象の領域がコピーされる。
         let val1 = original;
@@ -308,13 +308,13 @@ impl DnaSequence{
         #[cfg(test)]{
             println!("start: {}", start);
             println!("end:   {}", end);
-            println!("0101:  {:064b}", zero_ichi);
+            //println!("0101:  {:064b}", zero_ichi);
             println!("val1:  {:064b}", val1);
             println!("val2:  {:064b}", val2);
             println!("val3:  {:064b}", val3);
         }
         val3 <<= 2 * (32 - (end - start));
-        for i in 0..(end - start){
+        for _i in 0..(end - start){
             #[cfg(test)]{
                 println!("val3:  {:064b}", val3);
             }
