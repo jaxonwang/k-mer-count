@@ -20,7 +20,7 @@ class Record(ABC):
 	sseq     : str
 	evalue   : str
 	length   : int
-	staxid   : int
+	staxid   : str
 	staxids  : str
 	ssciname : str
 	scomname : str
@@ -87,7 +87,7 @@ def main():
 				sseq     = str(sseq)
 				evalue   = str(evalue)
 				length   = int(length)
-				staxid   = int(staxid)
+				staxid   = str(staxid)
 				staxids  = str(staxids)
 				ssciname = str(ssciname)
 				scomname = str(scomname)
