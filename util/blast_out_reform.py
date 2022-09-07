@@ -74,8 +74,7 @@ def main():
 				elm = line.strip().split("\t")
 				seqid = int(elm[0].split("-")[0], 16)
 				role = elm[0].split("-")[1]
-				qseqid, sseqid, sacc, slen, qstart, qend, sstart, send, qseq, sseq, evalue, length, staxid, staxids, ssciname, scomname
- = elm
+				qseqid, sseqid, sacc, slen, qstart, qend, sstart, send, qseq, sseq, evalue, length, staxid, staxids, ssciname, scomname = elm
 				qseqid   = str(qseqid)
 				sseqid   = str(sseqid)
 				sacc     = str(sacc)
