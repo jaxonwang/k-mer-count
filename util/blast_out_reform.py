@@ -93,9 +93,7 @@ def main():
 				scomname = str(scomname)
 
 
-
-
-				records.append(Record(seqid, role, qseqid, sseqid, pident, length, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore))
+				records.append(Record(qseqid,sseqid,sacc,slen,qstart,qend,sstart,send,qseq,sseq,evalue,length,staxid,staxids,ssciname,scomname))
 
 			#discarded_primer_pairs = blast_checker_1(primer_pairs, records)
 			discarded_primer_pairs = discarded_primer_pairs | blast_checker_2(records)
