@@ -6,8 +6,8 @@ pp = pprint.PrettyPrinter(indent = 2)
 
 def main():
 	parser = argparse.ArgumentParser(description = "return intersection of two file")
-	parser.add_argument("file1", "--file1", required=True, type=str, metavar="file 1", help="file1")
-	parser.add_argument("file2", "--file2", required=True, type=str, metavar="file 2", help="file2")
+	parser.add_argument("-file1", "--file1", required=True, type=str, metavar="file 1", help="file1")
+	parser.add_argument("-file2", "--file2", required=True, type=str, metavar="file 2", help="file2")
 	args = parser.parse_args()
 	file1_set = set()
 	file2_set = set()
