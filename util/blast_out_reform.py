@@ -16,8 +16,8 @@ class Record(ABC):
 	qend     : int
 	sstart   : int
 	send     : int
-	qseq     : int
-	sseq     : int
+	qseq     : str
+	sseq     : str
 	evalue   : str
 	length   : int
 	staxid   : int
@@ -83,8 +83,8 @@ def main():
 				qend     = int(qend)
 				sstart   = int(sstart)
 				send     = int(send)
-				qseq     = int(qseq)
-				sseq     = int(sseq)
+				qseq     = str(qseq)
+				sseq     = str(sseq)
 				evalue   = str(evalue)
 				length   = int(length)
 				staxid   = int(staxid)
