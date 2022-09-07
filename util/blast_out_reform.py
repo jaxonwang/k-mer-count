@@ -47,12 +47,8 @@ def blast_checker_1(primer_pairs, records):
 									discarded_primer_pairs.add(each_primer_pair)
 	return discarded_primer_pairs
 
-
 def blast_checker_2(records):
 	return set([x.qseqid for x in records])
-
-
-
 
 def main():
 	parser = argparse.ArgumentParser(description = "blastn-short result reformer")
