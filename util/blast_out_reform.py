@@ -8,20 +8,22 @@ pp = pprint.PrettyPrinter(indent = 2)
 
 @dataclass
 class Record(ABC):
-	seqid    : int
-	role     : str
 	qseqid   : str
 	sseqid   : str
-	pident   : float
-	length   : int
-	mismatch : int
-	gapopen  : int
-	qstart   : int
-	qend     : int
-	sstart   : int
-	send     : int
+	sacc     : str
+	slen     : str
+	qstart   : str
+	qend     : str
+	sstart   : str
+	send     : str
+	qseq     : str
+	sseq     : str
 	evalue   : str
-	bitscore : str
+	length   : str
+	staxid   : str
+	staxids  : str
+	ssciname : str
+	scomname : str
 
 
 def blast_checker_1(primer_pairs, records):
