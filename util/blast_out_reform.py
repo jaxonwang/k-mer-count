@@ -49,7 +49,7 @@ def blast_checker_1(primer_pairs, records):
 
 
 def blast_checker_2(records):
-	return set([x.seqid for x in records])
+	return set([x.qseqid for x in records])
 
 
 
