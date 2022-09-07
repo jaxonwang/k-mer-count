@@ -11,20 +11,19 @@ class Record(ABC):
 	qseqid   : str
 	sseqid   : str
 	sacc     : str
-	slen     : str
-	qstart   : str
-	qend     : str
-	sstart   : str
-	send     : str
-	qseq     : str
-	sseq     : str
+	slen     : int
+	qstart   : int
+	qend     : int
+	sstart   : int
+	send     : int
+	qseq     : int
+	sseq     : int
 	evalue   : str
-	length   : str
-	staxid   : str
+	length   : int
+	staxid   : int
 	staxids  : str
 	ssciname : str
 	scomname : str
-
 
 def blast_checker_1(primer_pairs, records):
 	discarded_primer_pairs = set()
@@ -75,15 +74,28 @@ def main():
 				elm = line.strip().split("\t")
 				seqid = int(elm[0].split("-")[0], 16)
 				role = elm[0].split("-")[1]
-				qseqid,sseqid,pident,length,mismatch,gapopen,qstart,qend,sstart,send,evalue,bitscore = elm
-				pident   = float(pident)
-				length   = int(length)
-				mismatch = int(mismatch)
-				gapopen  = int(gapopen)
+				qseqid, sseqid, sacc, slen, qstart, qend, sstart, send, qseq, sseq, evalue, length, staxid, staxids, ssciname, scomname
+ = elm
+				qseqid   = str(qseqid)
+				sseqid   = str(sseqid)
+				sacc     = str(sacc)
+				slen     = int(slen)
 				qstart   = int(qstart)
 				qend     = int(qend)
 				sstart   = int(sstart)
 				send     = int(send)
+				qseq     = int(qseq)
+				sseq     = int(sseq)
+				evalue   = str(evalue)
+				length   = int(length)
+				staxid   = int(staxid)
+				staxids  = str(staxids)
+				ssciname = str(ssciname)
+				scomname = str(scomname)
+
+
+
+
 				records.append(Record(seqid, role, qseqid, sseqid, pident, length, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore))
 
 			#discarded_primer_pairs = blast_checker_1(primer_pairs, records)
