@@ -90,9 +90,9 @@ def main():
 
 
 	remained = primer_candidates_set - discarded_primer_pairs
-	print(f"candidates: {len(primer_candidates_set)}", file = sys.stderr)
-	print(f"discarded:  {len(discarded_primer_pairs)}", file = sys.stderr)
-	print(f"remained:   {len(remained)}", file = sys.stderr)
+	#print(f"candidates: {len(primer_candidates_set)}", file = sys.stderr)
+	#print(f"discarded:  {len(discarded_primer_pairs)}", file = sys.stderr)
+	#print(f"remained:   {len(remained)}", file = sys.stderr)
 
 	for i in remained:
 		print(hex(i).replace("0x", ""))
