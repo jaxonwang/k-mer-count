@@ -4,6 +4,7 @@ import argparse
 import re
 import pprint
 import json
+import sys
 pp = pprint.PrettyPrinter(indent = 2)
 
 """
@@ -88,12 +89,13 @@ class PrimerPair():
 		self.PRIMER_PAIR_PRODUCT_TM      = PRIMER_PAIR_PRODUCT_TM
 
 
-
-
-
-
-
-
+def fmt4fasta(primer_pairs_dict):
+	retarray = []
+	for k, v in primer_pairs_dict.items():
+		for idx, each_pair in enumerate(v["Primer3_output"]):
+			tmpstr = f">{k}_{idx}_L\n{each_pair['PRIMER_LEFT_SEQUENCE']}\n>{k}_{idx}_M\n{each_pair['PRIMER_INTERNAL_SEQUENCE']}\n>{k}_{idx}_R\n{each_pair['PRIMER_RIGHT_SEQUENCE']}"
+			retarray.append(tmpstr)
+	return "\n".join(retarray)
 
 
 
@@ -253,7 +255,7 @@ def extract_primer_pairs(primers_candidates):
 				tmp_PrimerPair = PrimerPair(current_PRIMER_PAIR_PENALTY, current_PRIMER_LEFT_PENALTY, current_PRIMER_RIGHT_PENALTY, current_PRIMER_INTERNAL_PENALTY, current_PRIMER_LEFT_SEQUENCE, current_PRIMER_RIGHT_SEQUENCE, current_PRIMER_INTERNAL_SEQUENCE, current_PRIMER_LEFT, current_PRIMER_RIGHT, current_PRIMER_INTERNAL, current_PRIMER_LEFT_TM, current_PRIMER_RIGHT_TM, current_PRIMER_INTERNAL_TM, current_PRIMER_LEFT_GC_PERCENT, current_PRIMER_RIGHT_GC_PERCENT, current_PRIMER_INTERNAL_GC_PERCENT, current_PRIMER_INTERNAL_SELF_ANY_TH, current_PRIMER_LEFT_SELF_ANY_TH, current_PRIMER_RIGHT_SELF_ANY_TH, current_PRIMER_INTERNAL_SELF_END_TH, current_PRIMER_LEFT_SELF_END_TH, current_PRIMER_RIGHT_SELF_END_TH, current_PRIMER_LEFT_HAIRPIN_TH, current_PRIMER_RIGHT_HAIRPIN_TH, current_PRIMER_INTERNAL_HAIRPIN_TH, current_PRIMER_LEFT_END_STABILITY, current_PRIMER_RIGHT_END_STABILITY, current_PRIMER_PAIR_COMPL_ANY_TH, current_PRIMER_PAIR_COMPL_END_TH, current_PRIMER_PAIR_PRODUCT_SIZE, current_PRIMER_PAIR_PRODUCT_TM)
 				each_pairs.append(tmp_PrimerPair.__dict__)
 				i = i + 1
-			retdict[each_primer.SEQUENCE_ID] = {"Primer3_input": each_primer.__dict__, "Primer3_output": [each_pairs]}
+			retdict[each_primer.SEQUENCE_ID] = {"Primer3_input": each_primer.__dict__, "Primer3_output": each_pairs}
 	return retdict
 
 
@@ -262,15 +264,25 @@ def main():
 	parser = argparse.ArgumentParser(description = "primer3 result parser")
 	parser.add_argument("primer3_result", metavar = "primer3_result", type = str, help = "primer3 results file name")
 	parser.add_argument("-o",    metavar = "output_file",    type = str, default = "sys.stdout", help = "output file name (default = sys.stdout)")
+	parser.add_argument("--fasta", action='store_true', help = "output as fasta")
 	args = parser.parse_args()
-	pp.pprint(args.__dict__)
 	filename = args.primer3_result
 	primers_candidates = primer3_result_parser(filename)
 	primer_pairs_dict = extract_primer_pairs(primers_candidates)
-	if args.o != "sys.stdout":
-		with open(args.o, "w") as f:
-			json.dump(primer_pairs_dict, f, indent=2)
+	fmt4fasta_strings = fmt4fasta(primer_pairs_dict)
+
+	if args.fasta:
+		if args.o != "sys.stdout":
+			with open(args.o, "w") as f:
+				print(fmt4fasta_strings, file = f)
+		else:
+			print(fmt4fasta_strings, file = sys.stdout)
 	else:
-		print(json.dumps(primer_pairs_dict, indent=2))
+		if args.o != "sys.stdout":
+			with open(args.o, "w") as f:
+				json.dump(primer_pairs_dict, f, indent=2)
+		else:
+			print(json.dumps(primer_pairs_dict, indent=2))
+
 if __name__ == '__main__':
     main()
