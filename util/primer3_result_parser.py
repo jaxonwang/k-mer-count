@@ -285,4 +285,4 @@ def main():
 			print(json.dumps(primer_pairs_dict, indent=2))
 
 if __name__ == '__main__':
-    main()
+	main()
