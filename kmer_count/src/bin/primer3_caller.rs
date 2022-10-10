@@ -27,12 +27,10 @@ fn primer3_core_input_sequence(sequences: &Vec<u128>) -> Vec<String>{
         let sequence_with_internal_n = format!("{}{}{}{}{}", l_str, many_n, m_str, many_n, r_str);
         let primer3_fmt_str = format!("SEQUENCE_ID={:0x}
 SEQUENCE_TEMPLATE={}
-SEQUENCE_TARGET=28,86
 PRIMER_TASK=pick_pcr_primers_and_hyb_probe
 PRIMER_OPT_SIZE=18
 PRIMER_MIN_SIZE=15
 PRIMER_MAX_SIZE=21
-PRIMER_PRODUCT_SIZE_RANGE=201-300 101-200
 P3_FILE_FLAG=0
 PRIMER_EXPLAIN_FLAG=1
 =", each_seq, sequence_with_internal_n);
@@ -40,6 +38,8 @@ PRIMER_EXPLAIN_FLAG=1
     }
     return str_vec;
 }
+//SEQUENCE_TARGET=28,86
+//PRIMER_PRODUCT_SIZE_RANGE=100-300
 
 
 fn execute_primer3(formatted_string: String) -> String{
