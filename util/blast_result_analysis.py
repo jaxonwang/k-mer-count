@@ -41,10 +41,11 @@ def grep_input_record_name(primer_pairs_dict):
 
 def main():
 	parser = argparse.ArgumentParser(description = "compare input fasta file and blast result")
-	parser.add_argument("fasta",   metavar = "fasta",   type = str, help = "fasta file name")
-	parser.add_argument("blast",   metavar = "blast",   type = str, help = "blast output file name. outfmt must be '6 qseqid sseqid sacc slen qstart qend sstart send qseq sseq evalue length staxid staxids ssciname scomname'")
-	parser.add_argument("primer3", metavar = "primer3", type = str, help = "primer3 output file (json)")
-	parser.add_argument("-o",    metavar = "output_file",    type = str, default = "sys.stdout", help = "output file name (default = sys.stdout)")
+	parser.add_argument("fasta",   metavar = "fasta",       type = str, help = "fasta file name")
+	parser.add_argument("blast",   metavar = "blast",       type = str, help = "blast output file name. outfmt must be '6 qseqid sseqid sacc slen qstart qend sstart send qseq sseq evalue length staxid staxids ssciname scomname'")
+	parser.add_argument("primer3", metavar = "primer3",     type = str, help = "primer3 output file (json)")
+	parser.add_argument("-o",      metavar = "output_file", type = str, default = "sys.stdout", help = "output file name (default = sys.stdout)")
+	parser.add_argument("--fasta", action='store_true',     help = "output as fasta")
 	args = parser.parse_args()
 	filename = args.fasta
 	fasta_ids = set()
@@ -67,7 +68,6 @@ def main():
 	print(f"total count of blast hits                      : {len(blast_results)}")
 	print(f"cardinarity of input which was trapped by blast: {len(blast_trapped_seq_ids)}")
 	print(f"survivor                                       : {len(survivor)}")
-	#pp.pprint(survivor)
 	survivor_pair = set()
 	for each_primer in survivor:
 		pair = ""
@@ -77,12 +77,14 @@ def main():
 			pair = each_primer.replace("R", "L")
 		if pair in survivor:
 			survivor_pair.add(each_primer[0:-2])
-	#pp.pprint(survivor_pair)
+	pp.pprint(survivor_pair)
 	primer_pairs_dict = None
 	with open(args.primer3, "r") as f:
 		primer_pairs_dict = json.load(f)
 	#pp.pprint(primer_pairs_dict)
 
+
+		
 
 	for each_survivor_pair in survivor_pair:
 		seqid = each_survivor_pair[0:-2]
