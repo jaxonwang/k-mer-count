@@ -1,9 +1,9 @@
 //use crate::encoder_util::decode_u128_2_dna_seq;
 //use crate::encoder_util::encode_dna_seq_2_u128;
 //use crate::encoder_util::decode_u128_2_occurence;
-pub const L_LEN: usize = 21;
-pub const M_LEN: usize = 22;
-pub const R_LEN: usize = 21;
+pub const L_LEN: usize = 19;
+pub const M_LEN: usize = 26;
+pub const R_LEN: usize = 19;
 
 use crate::sequence_encoder_util::DnaSequence;
 //use rand::Rng;
