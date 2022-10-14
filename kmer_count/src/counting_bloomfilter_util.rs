@@ -44,12 +44,12 @@ R_LEN = 21
 //全てのL, Rと、hash値を出力する
 //部分配列のdecoderを書き、テストする
 pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SIZE]>{
-    let mut l_window_start: usize;
-    let mut l_window_end:   usize;
-    let mut m_window_start: usize;
-    let mut m_window_end:   usize;
-    let mut r_window_start: usize;
-    let mut r_window_end:   usize;
+    let mut l_window_start: usize = 0;
+    let mut l_window_end:   usize = 0;
+    let mut m_window_start: usize = 0;
+    let mut m_window_end:   usize = 0;
+    let mut r_window_start: usize = 0;
+    let mut r_window_end:   usize = 0;
 
     let mut loop_cnt:usize = 0;
     eprintln!("Allocating Box<[u64; BLOOMFILTER_TABLE_SIZE]> where BLOOMFILTER_TABLE_SIZE = {}", BLOOMFILTER_TABLE_SIZE);
@@ -77,13 +77,13 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
         let sequence_as_vec: Vec<u8> = record.seq().to_vec();
         let current_sequence = DnaSequence::new(&sequence_as_vec);
         'each_l_window: loop{
-            eprintln!("l_window_start: {:?},l_window_end: {:?}", l_window_start, l_window_end);
-            eprintln!("m_window_start: {:?},m_window_end: {:?}", m_window_start, m_window_end);
-            eprintln!("r_window_start: {:?},r_window_end: {:?}", r_window_start, r_window_end);
             l_window_end = l_window_start + L_LEN;
             if l_window_end >= current_sequence.len(){
                 break 'each_l_window;
             }
+            eprintln!("l_window_start: {:?},l_window_end: {:?}", l_window_start, l_window_end);
+            eprintln!("m_window_start: {:?},m_window_end: {:?}", m_window_start, m_window_end);
+            eprintln!("r_window_start: {:?},r_window_end: {:?}", r_window_start, r_window_end);
             l_window_cnt += 1;
             let l_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(l_window_start, l_window_end);
             if  l_has_poly_base_or_simple_repeat == true{
