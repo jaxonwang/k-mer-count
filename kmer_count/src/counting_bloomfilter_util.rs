@@ -81,13 +81,15 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
             if l_window_end >= current_sequence.len(){
                 break 'each_l_window;
             }
-            eprintln!("l_window_start: {:?},l_window_end: {:?}", l_window_start, l_window_end);
-            eprintln!("m_window_start: {:?},m_window_end: {:?}", m_window_start, m_window_end);
-            eprintln!("r_window_start: {:?},r_window_end: {:?}", r_window_start, r_window_end);
+            
+            // eprintln!("l_window_start: {:?},l_window_end: {:?}", l_window_start, l_window_end);
+            // eprintln!("m_window_start: {:?},m_window_end: {:?}", m_window_start, m_window_end);
+            // eprintln!("r_window_start: {:?},r_window_end: {:?}", r_window_start, r_window_end);
+
             l_window_cnt += 1;
             let l_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(l_window_start, l_window_end);
             if  l_has_poly_base_or_simple_repeat == true{
-                //l_window_start += L_LEN - 4;
+                l_window_start += 1;
                 continue 'each_l_window;
             }
             'each_r_window: for dna_chunk_size in 80..141 {
@@ -98,18 +100,18 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                 }
                 let r_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(r_window_start, r_window_end);
                 if r_has_poly_base_or_simple_repeat == true{
-                    //r_window_start += R_LEN - 4;
+                    r_window_start += 1;
                     continue 'each_r_window;
                 }
                 m_window_start = l_window_end + 1;
                 'each_m_window: loop{
-                    m_window_end   = m_window_start + M_LEN;
+                    m_window_end = m_window_start + M_LEN;
                     if m_window_end >= r_window_start{
                         break 'each_m_window;
                     }
                     let m_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(m_window_start, m_window_end);
                     if m_has_poly_base_or_simple_repeat == true{
-                        //m_window_start += M_LEN - 4;
+                        m_window_start += 1;
                         continue 'each_m_window;
                     }
                     add_bloom_filter_cnt += 1;
