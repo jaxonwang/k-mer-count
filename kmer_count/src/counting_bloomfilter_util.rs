@@ -1,12 +1,8 @@
-//use crate::encoder_util::decode_u128_2_dna_seq;
-//use crate::encoder_util::encode_dna_seq_2_u128;
-//use crate::encoder_util::decode_u128_2_occurence;
 pub const L_LEN: usize = 19;
 pub const M_LEN: usize = 26;
 pub const R_LEN: usize = 19;
 
 use crate::sequence_encoder_util::DnaSequence;
-//use rand::Rng;
 use std::fs::File;
 use sha2::Sha256;
 use sha2::Digest;
@@ -81,6 +77,9 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
         let sequence_as_vec: Vec<u8> = record.seq().to_vec();
         let current_sequence = DnaSequence::new(&sequence_as_vec);
         'each_l_window: loop{
+            eprintln!("l_window_start: {:?},l_window_end: {:?}", l_window_start, l_window_end);
+            eprintln!("m_window_start: {:?},m_window_end: {:?}", m_window_start, m_window_end);
+            eprintln!("r_window_start: {:?},r_window_end: {:?}", r_window_start, r_window_end);
             l_window_end = l_window_start + L_LEN;
             if l_window_end >= current_sequence.len(){
                 break 'each_l_window;
@@ -116,8 +115,6 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                     add_bloom_filter_cnt += 1;
                     let lmr_string = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [m_window_start, m_window_end], [r_window_start, r_window_end]]);
                     let table_indice:[u32;8] = hash_from_u128(lmr_string);//u128を受けてhashを返す関数
-
-
                     for i in 0..8{
                         let idx: usize = table_indice[i] as usize;
                         if ret_array[idx] == u64::MAX{
@@ -126,33 +123,6 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                             ret_array[idx] += 1;
                         }
                     }
-
-/*
-                    for i in 0..8{
-                        let idx: usize = table_indice[i] as usize;
-                        if rng.gen::<u64>() < (u64::MAX >> (64 - ret_array[idx].leading_zeros())){
-                            if ret_array[idx] == u64::MAX{
-                                eprintln!("index {} reaches u64::MAX", idx);
-                            }else{
-                                ret_array[idx] += 1;
-                            }
-                        }
-                    }
-*/
-/*
-                    let occurence = count_occurence_from_counting_bloomfilter_table(&ret_array, table_indice);
-                    if rng.gen::<u64>() < (u64::MAX >> (64 - occurence.leading_zeros())){
-                        for i in 0..8{
-                            let idx: usize = table_indice[i] as usize;
-                            if ret_array[idx] == u64::MAX{
-                                eprintln!("index {} reaches u64::MAX", idx);
-                            }else{
-                                ret_array[idx] += 1;
-                            }
-                        }
-                    }
-*/
-
                     m_window_start += 1;
                 }
             }
