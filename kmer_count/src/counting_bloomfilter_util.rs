@@ -44,23 +44,21 @@ R_LEN = 21
 //全てのL, Rと、hash値を出力する
 //部分配列のdecoderを書き、テストする
 pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SIZE]>{
-    let mut l_window_start: usize = 0;
-    let mut l_window_end:   usize = 0;
-    let mut m_window_start: usize = 0;
-    let mut m_window_end:   usize = 0;
-    let mut r_window_start: usize = 0;
-    let mut r_window_end:   usize = 0;
+    let mut l_window_start: usize;
+    let mut l_window_end:   usize;
+    let mut m_window_start: usize;
+    let mut m_window_end:   usize;
+    let mut r_window_start: usize;
+    let mut r_window_end:   usize;
+    let chunk_max: usize = 140;
 
     let mut loop_cnt:usize = 0;
     eprintln!("Allocating Box<[u64; BLOOMFILTER_TABLE_SIZE]> where BLOOMFILTER_TABLE_SIZE = {}", BLOOMFILTER_TABLE_SIZE);
     let mut ret_array: Box<[u64; BLOOMFILTER_TABLE_SIZE]> = Box::new([0; BLOOMFILTER_TABLE_SIZE]);
     eprintln!("finish allocating");
     let file = File::open(path).expect("Error during opening the file");
-
     let mut reader = faReader::new(file);
     let mut record = faRecord::new();
-
-    //let rng = rand::thread_rng();
     let start = Instant::now();
     let mut previous_time = start.elapsed();
     'each_read: loop {
@@ -68,54 +66,84 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
         if record.is_empty(){
             break 'each_read;
         }
-        l_window_start = 0;
         let mut add_bloom_filter_cnt: usize = 0;
-        let mut l_window_cnt: usize = 0;
+        let mut l_window_cnt: usize         = 0;
 
         eprint!("1st loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
         loop_cnt += 1;
         let sequence_as_vec: Vec<u8> = record.seq().to_vec();
         let current_sequence = DnaSequence::new(&sequence_as_vec);
+        l_window_start = 0;
         'each_l_window: loop{
             l_window_end = l_window_start + L_LEN;
             if l_window_end >= current_sequence.len(){
                 break 'each_l_window;
             }
-            
-            // eprintln!("l_window_start: {:?},l_window_end: {:?}", l_window_start, l_window_end);
-            // eprintln!("m_window_start: {:?},m_window_end: {:?}", m_window_start, m_window_end);
-            // eprintln!("r_window_start: {:?},r_window_end: {:?}", r_window_start, r_window_end);
-
             l_window_cnt += 1;
-            let l_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(l_window_start, l_window_end);
-            if  l_has_poly_base_or_simple_repeat == true{
-                l_window_start += 1;
+            //let l_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(l_window_start, l_window_end);
+            let l_has_poly_base: bool                  = current_sequence.has_poly_base    (l_window_start, l_window_end);
+            let l_has_simple_repeat: bool              = current_sequence.has_simple_repeat(l_window_start, l_window_end);
+            let l_has2base_repeat: bool                = current_sequence.has_2base_repeat (l_window_start, l_window_end);
+            let l_has_poly_base_or_simple_repeat: bool = l_has_poly_base|l_has_simple_repeat|l_has2base_repeat;
+            let mut l_add_value: usize = 1;
+            if l_has_poly_base{
+                l_add_value = L_LEN - 4;
+            }else if l_has_simple_repeat{
+                l_add_value = L_LEN - 9;
+            } else if l_has2base_repeat{
+                l_add_value = L_LEN - 6;
+            }
+            if l_has_poly_base_or_simple_repeat == true{
+                l_window_start += l_add_value;//ポリ塩基がLに含まれてる場合、L_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
                 continue 'each_l_window;
             }
-            'each_r_window: for dna_chunk_size in 80..141 {
-                r_window_start = l_window_start + dna_chunk_size - R_LEN;
-                r_window_end   = r_window_start + R_LEN;
-                if r_window_end >= current_sequence.len(){
-                    break 'each_r_window;
+            m_window_start = l_window_end + 1;
+            'each_m_window: loop{
+                m_window_end = m_window_start + M_LEN;
+                if m_window_end >= current_sequence.len() || m_window_end - l_window_start > chunk_max{
+                    break 'each_m_window;
                 }
-                let r_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(r_window_start, r_window_end);
-                if r_has_poly_base_or_simple_repeat == true{
-                    r_window_start += 1;
-                    continue 'each_r_window;
+                let m_has_poly_base: bool                  = current_sequence.has_poly_base    (m_window_start, m_window_end);
+                let m_has_simple_repeat: bool              = current_sequence.has_simple_repeat(m_window_start, m_window_end);
+                let m_has2base_repeat: bool                = current_sequence.has_2base_repeat (m_window_start, m_window_end);
+                let m_has_poly_base_or_simple_repeat: bool = m_has_poly_base|m_has_simple_repeat|m_has2base_repeat;
+                let mut m_add_value: usize = 1;
+                if m_has_poly_base{
+                    m_add_value = M_LEN - 4;
+                }else if m_has_simple_repeat{
+                    m_add_value = M_LEN - 9;
+                } else if m_has2base_repeat{
+                    m_add_value = M_LEN - 6;
                 }
-                m_window_start = l_window_end + 1;
-                'each_m_window: loop{
-                    m_window_end = m_window_start + M_LEN;
-                    if m_window_end >= r_window_start{
-                        break 'each_m_window;
+                if m_has_poly_base_or_simple_repeat == true{
+                    m_window_start += m_add_value;//ポリ塩基がLに含まれてる場合、m_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
+                    continue 'each_m_window;
+                }
+                r_window_start = m_window_end + 1;
+                'each_r_window: loop{
+                    r_window_end = r_window_start + R_LEN;
+                    if r_window_end >= current_sequence.len() || r_window_end - l_window_start > chunk_max{
+                        break 'each_r_window;
                     }
-                    let m_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(m_window_start, m_window_end);
-                    if m_has_poly_base_or_simple_repeat == true{
-                        m_window_start += 1;
-                        continue 'each_m_window;
+                    let r_has_poly_base: bool                  = current_sequence.has_poly_base    (r_window_start, r_window_end);
+                    let r_has_simple_repeat: bool              = current_sequence.has_simple_repeat(r_window_start, r_window_end);
+                    let r_has2base_repeat: bool                = current_sequence.has_2base_repeat (r_window_start, r_window_end);
+                    let r_has_poly_base_or_simple_repeat: bool = r_has_poly_base|r_has_simple_repeat|r_has2base_repeat;
+                    let mut r_add_value: usize = 1;
+                    if r_has_poly_base{
+                        r_add_value = R_LEN - 4;
+                    }else if r_has_simple_repeat{
+                        r_add_value = R_LEN - 9;
+                    } else if r_has2base_repeat{
+                        r_add_value = R_LEN - 6;
                     }
+                    if r_has_poly_base_or_simple_repeat == true{
+                        r_window_start += r_add_value;//ポリ塩基がLに含まれてる場合、R_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
+                        continue 'each_r_window;
+                    }
+                    //ここからcounting bloom filterに追加していく。
                     add_bloom_filter_cnt += 1;
-                    let lmr_string = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [m_window_start, m_window_end], [r_window_start, r_window_end]]);
+                    let lmr_string: u128 = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [m_window_start, m_window_end], [r_window_start, r_window_end]]);
                     let table_indice:[u32;8] = hash_from_u128(lmr_string);//u128を受けてhashを返す関数
                     for i in 0..8{
                         let idx: usize = table_indice[i] as usize;
@@ -125,8 +153,9 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                             ret_array[idx] += 1;
                         }
                     }
-                    m_window_start += 1;
+                    r_window_start += 1;
                 }
+                m_window_start += 1;
             }
             l_window_start += 1;
         }
@@ -156,7 +185,6 @@ fn hash_from_u128(source: u128) -> [u32; 8]{
         }
     }
     return ret_val;
-
 }
 
 fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &Box<[u64; BLOOMFILTER_TABLE_SIZE]>, indice: [u32; 8]) -> u64{
@@ -180,6 +208,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
     let mut r_window_start: usize;
     let mut r_window_end:   usize;
     let mut loop_cnt:usize = 0;
+    let chunk_max: usize = 140;
     let file = File::open(path).expect("Error during opening the file");
 
     let mut reader = faReader::new(file);
@@ -187,52 +216,94 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
 
     let start = Instant::now();
     let mut previous_time = start.elapsed();
+
+    let mut loop_cnt:usize = 0;
+    eprintln!("Allocating Box<[u64; BLOOMFILTER_TABLE_SIZE]> where BLOOMFILTER_TABLE_SIZE = {}", BLOOMFILTER_TABLE_SIZE);
+    let mut ret_array: Box<[u64; BLOOMFILTER_TABLE_SIZE]> = Box::new([0; BLOOMFILTER_TABLE_SIZE]);
+    eprintln!("finish allocating");
     'each_read: loop {
         reader.read(&mut record).unwrap();
         if record.is_empty(){
             break 'each_read;
         }
-        l_window_start = 0;
+        let mut add_bloom_filter_cnt: usize = 0;
+        let mut l_window_cnt: usize         = 0;
 
         eprint!("2nd loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
         loop_cnt += 1;
         let sequence_as_vec: Vec<u8> = record.seq().to_vec();
         let current_sequence = DnaSequence::new(&sequence_as_vec);
+        l_window_start = 0;
         'each_l_window: loop{
             l_window_end = l_window_start + L_LEN;
             if l_window_end >= current_sequence.len(){
                 break 'each_l_window;
             }
-            let l_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(l_window_start, l_window_end);
-            if  l_has_poly_base_or_simple_repeat == true{
-                l_window_start += 1;
+            l_window_cnt += 1;
+            //let l_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(l_window_start, l_window_end);
+            let l_has_poly_base: bool                  = current_sequence.has_poly_base    (l_window_start, l_window_end);
+            let l_has_simple_repeat: bool              = current_sequence.has_simple_repeat(l_window_start, l_window_end);
+            let l_has2base_repeat: bool                = current_sequence.has_2base_repeat (l_window_start, l_window_end);
+            let l_has_poly_base_or_simple_repeat: bool = l_has_poly_base|l_has_simple_repeat|l_has2base_repeat;
+            let mut l_add_value: usize = 1;
+            if l_has_poly_base{
+                l_add_value = L_LEN - 4;
+            }else if l_has_simple_repeat{
+                l_add_value = L_LEN - 9;
+            } else if l_has2base_repeat{
+                l_add_value = L_LEN - 6;
+            }
+            if l_has_poly_base_or_simple_repeat == true{
+                l_window_start += l_add_value;//ポリ塩基がLに含まれてる場合、L_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
                 continue 'each_l_window;
             }
-            'each_r_window: for dna_chunk_size in 80..141 {
-                r_window_start = l_window_start + dna_chunk_size - R_LEN;
-                r_window_end   = r_window_start + R_LEN;
-                if r_window_end >= current_sequence.len(){
-                    break 'each_r_window;
+            m_window_start = l_window_end + 1;
+            'each_m_window: loop{
+                m_window_end = m_window_start + M_LEN;
+                if m_window_end >= current_sequence.len() || m_window_end - l_window_start > chunk_max{
+                    break 'each_m_window;
                 }
-                let r_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(r_window_start, r_window_end);
-                if r_has_poly_base_or_simple_repeat == true{
-                    //r_window_start += R_LEN - 4;
-                    continue 'each_r_window;
+                let m_has_poly_base: bool                  = current_sequence.has_poly_base    (m_window_start, m_window_end);
+                let m_has_simple_repeat: bool              = current_sequence.has_simple_repeat(m_window_start, m_window_end);
+                let m_has2base_repeat: bool                = current_sequence.has_2base_repeat (m_window_start, m_window_end);
+                let m_has_poly_base_or_simple_repeat: bool = m_has_poly_base|m_has_simple_repeat|m_has2base_repeat;
+                let mut m_add_value: usize = 1;
+                if m_has_poly_base{
+                    m_add_value = M_LEN - 4;
+                }else if m_has_simple_repeat{
+                    m_add_value = M_LEN - 9;
+                } else if m_has2base_repeat{
+                    m_add_value = M_LEN - 6;
                 }
-                m_window_start = l_window_end + 1;
-                'each_m_window: loop{
-                    m_window_end   = m_window_start + M_LEN;
-                    if m_window_end >= r_window_start{
-                        break 'each_m_window;
+                if m_has_poly_base_or_simple_repeat == true{
+                    m_window_start += m_add_value;//ポリ塩基がLに含まれてる場合、m_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
+                    continue 'each_m_window;
+                }
+                r_window_start = m_window_end + 1;
+                'each_r_window: loop{
+                    r_window_end = r_window_start + R_LEN;
+                    if r_window_end >= current_sequence.len() || r_window_end - l_window_start > chunk_max{
+                        break 'each_r_window;
                     }
-                    let m_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(m_window_start, m_window_end);
-                    if m_has_poly_base_or_simple_repeat == true{
-                        //m_window_start += M_LEN - 4;
-                        continue 'each_m_window;
+                    let r_has_poly_base: bool                  = current_sequence.has_poly_base    (r_window_start, r_window_end);
+                    let r_has_simple_repeat: bool              = current_sequence.has_simple_repeat(r_window_start, r_window_end);
+                    let r_has2base_repeat: bool                = current_sequence.has_2base_repeat (r_window_start, r_window_end);
+                    let r_has_poly_base_or_simple_repeat: bool = r_has_poly_base|r_has_simple_repeat|r_has2base_repeat;
+                    let mut r_add_value: usize = 1;
+                    if r_has_poly_base{
+                        r_add_value = R_LEN - 4;
+                    }else if r_has_simple_repeat{
+                        r_add_value = R_LEN - 9;
+                    } else if r_has2base_repeat{
+                        r_add_value = R_LEN - 6;
                     }
-
-                    let lmr_string: u128 = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end],[m_window_start, m_window_end], [r_window_start, r_window_end]]);
-                    let table_indice:[u32;8] = hash_from_u128(lmr_string);
+                    if r_has_poly_base_or_simple_repeat == true{
+                        r_window_start += r_add_value;//ポリ塩基がLに含まれてる場合、R_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
+                        continue 'each_r_window;
+                    }
+                    //ここからcounting bloom filterに追加していく。
+                    let lmr_string:u128 = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [m_window_start, m_window_end], [r_window_start, r_window_end]]);
+                    let table_indice:[u32;8] = hash_from_u128(lmr_string);//u128を受けてhashを返す関数
                     let occurence: u64 = count_occurence_from_counting_bloomfilter_table(source_table, table_indice);
                     if occurence >= threshold{
                         ret_val += 1;
@@ -241,19 +312,18 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
                             ret_table[idx] |= true;
                         }
                     }
-                    m_window_start += 1;
+                    r_window_start += 1;
                 }
+                m_window_start += 1;
             }
             l_window_start += 1;
         }
         let end = start.elapsed();
-        eprintln!("sec: {}.{:03}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos());
+        eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
         previous_time = end;
     }
     return (ret_table, ret_val);
 }
-
-
 
 fn refer_bloom_filter_table(bloomfilter_table: &Box<[bool; BLOOMFILTER_TABLE_SIZE]>, query: u128) -> bool {
     let indice: [u32;8] = hash_from_u128(query);
@@ -270,8 +340,9 @@ fn refer_bloom_filter_table(bloomfilter_table: &Box<[bool; BLOOMFILTER_TABLE_SIZ
 ファイルを舐めて、個数を確定させてからVecを確保する。
 */
 
+
 pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_SIZE]>, path: &str, max_size_of_list: usize) -> Vec<u128>{
-    //let mut ret_table: Box<[bool; BLOOMFILTER_TABLE_SIZE]> = Box::new([false; BLOOMFILTER_TABLE_SIZE]);
+    let mut ret_val: usize = 0;
     let mut l_window_start: usize;
     let mut l_window_end:   usize;
     let mut m_window_start: usize;
@@ -279,76 +350,116 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
     let mut r_window_start: usize;
     let mut r_window_end:   usize;
     let mut loop_cnt:usize = 0;
-    let file = File::open(path).expect("Error during opening the file");
+    let chunk_max: usize = 140;
+    let mut loop_cnt:usize = 0;
+    let file: File = File::open(path).expect("Error during opening the file");
 
-    let mut ret_vec = vec![0 as u128; max_size_of_list + 1];
+    let mut ret_vec: Vec<u128> = vec![0 as u128; max_size_of_list + 1];
     let mut ret_vec_cnt: usize = 0;
 
     let mut reader = faReader::new(file);
     let mut record = faRecord::new();
 
-    let start = Instant::now();
+    let start: Instant = Instant::now();
     let mut previous_time = start.elapsed();
     'each_read: loop {
         reader.read(&mut record).unwrap();
         if record.is_empty(){
             break 'each_read;
         }
-        l_window_start = 0;
+        let mut add_bloom_filter_cnt: usize = 0;
+        let mut l_window_cnt: usize         = 0;
 
-        eprint!("3rd loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
+        eprint!("2nd loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
         loop_cnt += 1;
         let sequence_as_vec: Vec<u8> = record.seq().to_vec();
         let current_sequence = DnaSequence::new(&sequence_as_vec);
+        l_window_start = 0;
         'each_l_window: loop{
             l_window_end = l_window_start + L_LEN;
             if l_window_end >= current_sequence.len(){
                 break 'each_l_window;
             }
-            let l_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(l_window_start, l_window_end);
-            if  l_has_poly_base_or_simple_repeat == true{
-                l_window_start += 1;
+            l_window_cnt += 1;
+            //let l_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(l_window_start, l_window_end);
+            let l_has_poly_base: bool                  = current_sequence.has_poly_base    (l_window_start, l_window_end);
+            let l_has_simple_repeat: bool              = current_sequence.has_simple_repeat(l_window_start, l_window_end);
+            let l_has2base_repeat: bool                = current_sequence.has_2base_repeat (l_window_start, l_window_end);
+            let l_has_poly_base_or_simple_repeat: bool = l_has_poly_base|l_has_simple_repeat|l_has2base_repeat;
+            let mut l_add_value: usize = 1;
+            if l_has_poly_base{
+                l_add_value = L_LEN - 4;
+            }else if l_has_simple_repeat{
+                l_add_value = L_LEN - 9;
+            } else if l_has2base_repeat{
+                l_add_value = L_LEN - 6;
+            }
+            if l_has_poly_base_or_simple_repeat == true{
+                l_window_start += l_add_value;//ポリ塩基がLに含まれてる場合、L_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
                 continue 'each_l_window;
             }
-            'each_r_window: for dna_chunk_size in 80..141 {
-                r_window_start = l_window_start + dna_chunk_size - R_LEN;
-                r_window_end   = r_window_start + R_LEN;
-                if r_window_end >= current_sequence.len(){
-                    break 'each_r_window;
+            m_window_start = l_window_end + 1;
+            'each_m_window: loop{
+                m_window_end = m_window_start + M_LEN;
+                if m_window_end >= current_sequence.len() || m_window_end - l_window_start > chunk_max{
+                    break 'each_m_window;
                 }
-                let r_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(r_window_start, r_window_end);
-                if r_has_poly_base_or_simple_repeat == true{
-                    //r_window_start += R_LEN - 4;
-                    continue 'each_r_window;
+                let m_has_poly_base: bool                  = current_sequence.has_poly_base    (m_window_start, m_window_end);
+                let m_has_simple_repeat: bool              = current_sequence.has_simple_repeat(m_window_start, m_window_end);
+                let m_has2base_repeat: bool                = current_sequence.has_2base_repeat (m_window_start, m_window_end);
+                let m_has_poly_base_or_simple_repeat: bool = m_has_poly_base|m_has_simple_repeat|m_has2base_repeat;
+                let mut m_add_value: usize = 1;
+                if m_has_poly_base{
+                    m_add_value = M_LEN - 4;
+                }else if m_has_simple_repeat{
+                    m_add_value = M_LEN - 9;
+                } else if m_has2base_repeat{
+                    m_add_value = M_LEN - 6;
                 }
-                m_window_start = l_window_end + 1;
-                'each_m_window: loop{
-                    m_window_end   = m_window_start + M_LEN;
-                    if m_window_end >= r_window_start{
-                        break 'each_m_window;
-                    }
-                    let m_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(m_window_start, m_window_end);
-                    if m_has_poly_base_or_simple_repeat == true{
-                        //m_window_start += M_LEN - 4;
-                        continue 'each_m_window;
-                    }
-                    let r_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(r_window_start, r_window_end);
-                    if r_has_poly_base_or_simple_repeat != true{
-                        let lmr_string: u128 = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end],[m_window_start, m_window_end], [r_window_start, r_window_end]]);
-                        let is_high_occr_kmer: bool = refer_bloom_filter_table(source_table, lmr_string);
-                        if is_high_occr_kmer == true{
-                            ret_vec[ret_vec_cnt] = lmr_string;
-                            ret_vec_cnt += 1;
-                        }
-                    }
-                    m_window_start += 1;
+                if m_has_poly_base_or_simple_repeat == true{
+                    m_window_start += m_add_value;//ポリ塩基がLに含まれてる場合、m_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
+                    continue 'each_m_window;
                 }
+                r_window_start = m_window_end + 1;
+                'each_r_window: loop{
+                    r_window_end = r_window_start + R_LEN;
+                    if r_window_end >= current_sequence.len() || r_window_end - l_window_start > chunk_max{
+                        break 'each_r_window;
+                    }
+                    let r_has_poly_base: bool                  = current_sequence.has_poly_base    (r_window_start, r_window_end);
+                    let r_has_simple_repeat: bool              = current_sequence.has_simple_repeat(r_window_start, r_window_end);
+                    let r_has2base_repeat: bool                = current_sequence.has_2base_repeat (r_window_start, r_window_end);
+                    let r_has_poly_base_or_simple_repeat: bool = r_has_poly_base|r_has_simple_repeat|r_has2base_repeat;
+                    let mut r_add_value: usize = 1;
+                    if r_has_poly_base{
+                        r_add_value = R_LEN - 4;
+                    }else if r_has_simple_repeat{
+                        r_add_value = R_LEN - 9;
+                    } else if r_has2base_repeat{
+                        r_add_value = R_LEN - 6;
+                    }
+                    if r_has_poly_base_or_simple_repeat == true{
+                        r_window_start += r_add_value;//ポリ塩基がLに含まれてる場合、R_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
+                        continue 'each_r_window;
+                    }
+                    //ここからcounting bloom filterに追加していく。
+                    let lmr_string = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [m_window_start, m_window_end], [r_window_start, r_window_end]]);
+                    let table_indice:[u32;8] = hash_from_u128(lmr_string);//u128を受けてhashを返す関数
+                    let is_high_occr_kmer: bool = refer_bloom_filter_table(source_table, lmr_string);
+                    if is_high_occr_kmer == true{
+                        ret_vec[ret_vec_cnt] = lmr_string;
+                        ret_vec_cnt += 1;
+                    }
+                    r_window_start += 1;
+                }
+                m_window_start += 1;
             }
             l_window_start += 1;
         }
         let end = start.elapsed();
-        eprintln!("sec: {}.{:03}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos());
+        eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
         previous_time = end;
     }
     return ret_vec;
 }
+
