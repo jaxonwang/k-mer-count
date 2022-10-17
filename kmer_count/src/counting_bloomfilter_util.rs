@@ -1,6 +1,6 @@
-pub const L_LEN: usize = 19;
-pub const M_LEN: usize = 26;
-pub const R_LEN: usize = 19;
+pub const L_LEN: usize = 21;
+pub const M_LEN: usize = 22;
+pub const R_LEN: usize = 21;
 
 use crate::sequence_encoder_util::DnaSequence;
 use std::fs::File;
@@ -370,7 +370,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
         let mut add_bloom_filter_cnt: usize = 0;
         let mut l_window_cnt: usize         = 0;
 
-        eprint!("2nd loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
+        eprint!("3rd loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
         loop_cnt += 1;
         let sequence_as_vec: Vec<u8> = record.seq().to_vec();
         let current_sequence = DnaSequence::new(&sequence_as_vec);
@@ -443,7 +443,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                         continue 'each_r_window;
                     }
                     //ここからcounting bloom filterに追加していく。
-                    let lmr_string = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [m_window_start, m_window_end], [r_window_start, r_window_end]]);
+                    let lmr_string:u128 = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [m_window_start, m_window_end], [r_window_start, r_window_end]]);
                     let table_indice:[u32;8] = hash_from_u128(lmr_string);//u128を受けてhashを返す関数
                     let is_high_occr_kmer: bool = refer_bloom_filter_table(source_table, lmr_string);
                     if is_high_occr_kmer == true{
