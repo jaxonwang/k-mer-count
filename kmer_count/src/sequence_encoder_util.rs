@@ -303,7 +303,7 @@ impl DnaSequence{
         }//ここまでで、originalに右詰で対象の領域がコピーされる。
         let val1 = original;
         let val2 = original >> 4;
-        let mut val3 = val1 ^ val2;//val3で0が20個並んでるのを検出したい。これで2x6の単調反復を検出できる
+        let mut val3 = val1 ^ val2;//val3で0が20個並んでるのを検出したい。これで2x6の単調反復を検出できる←8個でよかった。
         //２個隣の塩基が自身と異なればnon-zero, 同じなら00が立つ
         //意味のあるbitは下位(end - start) * 2bit
         let mut ret_flag = false;

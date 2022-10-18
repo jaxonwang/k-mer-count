@@ -1,6 +1,6 @@
-pub const L_LEN: usize = 19;
-pub const M_LEN: usize = 26;
-pub const R_LEN: usize = 19;
+pub const L_LEN: usize = 21;
+pub const M_LEN: usize = 22;
+pub const R_LEN: usize = 21;
 
 use crate::sequence_encoder_util::DnaSequence;
 use std::fs::File;
