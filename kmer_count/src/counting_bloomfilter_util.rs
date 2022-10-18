@@ -61,6 +61,8 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
     let mut record = faRecord::new();
     let start = Instant::now();
     let mut previous_time = start.elapsed();
+    let mut ret_table: Box<[bool; BLOOMFILTER_TABLE_SIZE]> = Box::new([false; BLOOMFILTER_TABLE_SIZE]);
+
     'each_read: loop {
         reader.read(&mut record).unwrap();
         if record.is_empty(){
@@ -85,13 +87,13 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
             let l_has_simple_repeat: bool              = current_sequence.has_simple_repeat(l_window_start, l_window_end);
             let l_has2base_repeat: bool                = current_sequence.has_2base_repeat (l_window_start, l_window_end);
             let l_has_poly_base_or_simple_repeat: bool = l_has_poly_base|l_has_simple_repeat|l_has2base_repeat;
-            let mut l_add_value: usize = 1;
+            let mut l_add_value: usize = 0;
             if l_has_poly_base{
-                l_add_value = L_LEN - 4;
+                l_add_value = L_LEN - 3;
             }else if l_has_simple_repeat{
-                l_add_value = L_LEN - 9;
+                l_add_value = L_LEN - 8;
             } else if l_has2base_repeat{
-                l_add_value = L_LEN - 6;
+                l_add_value = L_LEN - 5;
             }
             if l_has_poly_base_or_simple_repeat == true{
                 l_window_start += l_add_value;//ポリ塩基がLに含まれてる場合、L_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
@@ -109,11 +111,11 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                 let m_has_poly_base_or_simple_repeat: bool = m_has_poly_base|m_has_simple_repeat|m_has2base_repeat;
                 let mut m_add_value: usize = 1;
                 if m_has_poly_base{
-                    m_add_value = M_LEN - 4;
+                    m_add_value = M_LEN - 3;
                 }else if m_has_simple_repeat{
-                    m_add_value = M_LEN - 9;
+                    m_add_value = M_LEN - 8;
                 } else if m_has2base_repeat{
-                    m_add_value = M_LEN - 6;
+                    m_add_value = M_LEN - 5;
                 }
                 if m_has_poly_base_or_simple_repeat == true{
                     m_window_start += m_add_value;//ポリ塩基がLに含まれてる場合、m_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
@@ -131,11 +133,11 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                     let r_has_poly_base_or_simple_repeat: bool = r_has_poly_base|r_has_simple_repeat|r_has2base_repeat;
                     let mut r_add_value: usize = 1;
                     if r_has_poly_base{
-                        r_add_value = R_LEN - 4;
+                        r_add_value = R_LEN - 3;
                     }else if r_has_simple_repeat{
-                        r_add_value = R_LEN - 9;
+                        r_add_value = R_LEN - 8;
                     } else if r_has2base_repeat{
-                        r_add_value = R_LEN - 6;
+                        r_add_value = R_LEN - 5;
                     }
                     if r_has_poly_base_or_simple_repeat == true{
                         r_window_start += r_add_value;//ポリ塩基がLに含まれてる場合、R_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
@@ -247,11 +249,11 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
             let l_has_poly_base_or_simple_repeat: bool = l_has_poly_base|l_has_simple_repeat|l_has2base_repeat;
             let mut l_add_value: usize = 1;
             if l_has_poly_base{
-                l_add_value = L_LEN - 4;
+                l_add_value = L_LEN - 3;
             }else if l_has_simple_repeat{
-                l_add_value = L_LEN - 9;
+                l_add_value = L_LEN - 8;
             } else if l_has2base_repeat{
-                l_add_value = L_LEN - 6;
+                l_add_value = L_LEN - 5;
             }
             if l_has_poly_base_or_simple_repeat == true{
                 l_window_start += l_add_value;//ポリ塩基がLに含まれてる場合、L_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
@@ -269,11 +271,11 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
                 let m_has_poly_base_or_simple_repeat: bool = m_has_poly_base|m_has_simple_repeat|m_has2base_repeat;
                 let mut m_add_value: usize = 1;
                 if m_has_poly_base{
-                    m_add_value = M_LEN - 4;
+                    m_add_value = M_LEN - 3;
                 }else if m_has_simple_repeat{
-                    m_add_value = M_LEN - 9;
+                    m_add_value = M_LEN - 8;
                 } else if m_has2base_repeat{
-                    m_add_value = M_LEN - 6;
+                    m_add_value = M_LEN - 5;
                 }
                 if m_has_poly_base_or_simple_repeat == true{
                     m_window_start += m_add_value;//ポリ塩基がLに含まれてる場合、m_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
@@ -291,17 +293,18 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u64; BLOOMFILTER_TABLE_
                     let r_has_poly_base_or_simple_repeat: bool = r_has_poly_base|r_has_simple_repeat|r_has2base_repeat;
                     let mut r_add_value: usize = 1;
                     if r_has_poly_base{
-                        r_add_value = R_LEN - 4;
+                        r_add_value = R_LEN - 3;
                     }else if r_has_simple_repeat{
-                        r_add_value = R_LEN - 9;
+                        r_add_value = R_LEN - 8;
                     } else if r_has2base_repeat{
-                        r_add_value = R_LEN - 6;
+                        r_add_value = R_LEN - 5;
                     }
                     if r_has_poly_base_or_simple_repeat == true{
                         r_window_start += r_add_value;//ポリ塩基がLに含まれてる場合、R_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
                         continue 'each_r_window;
                     }
                     //ここからcounting bloom filterに追加していく。
+                    add_bloom_filter_cnt += 1;
                     let lmr_string:u128 = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [m_window_start, m_window_end], [r_window_start, r_window_end]]);
                     let table_indice:[u32;8] = hash_from_u128(lmr_string);//u128を受けてhashを返す関数
                     let occurence: u64 = count_occurence_from_counting_bloomfilter_table(source_table, table_indice);
@@ -388,11 +391,11 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
             let l_has_poly_base_or_simple_repeat: bool = l_has_poly_base|l_has_simple_repeat|l_has2base_repeat;
             let mut l_add_value: usize = 1;
             if l_has_poly_base{
-                l_add_value = L_LEN - 4;
+                l_add_value = L_LEN - 3;
             }else if l_has_simple_repeat{
-                l_add_value = L_LEN - 9;
+                l_add_value = L_LEN - 8;
             } else if l_has2base_repeat{
-                l_add_value = L_LEN - 6;
+                l_add_value = L_LEN - 5;
             }
             if l_has_poly_base_or_simple_repeat == true{
                 l_window_start += l_add_value;//ポリ塩基がLに含まれてる場合、L_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
@@ -410,11 +413,11 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                 let m_has_poly_base_or_simple_repeat: bool = m_has_poly_base|m_has_simple_repeat|m_has2base_repeat;
                 let mut m_add_value: usize = 1;
                 if m_has_poly_base{
-                    m_add_value = M_LEN - 4;
+                    m_add_value = M_LEN - 3;
                 }else if m_has_simple_repeat{
-                    m_add_value = M_LEN - 9;
+                    m_add_value = M_LEN - 8;
                 } else if m_has2base_repeat{
-                    m_add_value = M_LEN - 6;
+                    m_add_value = M_LEN - 5;
                 }
                 if m_has_poly_base_or_simple_repeat == true{
                     m_window_start += m_add_value;//ポリ塩基がLに含まれてる場合、m_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
@@ -432,17 +435,18 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                     let r_has_poly_base_or_simple_repeat: bool = r_has_poly_base|r_has_simple_repeat|r_has2base_repeat;
                     let mut r_add_value: usize = 1;
                     if r_has_poly_base{
-                        r_add_value = R_LEN - 4;
+                        r_add_value = R_LEN - 3;
                     }else if r_has_simple_repeat{
-                        r_add_value = R_LEN - 9;
+                        r_add_value = R_LEN - 8;
                     } else if r_has2base_repeat{
-                        r_add_value = R_LEN - 6;
+                        r_add_value = R_LEN - 5;
                     }
                     if r_has_poly_base_or_simple_repeat == true{
                         r_window_start += r_add_value;//ポリ塩基がLに含まれてる場合、R_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
                         continue 'each_r_window;
                     }
                     //ここからcounting bloom filterに追加していく。
+                    add_bloom_filter_cnt += 1;
                     let lmr_string:u128 = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [m_window_start, m_window_end], [r_window_start, r_window_end]]);
                     let table_indice:[u32;8] = hash_from_u128(lmr_string);//u128を受けてhashを返す関数
                     let is_high_occr_kmer: bool = refer_bloom_filter_table(source_table, lmr_string);
