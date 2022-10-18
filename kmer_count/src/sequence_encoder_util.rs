@@ -214,7 +214,7 @@ impl DnaSequence{
         let val6 = !val5;
         let val7 = val6 & zero_ichi;
         let val8 = val7 >> 2;
-        //let val9 = val7 >> 4;
+        let val9 = val7 >> 4;
         let last = val7 & val8;// & val9;
         #[cfg(test)]{
             println!("start:    {}", start);
@@ -304,7 +304,10 @@ impl DnaSequence{
         let val1 = original;
         let val2 = original >> 4;
         let mut val3 = val1 ^ val2;//val3で0が20個並んでるのを検出したい。これで2x6の単調反復を検出できる
+        //２個隣の塩基が自身と異なればnon-zero, 同じなら00が立つ
+        //意味のあるbitは下位(end - start) * 2bit
         let mut ret_flag = false;
+        val3 <<= 2 * (32 - (end - start));
         #[cfg(test)]{
             println!("start: {}", start);
             println!("end:   {}", end);
@@ -313,12 +316,12 @@ impl DnaSequence{
             println!("val2:  {:064b}", val2);
             println!("val3:  {:064b}", val3);
         }
-        val3 <<= 2 * (32 - (end - start));
         for _i in 0..(end - start){
             #[cfg(test)]{
                 println!("val3:  {:064b}", val3);
+                println!("val3.leading_zeros(): {}", val3.leading_zeros());//上位nitから見る。
             }
-            if val3.leading_zeros() >= 20{
+            if val3.leading_zeros() >= 8{
                 ret_flag = true;
                 break;
             }
@@ -451,30 +454,30 @@ mod tests{
     fn has_poly_base_test_8C(){
         let source: Vec<u8> = vec![b'C', b'C', b'C', b'C', b'C', b'C', b'C', b'C'];
         let obj = DnaSequence::new(&source);
-        assert!(obj.has_poly_base(0, 4) == true, "has_poly_base_test_8C failed: obj.has_poly_base(0, 4) returns {}", obj.has_poly_base(0, 4));
-        assert!(obj.has_poly_base(0, 5) == true, "has_poly_base_test_8C failed: obj.has_poly_base(0, 5) returns {}", obj.has_poly_base(0, 5));
-        assert!(obj.has_poly_base(0, 6) == true, "has_poly_base_test_8C failed: obj.has_poly_base(0, 6) returns {}", obj.has_poly_base(0, 6));
-        assert!(obj.has_poly_base(0, 7) == true, "has_poly_base_test_8C failed: obj.has_poly_base(0, 7) returns {}", obj.has_poly_base(0, 7));
+        assert!(obj.has_poly_base(0, 4) == true,  "has_poly_base_test_8C failed: obj.has_poly_base(0, 4) returns {}", obj.has_poly_base(0, 4));
+        assert!(obj.has_poly_base(0, 5) == true,  "has_poly_base_test_8C failed: obj.has_poly_base(0, 5) returns {}", obj.has_poly_base(0, 5));
+        assert!(obj.has_poly_base(0, 6) == true,  "has_poly_base_test_8C failed: obj.has_poly_base(0, 6) returns {}", obj.has_poly_base(0, 6));
+        assert!(obj.has_poly_base(0, 7) == true,  "has_poly_base_test_8C failed: obj.has_poly_base(0, 7) returns {}", obj.has_poly_base(0, 7));
     }
 
     #[test]
     fn has_poly_base_test_8G(){
         let source: Vec<u8> = vec![b'G', b'G', b'G', b'G', b'G', b'G', b'G', b'G'];
         let obj = DnaSequence::new(&source);
-        assert!(obj.has_poly_base(0, 4) == true, "has_poly_base_test_8G failed: obj.has_poly_base(0, 4) returns {}", obj.has_poly_base(0, 4));
-        assert!(obj.has_poly_base(0, 5) == true, "has_poly_base_test_8G failed: obj.has_poly_base(0, 5) returns {}", obj.has_poly_base(0, 5));
-        assert!(obj.has_poly_base(0, 6) == true, "has_poly_base_test_8G failed: obj.has_poly_base(0, 6) returns {}", obj.has_poly_base(0, 6));
-        assert!(obj.has_poly_base(0, 7) == true, "has_poly_base_test_8G failed: obj.has_poly_base(0, 7) returns {}", obj.has_poly_base(0, 7));
+        assert!(obj.has_poly_base(0, 4) == true,  "has_poly_base_test_8G failed: obj.has_poly_base(0, 4) returns {}", obj.has_poly_base(0, 4));
+        assert!(obj.has_poly_base(0, 5) == true,  "has_poly_base_test_8G failed: obj.has_poly_base(0, 5) returns {}", obj.has_poly_base(0, 5));
+        assert!(obj.has_poly_base(0, 6) == true,  "has_poly_base_test_8G failed: obj.has_poly_base(0, 6) returns {}", obj.has_poly_base(0, 6));
+        assert!(obj.has_poly_base(0, 7) == true,  "has_poly_base_test_8G failed: obj.has_poly_base(0, 7) returns {}", obj.has_poly_base(0, 7));
     }
 
     #[test]
     fn has_poly_base_test_8T(){
         let source: Vec<u8> = vec![b'T', b'T', b'T', b'T', b'T', b'T', b'T', b'T'];
         let obj = DnaSequence::new(&source);
-        assert!(obj.has_poly_base(0, 4) == true, "has_poly_base_test_8T failed: obj.has_poly_base(0, 4) returns {}", obj.has_poly_base(0, 4));
-        assert!(obj.has_poly_base(0, 5) == true, "has_poly_base_test_8T failed: obj.has_poly_base(0, 5) returns {}", obj.has_poly_base(0, 5));
-        assert!(obj.has_poly_base(0, 6) == true, "has_poly_base_test_8T failed: obj.has_poly_base(0, 6) returns {}", obj.has_poly_base(0, 6));
-        assert!(obj.has_poly_base(0, 7) == true, "has_poly_base_test_8T failed: obj.has_poly_base(0, 7) returns {}", obj.has_poly_base(0, 7));
+        assert!(obj.has_poly_base(0, 4) == true,  "has_poly_base_test_8T failed: obj.has_poly_base(0, 4) returns {}", obj.has_poly_base(0, 4));
+        assert!(obj.has_poly_base(0, 5) == true,  "has_poly_base_test_8T failed: obj.has_poly_base(0, 5) returns {}", obj.has_poly_base(0, 5));
+        assert!(obj.has_poly_base(0, 6) == true,  "has_poly_base_test_8T failed: obj.has_poly_base(0, 6) returns {}", obj.has_poly_base(0, 6));
+        assert!(obj.has_poly_base(0, 7) == true,  "has_poly_base_test_8T failed: obj.has_poly_base(0, 7) returns {}", obj.has_poly_base(0, 7));
     }
 
     #[test]
@@ -562,6 +565,21 @@ mod tests{
         assert!(obj.has_2base_repeat(0, 27) == true, "has_2base_repeat_27N_1 failed: obj.has_2base_repeat (0, 27)   returns {}", obj.has_2base_repeat(0, 27));
     }
 
+    #[test]
+    fn has_2base_repeat_27N_4(){
+        let source: String = "ACGTTATACCTGTACCGCACGTACGCT".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_2base_repeat(0, 27) == false, "has_2base_repeat_27N_1 failed: obj.has_2base_repeat (0, 27)   returns {}", obj.has_2base_repeat(0, 27));
+    }
+
+    #[test]
+    fn has_2base_repeat_27N_5(){
+        let source: String = "GCGGTATATACGTACCGCACGTACGCT".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_2base_repeat(0, 27) == true, "has_2base_repeat_27N_1 failed: obj.has_2base_repeat (0, 27)   returns {}", obj.has_2base_repeat(0, 27));
+    }
 
 
 
