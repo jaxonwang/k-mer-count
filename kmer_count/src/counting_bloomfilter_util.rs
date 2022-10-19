@@ -1,6 +1,6 @@
-pub const L_LEN: usize = 21;
-pub const M_LEN: usize = 22;
-pub const R_LEN: usize = 21;
+pub const L_LEN: usize = 19;
+pub const M_LEN: usize = 26;
+pub const R_LEN: usize = 19;
 
 use crate::sequence_encoder_util::DnaSequence;
 use std::fs::File;
@@ -61,7 +61,6 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
     let mut record = faRecord::new();
     let start = Instant::now();
     let mut previous_time = start.elapsed();
-    let mut ret_table: Box<[bool; BLOOMFILTER_TABLE_SIZE]> = Box::new([false; BLOOMFILTER_TABLE_SIZE]);
 
     'each_read: loop {
         reader.read(&mut record).unwrap();

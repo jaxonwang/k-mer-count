@@ -321,7 +321,7 @@ impl DnaSequence{
                 println!("val3:  {:064b}", val3);
                 println!("val3.leading_zeros(): {}", val3.leading_zeros());//上位nitから見る。
             }
-            if val3.leading_zeros() >= 8{
+            if val3.leading_zeros() >= 20{
                 ret_flag = true;
                 break;
             }
