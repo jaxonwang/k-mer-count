@@ -52,7 +52,7 @@ fn main() {
     };
 
     let threshold = if matches.opt_present("a") {
-        matches.opt_str("a").unwrap().parse::<u64>().unwrap()
+        matches.opt_str("a").unwrap().parse::<u16>().unwrap()
     }else{
         8
     };
@@ -69,7 +69,7 @@ fn main() {
 
     //1段目
     eprintln!("start calling build_counting_bloom_filter");
-    let counting_bloom_filter_table: Box<[u64; BLOOMFILTER_TABLE_SIZE]> = build_counting_bloom_filter(&input_file);
+    let counting_bloom_filter_table: Box<[u16; BLOOMFILTER_TABLE_SIZE]> = build_counting_bloom_filter(&input_file);
     eprintln!("finish calling build_counting_bloom_filter");
 
     //2段目
