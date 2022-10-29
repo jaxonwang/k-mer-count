@@ -50,7 +50,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
     let mut m_window_end:   usize;
     let mut r_window_start: usize;
     let mut r_window_end:   usize;
-    let chunk_max: usize = 140;
+    let chunk_max: usize = 141;
 
     let mut loop_cnt:usize = 0;
     eprintln!("Allocating Box<[u64; BLOOMFILTER_TABLE_SIZE]> where BLOOMFILTER_TABLE_SIZE = {}", BLOOMFILTER_TABLE_SIZE);
@@ -81,8 +81,9 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                 break 'each_l_window;
             }
             l_window_cnt += 1;
-            //let l_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(l_window_start, l_window_end);
-            let l_has_poly_base: bool                  = current_sequence.has_poly_base    (l_window_start, l_window_end);
+            let l_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(l_window_start, l_window_end);
+            /*
+             let l_has_poly_base: bool                  = current_sequence.has_poly_base    (l_window_start, l_window_end);
             let l_has_simple_repeat: bool              = current_sequence.has_simple_repeat(l_window_start, l_window_end);
             let l_has2base_repeat: bool                = current_sequence.has_2base_repeat (l_window_start, l_window_end);
             let l_has_poly_base_or_simple_repeat: bool = l_has_poly_base|l_has_simple_repeat|l_has2base_repeat;
@@ -94,8 +95,9 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
             } else if l_has2base_repeat{
                 l_add_value = L_LEN - 5;
             }
+            */
             if l_has_poly_base_or_simple_repeat == true{
-                l_window_start += l_add_value;//ポリ塩基がLに含まれてる場合、L_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
+                l_window_start += 1;
                 continue 'each_l_window;
             }
             m_window_start = l_window_end + 1;
@@ -104,6 +106,8 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                 if m_window_end >= current_sequence.len() || m_window_end - l_window_start > chunk_max{
                     break 'each_m_window;
                 }
+                let m_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(m_window_start, m_window_end);
+                /*
                 let m_has_poly_base: bool                  = current_sequence.has_poly_base    (m_window_start, m_window_end);
                 let m_has_simple_repeat: bool              = current_sequence.has_simple_repeat(m_window_start, m_window_end);
                 let m_has2base_repeat: bool                = current_sequence.has_2base_repeat (m_window_start, m_window_end);
@@ -116,8 +120,9 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                 } else if m_has2base_repeat{
                     m_add_value = M_LEN - 5;
                 }
+                */
                 if m_has_poly_base_or_simple_repeat == true{
-                    m_window_start += m_add_value;//ポリ塩基がLに含まれてる場合、m_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
+                    m_window_start += 1;
                     continue 'each_m_window;
                 }
                 r_window_start = m_window_end + 1;
@@ -126,6 +131,8 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                     if r_window_end >= current_sequence.len() || r_window_end - l_window_start > chunk_max{
                         break 'each_r_window;
                     }
+                    let r_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(r_window_start, r_window_end);
+                    /*
                     let r_has_poly_base: bool                  = current_sequence.has_poly_base    (r_window_start, r_window_end);
                     let r_has_simple_repeat: bool              = current_sequence.has_simple_repeat(r_window_start, r_window_end);
                     let r_has2base_repeat: bool                = current_sequence.has_2base_repeat (r_window_start, r_window_end);
@@ -138,8 +145,9 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u64; BLOOMFILTER_TABLE_SI
                     } else if r_has2base_repeat{
                         r_add_value = R_LEN - 5;
                     }
+                     */
                     if r_has_poly_base_or_simple_repeat == true{
-                        r_window_start += r_add_value;//ポリ塩基がLに含まれてる場合、R_LEN - 4塩基ずらしても良いし、ポリ塩基の種類によっては-6や-9でよい。
+                        r_window_start += 1;
                         continue 'each_r_window;
                     }
                     //ここからcounting bloom filterに追加していく。

@@ -150,7 +150,7 @@ fn main() {
 
 
     eprintln!("finish writing to output file: {:?}", &output_file);
-    eprintln!("L:{}, M:{}, R{}", L_LEN, M_LEN, R_LEN);
+    eprintln!("L:{}, M:{}, R{}, threshold: {}({}x63)\tcardinarity: {}", L_LEN, M_LEN, R_LEN, threshold, threshold / 63, cnt);
     eprintln!("total cardinarity: {}", cnt);
     eprintln!("threads: {}\tthreshold: {}\tinput file {:?}", threads, threshold, &input_file);
 
