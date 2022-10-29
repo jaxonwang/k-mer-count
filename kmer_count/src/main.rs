@@ -45,13 +45,13 @@ fn main() {
         return;
     };
 
-    let threads = if matches.opt_present("t") {
+    let threads: usize = if matches.opt_present("t") {
         matches.opt_str("t").unwrap().parse::<usize>().unwrap()
     }else{
         8
     };
 
-    let threshold = if matches.opt_present("a") {
+    let threshold:u16 = if matches.opt_present("a") {
         matches.opt_str("a").unwrap().parse::<u16>().unwrap()
     }else{
         8
