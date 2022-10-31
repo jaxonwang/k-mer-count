@@ -194,7 +194,7 @@ impl DnaSequence{
         assert!(start < end, "DnaSequence::has_poly_base assertion failed: {} !< {}", start, end);
         assert!(end - start > 3, "DnaSequence::has_poly_base assertion failed: {} - {} < 4", end, start);
         assert!(end - start < 32, "DnaSequence::has_poly_base assertion failed: length of the evaluation subject must be shorter than 32");
-        assert!(end <= self.length, "DnaSequence::has_poly_base assertion failed: end coordinate must be smaller than length of the sequence. end: {}, self.lngth: {}", end, self.length);
+        assert!(end <= self.length, "DnaSequence::has_poly_base assertion failed: end coordinate must be smaller than length of the sequence. start: {}, end: {}, self.lngth: {}", start, end, self.length);
         let mut original:  u64 = 0;
         let mut zero_ichi: u64 = 1;
         for i in start..end{
