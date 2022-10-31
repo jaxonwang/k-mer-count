@@ -191,6 +191,7 @@ impl DnaSequence{
     }
 
     pub fn has_poly_base(&self, start: usize, end: usize) -> (bool, usize) {
+        eprintln!("start: {} end: {}", start, end);
         assert!(start < end, "DnaSequence::has_poly_base assertion failed: {} !< {}", start, end);
         assert!(end - start > 3, "DnaSequence::has_poly_base assertion failed: {} - {} < 4", end, start);
         assert!(end - start < 32, "DnaSequence::has_poly_base assertion failed: length of the evaluation subject must be shorter than 32");

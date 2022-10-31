@@ -344,7 +344,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
             let mut l_offset_1: usize;
             let mut l_offset_2: usize;
             let mut l_offset_3: usize;
-            eprintln!("L_LEN: {}, start: {}, end{}", L_LEN, l_window_start, l_window_end);
+            eprintln!("\nL_LEN: {}, start: {}, end: {}", L_LEN, l_window_start, l_window_end);
             let (l_has_poly_base, l_offset_1)     = current_sequence.has_poly_base(l_window_start, l_window_end);
             let (l_has_simple_repeat, l_offset_2) = current_sequence.has_simple_repeat(l_window_start, l_window_end);
             let (l_has_2base_repeat, l_offset_3)  = current_sequence.has_2base_repeat(l_window_start, l_window_end);
