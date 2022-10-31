@@ -8,7 +8,7 @@ use sha2::Sha256;
 use sha2::Digest;
 
 use std::time::{/*Duration, */Instant};
-
+use std::cmp;
 //use bio::io::fastq::Reader as fqReader;
 //use bio::io::fastq::Record as fqRecord;
 use bio::io::fasta::Reader as faReader;
@@ -77,9 +77,14 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u16; BLOOMFILTER_TABLE_SI
                 break 'each_l_window;
             }
             l_window_cnt += 1;
-            let l_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(l_window_start, l_window_end);
-            if l_has_poly_base_or_simple_repeat == true{
-                l_window_start += 1;
+            let mut l_offset_1: usize;
+            let mut l_offset_2: usize;
+            let mut l_offset_3: usize;
+            let (l_has_poly_base, l_offset_1)     = current_sequence.has_poly_base(l_window_start, l_window_end);
+            let (l_has_simple_repeat, l_offset_2) = current_sequence.has_simple_repeat(l_window_start, l_window_end);
+            let (l_has_2base_repeat, l_offset_3)  = current_sequence.has_2base_repeat(l_window_start, l_window_end);
+            if l_has_poly_base||l_has_simple_repeat||l_has_2base_repeat {
+                l_window_start += cmp::max(cmp::max(l_offset_1, l_offset_2), l_offset_3) + 1;
                 continue 'each_l_window;
             }
             m_window_start = l_window_end + 1;
@@ -88,23 +93,33 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u16; BLOOMFILTER_TABLE_SI
                 if m_window_end >= current_sequence.len() || m_window_end - l_window_start > chunk_max{
                     break 'each_m_window;
                 }
-                let m_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(m_window_start, m_window_end);
-                if m_has_poly_base_or_simple_repeat == true{
-                    m_window_start += 1;
+                let mut m_offset_1: usize;
+                let mut m_offset_2: usize;
+                let mut m_offset_3: usize;
+                let (m_has_poly_base, m_offset_1)     = current_sequence.has_poly_base(m_window_start, m_window_end);
+                let (m_has_simple_repeat, m_offset_2) = current_sequence.has_simple_repeat(m_window_start, m_window_end);
+                let (m_has_2base_repeat, m_offset_3)  = current_sequence.has_2base_repeat(m_window_start, m_window_end);
+                if m_has_poly_base||m_has_simple_repeat||m_has_2base_repeat {
+                    m_window_start += cmp::max(cmp::max(m_offset_1, m_offset_2), m_offset_3) + 1;
                     continue 'each_m_window;
                 }
-                    r_window_start = m_window_end + 1;
+                r_window_start = m_window_end + 1;
                 'each_r_window: loop{
                     r_window_end = r_window_start + R_LEN;
                     if r_window_end >= current_sequence.len() || r_window_end - l_window_start > chunk_max{
                         break 'each_r_window;
                     }
-                    let r_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(r_window_start, r_window_end);
-                    if r_has_poly_base_or_simple_repeat == true{
-                        r_window_start += 1;
+                    let mut r_offset_1: usize;
+                    let mut r_offset_2: usize;
+                    let mut r_offset_3: usize;
+                    let (r_has_poly_base, r_offset_1)     = current_sequence.has_poly_base(r_window_start, r_window_end);
+                    let (r_has_simple_repeat, r_offset_2) = current_sequence.has_simple_repeat(r_window_start, r_window_end);
+                    let (r_has_2base_repeat, r_offset_3)  = current_sequence.has_2base_repeat(r_window_start, r_window_end);
+                    if r_has_poly_base||r_has_simple_repeat||r_has_2base_repeat {
+                        r_window_start += cmp::max(cmp::max(r_offset_1, r_offset_2), r_offset_3) + 1;
                         continue 'each_r_window;
                     }
-                            //ここからcounting bloom filterに追加していく。
+                    //ここからcounting bloom filterに追加していく。
                     add_bloom_filter_cnt += 1;
                     let lmr_string: u128 = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [m_window_start, m_window_end], [r_window_start, r_window_end]]);
                     let table_indice:[u32;8] = hash_from_u128(lmr_string);//u128を受けてhashを返す関数
@@ -202,9 +217,14 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u16; BLOOMFILTER_TABLE_
             if l_window_end >= current_sequence.len(){
                 break 'each_l_window;
             }
-            let l_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(l_window_start, l_window_end);
-            if l_has_poly_base_or_simple_repeat == true{
-                l_window_start += 1;
+            let mut l_offset_1: usize;
+            let mut l_offset_2: usize;
+            let mut l_offset_3: usize;
+            let (l_has_poly_base, l_offset_1)     = current_sequence.has_poly_base(l_window_start, l_window_end);
+            let (l_has_simple_repeat, l_offset_2) = current_sequence.has_simple_repeat(l_window_start, l_window_end);
+            let (l_has_2base_repeat, l_offset_3)  = current_sequence.has_2base_repeat(l_window_start, l_window_end);
+            if l_has_poly_base||l_has_simple_repeat||l_has_2base_repeat {
+                l_window_start += cmp::max(cmp::max(l_offset_1, l_offset_2), l_offset_3) + 1;
                 continue 'each_l_window;
             }
             m_window_start = l_window_end + 1;
@@ -213,23 +233,34 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u16; BLOOMFILTER_TABLE_
                 if m_window_end >= current_sequence.len() || m_window_end - l_window_start > chunk_max{
                     break 'each_m_window;
                 }
-                let m_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(m_window_start, m_window_end);
-                if m_has_poly_base_or_simple_repeat == true{
-                    m_window_start += 1;
+                let mut m_offset_1: usize;
+                let mut m_offset_2: usize;
+                let mut m_offset_3: usize;
+                let (m_has_poly_base, m_offset_1)     = current_sequence.has_poly_base(m_window_start, m_window_end);
+                let (m_has_simple_repeat, m_offset_2) = current_sequence.has_simple_repeat(m_window_start, m_window_end);
+                let (m_has_2base_repeat, m_offset_3)  = current_sequence.has_2base_repeat(m_window_start, m_window_end);
+                if m_has_poly_base||m_has_simple_repeat||m_has_2base_repeat {
+                    m_window_start += cmp::max(cmp::max(m_offset_1, m_offset_2), m_offset_3) + 1;
                     continue 'each_m_window;
                 }
-                    r_window_start = m_window_end + 1;
+                r_window_start = m_window_end + 1;
                 'each_r_window: loop{
                     r_window_end = r_window_start + R_LEN;
                     if r_window_end >= current_sequence.len() || r_window_end - l_window_start > chunk_max{
                         break 'each_r_window;
                     }
                     let r_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(r_window_start, r_window_end);
-                    if r_has_poly_base_or_simple_repeat == true{
-                        r_window_start += 1;
+                    let mut r_offset_1: usize;
+                    let mut r_offset_2: usize;
+                    let mut r_offset_3: usize;
+                    let (r_has_poly_base, r_offset_1)     = current_sequence.has_poly_base(r_window_start, r_window_end);
+                    let (r_has_simple_repeat, r_offset_2) = current_sequence.has_simple_repeat(r_window_start, r_window_end);
+                    let (r_has_2base_repeat, r_offset_3)  = current_sequence.has_2base_repeat(r_window_start, r_window_end);
+                    if r_has_poly_base||r_has_simple_repeat||r_has_2base_repeat {
+                        r_window_start += cmp::max(cmp::max(r_offset_1, r_offset_2), r_offset_3) + 1;
                         continue 'each_r_window;
                     }
-                            //ここからcounting bloom filterに追加していく。
+                                //ここからcounting bloom filterに追加していく。
                     add_bloom_filter_cnt += 1;
                     let lmr_string:u128 = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [m_window_start, m_window_end], [r_window_start, r_window_end]]);
                     let table_indice:[u32;8] = hash_from_u128(lmr_string);//u128を受けてhashを返す関数
@@ -310,9 +341,14 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                 break 'each_l_window;
             }
             l_window_cnt += 1;
-            let l_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(l_window_start, l_window_end);
-            if l_has_poly_base_or_simple_repeat == true{
-                l_window_start += 1;
+            let mut l_offset_1: usize;
+            let mut l_offset_2: usize;
+            let mut l_offset_3: usize;
+            let (l_has_poly_base, l_offset_1)     = current_sequence.has_poly_base(l_window_start, l_window_end);
+            let (l_has_simple_repeat, l_offset_2) = current_sequence.has_simple_repeat(l_window_start, l_window_end);
+            let (l_has_2base_repeat, l_offset_3)  = current_sequence.has_2base_repeat(l_window_start, l_window_end);
+            if l_has_poly_base||l_has_simple_repeat||l_has_2base_repeat {
+                l_window_start += cmp::max(cmp::max(l_offset_1, l_offset_2), l_offset_3) + 1;
                 continue 'each_l_window;
             }
             m_window_start = l_window_end + 1;
@@ -321,16 +357,28 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                 if m_window_end >= current_sequence.len() || m_window_end - l_window_start > chunk_max{
                     break 'each_m_window;
                 }
-                let m_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(m_window_start, m_window_end);
-                if m_has_poly_base_or_simple_repeat == true{
-                    m_window_start += 1;
+                let mut m_offset_1: usize;
+                let mut m_offset_2: usize;
+                let mut m_offset_3: usize;
+                let (m_has_poly_base, m_offset_1)     = current_sequence.has_poly_base(m_window_start, m_window_end);
+                let (m_has_simple_repeat, m_offset_2) = current_sequence.has_simple_repeat(m_window_start, m_window_end);
+                let (m_has_2base_repeat, m_offset_3)  = current_sequence.has_2base_repeat(m_window_start, m_window_end);
+                if m_has_poly_base||m_has_simple_repeat||m_has_2base_repeat {
+                    m_window_start += cmp::max(cmp::max(m_offset_1, m_offset_2), m_offset_3) + 1;
                     continue 'each_m_window;
                 }
-                    r_window_start = m_window_end + 1;
+                r_window_start = m_window_end + 1;
                 'each_r_window: loop{
                     r_window_end = r_window_start + R_LEN;
-                    if r_window_end >= current_sequence.len() || r_window_end - l_window_start > chunk_max{
-                        break 'each_r_window;
+                    let mut r_offset_1: usize;
+                    let mut r_offset_2: usize;
+                    let mut r_offset_3: usize;
+                    let (r_has_poly_base, r_offset_1)     = current_sequence.has_poly_base(r_window_start, r_window_end);
+                    let (r_has_simple_repeat, r_offset_2) = current_sequence.has_simple_repeat(r_window_start, r_window_end);
+                    let (r_has_2base_repeat, r_offset_3)  = current_sequence.has_2base_repeat(r_window_start, r_window_end);
+                    if r_has_poly_base||r_has_simple_repeat||r_has_2base_repeat {
+                        r_window_start += cmp::max(cmp::max(r_offset_1, r_offset_2), r_offset_3) + 1;
+                        continue 'each_r_window;
                     }
                     let r_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(r_window_start, r_window_end);
                     if r_has_poly_base_or_simple_repeat == true{
