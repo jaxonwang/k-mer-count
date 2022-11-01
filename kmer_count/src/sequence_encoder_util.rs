@@ -187,11 +187,15 @@ impl DnaSequence{
     }
 
     pub fn has_poly_base_or_simple_repeat(&self, start: usize, end: usize) -> bool {
-        return self.has_poly_base(start, end).0 | self.has_simple_repeat(start, end).0 | self.has_2base_repeat(start, end).0;
+        return self.has_poly_base(start, end, false).0 | self.has_simple_repeat(start, end).0 | self.has_2base_repeat(start, end).0;
     }
 
-    pub fn has_poly_base(&self, start: usize, end: usize) -> (bool, usize) {
-        if end > self.length{eprintln!("start: {} end: {}", start, end);}
+    pub fn has_poly_base(&self, start: usize, end: usize, flag: bool) -> (bool, usize) {
+        if flag {
+            eprintln!("has_poly_base recieved start: {} end: {} nd self.length is {}", start, end, self.length);
+            assert!(end <= self.length, "DnaSequence::has_poly_base assertion failed: end coordinate must be smaller than length of the sequence. start: {}, end: {}, self.lngth: {}", start, end, self.length);
+            eprintln!("has_poly_base recieved start: {} end: {} nd self.length is {}", start, end, self.length);
+        }
         assert!(start < end, "DnaSequence::has_poly_base assertion failed: {} !< {}", start, end);
         assert!(end - start > 3, "DnaSequence::has_poly_base assertion failed: {} - {} < 4", end, start);
         assert!(end - start < 32, "DnaSequence::has_poly_base assertion failed: length of the evaluation subject must be shorter than 32");
@@ -242,10 +246,10 @@ impl DnaSequence{
     }
 
     pub fn has_simple_repeat(&self, start: usize, end: usize) -> (bool, usize) {
-        assert!(start < end, "DnaSequence::has_poly_base assertion failed: {} !< {}", start, end);
-        assert!(end - start > 3, "DnaSequence::has_poly_base assertion failed: {} - {} < 4", end, start);
-        assert!(end - start < 32, "DnaSequence::has_poly_base assertion failed: length of the evaluation subject must be shorter than 32");
-        assert!(end <= self.length, "DnaSequence::has_poly_base assertion failed: end coordinate must be smaller than length of the sequence. end: {}, self.lngth: {}", end, self.length);
+        assert!(start < end, "DnaSequence::has_simple_repeat assertion failed: {} !< {}", start, end);
+        assert!(end - start > 3, "DnaSequence::has_simple_repeat assertion failed: {} - {} < 4", end, start);
+        assert!(end - start < 32, "DnaSequence::has_simple_repeat assertion failed: length of the evaluation subject must be shorter than 32");
+        assert!(end <= self.length, "DnaSequence::has_simple_repeat assertion failed: end coordinate must be smaller than length of the sequence. end: {}, self.lngth: {}", end, self.length);
         let mut original:  u64 = 0;
         let mut zero_ichi: u64 = 1;
         for i in start..end{
@@ -297,10 +301,10 @@ impl DnaSequence{
     }
 
     pub fn has_2base_repeat(&self, start: usize, end: usize) -> (bool, usize) {
-        assert!(start < end, "DnaSequence::has_poly_base assertion failed: {} !< {}", start, end);
-        assert!(end - start > 3, "DnaSequence::has_poly_base assertion failed: {} - {} < 4", end, start);
-        assert!(end - start < 32, "DnaSequence::has_poly_base assertion failed: length of the evaluation subject must be shorter than 32");
-        assert!(end <= self.length, "DnaSequence::has_poly_base assertion failed: end coordinate must be smaller than length of the sequence. end: {}, self.lngth: {}", end, self.length);
+        assert!(start < end, "DnaSequence::has_2base_repeat assertion failed: {} !< {}", start, end);
+        assert!(end - start > 3, "DnaSequence::has_2base_repeat assertion failed: {} - {} < 4", end, start);
+        assert!(end - start < 32, "DnaSequence::has_2base_repeat assertion failed: length of the evaluation subject must be shorter than 32");
+        assert!(end <= self.length, "DnaSequence::has_2base_repeat assertion failed: end coordinate must be smaller than length of the sequence. end: {}, self.lngth: {}", end, self.length);
         let mut original:  u64 = 0;
         //let mut zero_ichi: u64 = 1;
         for i in start..end{
