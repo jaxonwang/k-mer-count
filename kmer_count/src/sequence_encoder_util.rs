@@ -199,9 +199,7 @@ impl DnaSequence{
             eprintln!("has_poly_base recieved start: {} end: {} and self.length is {}", start, end, self.length);
             assert!(end <= self.length, "DnaSequence::has_poly_base assertion failed: end coordinate must be smaller than length of the sequence. start: {}, end: {}, self.length: {}", start, end, self.length);
         }
-        if end > self.length{
-            eprintln!("has_poly_base: {}, {}", end, self.length);
-        }
+        eprintln!("has_poly_base: {}, {}", end, self.length);
         assert!(start < end, "DnaSequence::has_poly_base assertion failed: {} !< {}", start, end);
         assert!(end - start > 3, "DnaSequence::has_poly_base assertion failed: {} - {} < 4", end, start);
         assert!(end - start < 32, "DnaSequence::has_poly_base assertion failed: length of the evaluation subject must be shorter than 32");
