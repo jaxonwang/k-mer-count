@@ -80,7 +80,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u16; BLOOMFILTER_TABLE_SI
             let mut l_offset_1: usize;
             let mut l_offset_2: usize;
             let mut l_offset_3: usize;
-            let (l_has_poly_base, l_offset_1)     = current_sequence.has_poly_base(l_window_start, l_window_end, false);
+            let (l_has_poly_base, l_offset_1)     = current_sequence.has_poly_base(l_window_start, l_window_end);
             let (l_has_simple_repeat, l_offset_2) = current_sequence.has_simple_repeat(l_window_start, l_window_end);
             let (l_has_2base_repeat, l_offset_3)  = current_sequence.has_2base_repeat(l_window_start, l_window_end);
             if l_has_poly_base||l_has_simple_repeat||l_has_2base_repeat {
@@ -96,7 +96,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u16; BLOOMFILTER_TABLE_SI
                 let mut m_offset_1: usize;
                 let mut m_offset_2: usize;
                 let mut m_offset_3: usize;
-                let (m_has_poly_base, m_offset_1)     = current_sequence.has_poly_base(m_window_start, m_window_end, false);
+                let (m_has_poly_base, m_offset_1)     = current_sequence.has_poly_base(m_window_start, m_window_end);
                 let (m_has_simple_repeat, m_offset_2) = current_sequence.has_simple_repeat(m_window_start, m_window_end);
                 let (m_has_2base_repeat, m_offset_3)  = current_sequence.has_2base_repeat(m_window_start, m_window_end);
                 if m_has_poly_base||m_has_simple_repeat||m_has_2base_repeat {
@@ -112,7 +112,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u16; BLOOMFILTER_TABLE_SI
                     let mut r_offset_1: usize;
                     let mut r_offset_2: usize;
                     let mut r_offset_3: usize;
-                    let (r_has_poly_base, r_offset_1)     = current_sequence.has_poly_base(r_window_start, r_window_end, false);
+                    let (r_has_poly_base, r_offset_1)     = current_sequence.has_poly_base(r_window_start, r_window_end);
                     let (r_has_simple_repeat, r_offset_2) = current_sequence.has_simple_repeat(r_window_start, r_window_end);
                     let (r_has_2base_repeat, r_offset_3)  = current_sequence.has_2base_repeat(r_window_start, r_window_end);
                     if r_has_poly_base||r_has_simple_repeat||r_has_2base_repeat {
@@ -220,7 +220,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u16; BLOOMFILTER_TABLE_
             let mut l_offset_1: usize;
             let mut l_offset_2: usize;
             let mut l_offset_3: usize;
-            let (l_has_poly_base, l_offset_1)     = current_sequence.has_poly_base(l_window_start, l_window_end, false);
+            let (l_has_poly_base, l_offset_1)     = current_sequence.has_poly_base(l_window_start, l_window_end);
             let (l_has_simple_repeat, l_offset_2) = current_sequence.has_simple_repeat(l_window_start, l_window_end);
             let (l_has_2base_repeat, l_offset_3)  = current_sequence.has_2base_repeat(l_window_start, l_window_end);
             if l_has_poly_base||l_has_simple_repeat||l_has_2base_repeat {
@@ -236,7 +236,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u16; BLOOMFILTER_TABLE_
                 let mut m_offset_1: usize;
                 let mut m_offset_2: usize;
                 let mut m_offset_3: usize;
-                let (m_has_poly_base, m_offset_1)     = current_sequence.has_poly_base(m_window_start, m_window_end, false);
+                let (m_has_poly_base, m_offset_1)     = current_sequence.has_poly_base(m_window_start, m_window_end);
                 let (m_has_simple_repeat, m_offset_2) = current_sequence.has_simple_repeat(m_window_start, m_window_end);
                 let (m_has_2base_repeat, m_offset_3)  = current_sequence.has_2base_repeat(m_window_start, m_window_end);
                 if m_has_poly_base||m_has_simple_repeat||m_has_2base_repeat {
@@ -253,7 +253,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u16; BLOOMFILTER_TABLE_
                     let mut r_offset_1: usize;
                     let mut r_offset_2: usize;
                     let mut r_offset_3: usize;
-                    let (r_has_poly_base, r_offset_1)     = current_sequence.has_poly_base(r_window_start, r_window_end, false);
+                    let (r_has_poly_base, r_offset_1)     = current_sequence.has_poly_base(r_window_start, r_window_end);
                     let (r_has_simple_repeat, r_offset_2) = current_sequence.has_simple_repeat(r_window_start, r_window_end);
                     let (r_has_2base_repeat, r_offset_3)  = current_sequence.has_2base_repeat(r_window_start, r_window_end);
                     if r_has_poly_base||r_has_simple_repeat||r_has_2base_repeat {
@@ -345,7 +345,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
             let mut l_offset_1: usize;
             let mut l_offset_2: usize;
             let mut l_offset_3: usize;
-            let (l_has_poly_base, l_offset_1)     = current_sequence.has_poly_base(l_window_start, l_window_end, false);
+            let (l_has_poly_base, l_offset_1)     = current_sequence.has_poly_base(l_window_start, l_window_end);
             let (l_has_simple_repeat, l_offset_2) = current_sequence.has_simple_repeat(l_window_start, l_window_end);
             let (l_has_2base_repeat, l_offset_3)  = current_sequence.has_2base_repeat(l_window_start, l_window_end);
             if l_has_poly_base||l_has_simple_repeat||l_has_2base_repeat {
@@ -361,7 +361,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                 let mut m_offset_1: usize;
                 let mut m_offset_2: usize;
                 let mut m_offset_3: usize;
-                let (m_has_poly_base, m_offset_1)     = current_sequence.has_poly_base(m_window_start, m_window_end, true);
+                let (m_has_poly_base, m_offset_1)     = current_sequence.has_poly_base(m_window_start, m_window_end);
                 let (m_has_simple_repeat, m_offset_2) = current_sequence.has_simple_repeat(m_window_start, m_window_end);
                 let (m_has_2base_repeat, m_offset_3)  = current_sequence.has_2base_repeat(m_window_start, m_window_end);
                 if m_has_poly_base||m_has_simple_repeat||m_has_2base_repeat {
@@ -377,7 +377,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                     let mut r_offset_1: usize;
                     let mut r_offset_2: usize;
                     let mut r_offset_3: usize;
-                    let (r_has_poly_base, r_offset_1)     = current_sequence.has_poly_base(r_window_start, r_window_end, false);
+                    let (r_has_poly_base, r_offset_1)     = current_sequence.has_poly_base(r_window_start, r_window_end);
                     let (r_has_simple_repeat, r_offset_2) = current_sequence.has_simple_repeat(r_window_start, r_window_end);
                     let (r_has_2base_repeat, r_offset_3)  = current_sequence.has_2base_repeat(r_window_start, r_window_end);
                     if r_has_poly_base||r_has_simple_repeat||r_has_2base_repeat {
