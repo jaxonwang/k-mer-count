@@ -85,7 +85,7 @@ fn main(){
                     tmp_seq_as_u128 <<= 8;
                     tmp_seq_as_u128 += u128::from(buf[i]);
                 }
-                sequence_dump(&tmp_seq_as_u128);
+                println!("{:?}", sequence_dump(&tmp_seq_as_u128));
             }
         }
     }
