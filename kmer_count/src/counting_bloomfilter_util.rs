@@ -18,25 +18,6 @@ use bio::io::fasta::FastaRead;
 
 pub const BLOOMFILTER_TABLE_SIZE: usize = u32::MAX as usize + 1;
 
-
-/*
-L_LEN = 21
-M_LEN = 22
-R_LEN = 21
-
-1)断片サイズで60通り
-2)Mの開始位置でバリエーション
-80...16(80 - 21 - 21 - 22 = 16)
-81...17
-.
-.
-.
-140...76
-2806
-
-168360
-*/
-
 //全てのL, Rと、hash値を出力する
 //部分配列のdecoderを書き、テストする
 pub fn build_counting_bloom_filter(path: &str) -> Box<[u16; BLOOMFILTER_TABLE_SIZE]>{
@@ -84,8 +65,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u16; BLOOMFILTER_TABLE_SI
             let (l_has_simple_repeat, l_offset_2) = current_sequence.has_simple_repeat(l_window_start, l_window_end);
             let (l_has_2base_repeat, l_offset_3)  = current_sequence.has_2base_repeat(l_window_start, l_window_end);
             if l_has_poly_base||l_has_simple_repeat||l_has_2base_repeat {
-                //l_window_start += cmp::max(cmp::max(l_offset_1, l_offset_2), l_offset_3) + 1;
-                l_window_start += 1;
+                l_window_start += cmp::max(cmp::max(l_offset_1, l_offset_2), l_offset_3) + 1;
                 continue 'each_l_window;
             }
             m_window_start = l_window_end + 1;
@@ -101,8 +81,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u16; BLOOMFILTER_TABLE_SI
                 let (m_has_simple_repeat, m_offset_2) = current_sequence.has_simple_repeat(m_window_start, m_window_end);
                 let (m_has_2base_repeat, m_offset_3)  = current_sequence.has_2base_repeat(m_window_start, m_window_end);
                 if m_has_poly_base||m_has_simple_repeat||m_has_2base_repeat {
-                    //m_window_start += cmp::max(cmp::max(m_offset_1, m_offset_2), m_offset_3) + 1;
-                    m_window_start += 1;
+                    m_window_start += cmp::max(cmp::max(m_offset_1, m_offset_2), m_offset_3) + 1;
                     continue 'each_m_window;
                 }
                 r_window_start = m_window_end + 1;
@@ -118,8 +97,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u16; BLOOMFILTER_TABLE_SI
                     let (r_has_simple_repeat, r_offset_2) = current_sequence.has_simple_repeat(r_window_start, r_window_end);
                     let (r_has_2base_repeat, r_offset_3)  = current_sequence.has_2base_repeat(r_window_start, r_window_end);
                     if r_has_poly_base||r_has_simple_repeat||r_has_2base_repeat {
-                        //r_window_start += cmp::max(cmp::max(r_offset_1, r_offset_2), r_offset_3) + 1;
-                        r_window_start += 1;
+                        r_window_start += cmp::max(cmp::max(r_offset_1, r_offset_2), r_offset_3) + 1;
                         continue 'each_r_window;
                     }
                     //ここからcounting bloom filterに追加していく。
@@ -227,8 +205,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u16; BLOOMFILTER_TABLE_
             let (l_has_simple_repeat, l_offset_2) = current_sequence.has_simple_repeat(l_window_start, l_window_end);
             let (l_has_2base_repeat, l_offset_3)  = current_sequence.has_2base_repeat(l_window_start, l_window_end);
             if l_has_poly_base||l_has_simple_repeat||l_has_2base_repeat {
-                //l_window_start += cmp::max(cmp::max(l_offset_1, l_offset_2), l_offset_3) + 1;
-                l_window_start += 1;
+                l_window_start += cmp::max(cmp::max(l_offset_1, l_offset_2), l_offset_3) + 1;
                 continue 'each_l_window;
             }
             m_window_start = l_window_end + 1;
@@ -244,8 +221,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u16; BLOOMFILTER_TABLE_
                 let (m_has_simple_repeat, m_offset_2) = current_sequence.has_simple_repeat(m_window_start, m_window_end);
                 let (m_has_2base_repeat, m_offset_3)  = current_sequence.has_2base_repeat(m_window_start, m_window_end);
                 if m_has_poly_base||m_has_simple_repeat||m_has_2base_repeat {
-                    //m_window_start += cmp::max(cmp::max(m_offset_1, m_offset_2), m_offset_3) + 1;
-                    m_window_start += 1;
+                    m_window_start += cmp::max(cmp::max(m_offset_1, m_offset_2), m_offset_3) + 1;
                     continue 'each_m_window;
                 }
                 r_window_start = m_window_end + 1;
@@ -262,8 +238,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u16; BLOOMFILTER_TABLE_
                     let (r_has_simple_repeat, r_offset_2) = current_sequence.has_simple_repeat(r_window_start, r_window_end);
                     let (r_has_2base_repeat, r_offset_3)  = current_sequence.has_2base_repeat(r_window_start, r_window_end);
                     if r_has_poly_base||r_has_simple_repeat||r_has_2base_repeat {
-                        //r_window_start += cmp::max(cmp::max(r_offset_1, r_offset_2), r_offset_3) + 1;
-                        r_window_start += 1;
+                        r_window_start += cmp::max(cmp::max(r_offset_1, r_offset_2), r_offset_3) + 1;
                         continue 'each_r_window;
                     }
                                 //ここからcounting bloom filterに追加していく。
@@ -354,8 +329,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
             let (l_has_simple_repeat, l_offset_2) = current_sequence.has_simple_repeat(l_window_start, l_window_end);
             let (l_has_2base_repeat, l_offset_3)  = current_sequence.has_2base_repeat(l_window_start, l_window_end);
             if l_has_poly_base||l_has_simple_repeat||l_has_2base_repeat {
-                //l_window_start += cmp::max(cmp::max(l_offset_1, l_offset_2), l_offset_3) + 1;
-                l_window_start += 1;
+                l_window_start += cmp::max(cmp::max(l_offset_1, l_offset_2), l_offset_3) + 1;
                 continue 'each_l_window;
             }
             m_window_start = l_window_end + 1;
@@ -371,8 +345,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                 let (m_has_simple_repeat, m_offset_2) = current_sequence.has_simple_repeat(m_window_start, m_window_end);
                 let (m_has_2base_repeat, m_offset_3)  = current_sequence.has_2base_repeat(m_window_start, m_window_end);
                 if m_has_poly_base||m_has_simple_repeat||m_has_2base_repeat {
-                    //m_window_start += cmp::max(cmp::max(m_offset_1, m_offset_2), m_offset_3) + 1;
-                    m_window_start += 1;
+                    m_window_start += cmp::max(cmp::max(m_offset_1, m_offset_2), m_offset_3) + 1;
                     continue 'each_m_window;
                 }
                 r_window_start = m_window_end + 1;
@@ -388,8 +361,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                     let (r_has_simple_repeat, r_offset_2) = current_sequence.has_simple_repeat(r_window_start, r_window_end);
                     let (r_has_2base_repeat, r_offset_3)  = current_sequence.has_2base_repeat(r_window_start, r_window_end);
                     if r_has_poly_base||r_has_simple_repeat||r_has_2base_repeat {
-                        //r_window_start += cmp::max(cmp::max(r_offset_1, r_offset_2), r_offset_3) + 1;
-                        r_window_start += 1;
+                        r_window_start += cmp::max(cmp::max(r_offset_1, r_offset_2), r_offset_3) + 1;
                         continue 'each_r_window;
                     }
                     //ここからcounting bloom filterに追加していく。
