@@ -11,19 +11,22 @@ use std::sync::Mutex;
 use getopts::Options;
 use kmer_count::sequence_encoder_util::{decode_u128_l, decode_u128_m, decode_u128_r};
 
+fn sequence_dump(sequence: &u128) -> String{
+    let l_u8_array  = decode_u128_l(sequence);
+    let m_u8_array  = decode_u128_m(sequence);
+    let r_u8_array  = decode_u128_r(sequence);
+    let l_str: &str = std::str::from_utf8(&l_u8_array).unwrap();
+    let m_str: &str = std::str::from_utf8(&m_u8_array).unwrap();
+    let r_str: &str = std::str::from_utf8(&r_u8_array).unwrap();
+    return format!("{}{}{}", l_str, m_str, r_str);
+}
 
 
-fn sequence_dump(sequences: &Vec<u128>) -> Vec<String>{
+
+fn sequences_dump(sequences: &Vec<u128>) -> Vec<String>{
     let mut str_vec: Vec<String> = Vec::new();
     for each_seq in sequences {
-        let l_u8_array  = decode_u128_l(&each_seq);
-        let m_u8_array  = decode_u128_m(&each_seq);
-        let r_u8_array  = decode_u128_r(&each_seq);
-        let l_str: &str = std::str::from_utf8(&l_u8_array).unwrap();
-        let m_str: &str = std::str::from_utf8(&m_u8_array).unwrap();
-        let r_str: &str = std::str::from_utf8(&r_u8_array).unwrap();
-        let sequence    = format!("{}{}{}", l_str, m_str, r_str);
-        str_vec.push(sequence);
+        str_vec.push(sequence_dump(each_seq));
     }
     return str_vec;
 }
@@ -82,13 +85,14 @@ fn main(){
                     tmp_seq_as_u128 <<= 8;
                     tmp_seq_as_u128 += u128::from(buf[i]);
                 }
-                candidates.push(tmp_seq_as_u128);
+                sequence_dump(&tmp_seq_as_u128);
             }
         }
     }
-
-    let sequence_dump_string: Vec<String> = sequence_dump(&candidates);
-    for candidate in sequence_dump_string{
+/* 
+    let sequences_dump_string: Vec<String> = sequences_dump(&candidates);
+    for candidate in sequences_dump_string{
         println!("{}", candidate);
     }
+*/
 }

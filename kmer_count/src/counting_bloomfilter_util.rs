@@ -344,7 +344,6 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
         'each_l_window: loop{
             l_window_end = l_window_start + L_LEN;
             if l_window_end >= current_sequence.len(){
-                eprintln!("break");
                 break 'each_l_window;
             }
             l_window_cnt += 1;
