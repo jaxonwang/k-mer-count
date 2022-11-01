@@ -192,9 +192,8 @@ impl DnaSequence{
 
     pub fn has_poly_base(&self, start: usize, end: usize, flag: bool) -> (bool, usize) {
         if flag {
-            eprintln!("has_poly_base recieved start: {} end: {} nd self.length is {}", start, end, self.length);
-            assert!(end <= self.length, "DnaSequence::has_poly_base assertion failed: end coordinate must be smaller than length of the sequence. start: {}, end: {}, self.lngth: {}", start, end, self.length);
-            eprintln!("has_poly_base recieved start: {} end: {} nd self.length is {}", start, end, self.length);
+            eprintln!("has_poly_base recieved start: {} end: {} and self.length is {}", start, end, self.length);
+            assert!(end <= self.length, "DnaSequence::has_poly_base assertion failed: end coordinate must be smaller than length of the sequence. start: {}, end: {}, self.length: {}", start, end, self.length);
         }
         assert!(start < end, "DnaSequence::has_poly_base assertion failed: {} !< {}", start, end);
         assert!(end - start > 3, "DnaSequence::has_poly_base assertion failed: {} - {} < 4", end, start);
