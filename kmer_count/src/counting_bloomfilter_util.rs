@@ -20,7 +20,7 @@ pub const BLOOMFILTER_TABLE_SIZE: usize = u32::MAX as usize + 1;
 
 //全てのL, Rと、hash値を出力する
 //部分配列のdecoderを書き、テストする
-pub fn build_counting_bloom_filter(path: &str) -> Box<[u16; BLOOMFILTER_TABLE_SIZE]>{
+pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SIZE]>{
     let mut l_window_start: usize;
     let mut l_window_end:   usize;
     let mut m_window_start: usize;
@@ -30,8 +30,8 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u16; BLOOMFILTER_TABLE_SI
     let chunk_max: usize = 141;
 
     let mut loop_cnt:usize = 0;
-    eprintln!("Allocating Box<[u16; BLOOMFILTER_TABLE_SIZE]> where BLOOMFILTER_TABLE_SIZE = {}", BLOOMFILTER_TABLE_SIZE);
-    let mut ret_array: Box<[u16; BLOOMFILTER_TABLE_SIZE]> = Box::new([0; BLOOMFILTER_TABLE_SIZE]);
+    eprintln!("Allocating Box<[u32; BLOOMFILTER_TABLE_SIZE]> where BLOOMFILTER_TABLE_SIZE = {}", BLOOMFILTER_TABLE_SIZE);
+    let mut ret_array: Box<[u32; BLOOMFILTER_TABLE_SIZE]> = Box::new([0; BLOOMFILTER_TABLE_SIZE]);
     eprintln!("finish allocating");
     let file = File::open(path).expect("Error during opening the file");
     let mut reader = faReader::new(file);
@@ -106,8 +106,8 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u16; BLOOMFILTER_TABLE_SI
                     let table_indice:[u32;8] = hash_from_u128(lmr_string);//u128を受けてhashを返す関数
                     for i in 0..8{
                         let idx: usize = table_indice[i] as usize;
-                        if ret_array[idx] == u16::MAX{
-                            eprintln!("index {} reaches u16::MAX", idx);
+                        if ret_array[idx] == u32::MAX{
+                            eprintln!("index {} reaches u32::MAX", idx);
                         }else{
                             ret_array[idx] += 1;
                         }
@@ -146,8 +146,8 @@ fn hash_from_u128(source: u128) -> [u32; 8]{
     return ret_val;
 }
 
-fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &Box<[u16; BLOOMFILTER_TABLE_SIZE]>, indice: [u32; 8]) -> u16{
-    let mut retval: u16 = u16::MAX;
+fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &Box<[u32; BLOOMFILTER_TABLE_SIZE]>, indice: [u32; 8]) -> u32{
+    let mut retval: u32 = u32::MAX;
     for index in indice{
         if counting_bloomfilter_table[index as usize] < retval{
             retval = counting_bloomfilter_table[index as usize];
@@ -157,7 +157,7 @@ fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &
 }
 
 
-pub fn number_of_high_occurence_kmer(source_table: &Box<[u16; BLOOMFILTER_TABLE_SIZE]>, path: &str, threshold: u16) -> (Box<[bool; BLOOMFILTER_TABLE_SIZE]>, usize){
+pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_SIZE]>, path: &str, threshold: u32) -> (Box<[bool; BLOOMFILTER_TABLE_SIZE]>, usize){
     let mut ret_table: Box<[bool; BLOOMFILTER_TABLE_SIZE]> = Box::new([false; BLOOMFILTER_TABLE_SIZE]);
     let mut ret_val: usize = 0;
     let mut l_window_start: usize;
@@ -177,8 +177,8 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u16; BLOOMFILTER_TABLE_
     let mut previous_time = start.elapsed();
 
     let mut loop_cnt:usize = 0;
-    eprintln!("Allocating Box<[u16; BLOOMFILTER_TABLE_SIZE]> where BLOOMFILTER_TABLE_SIZE = {}", BLOOMFILTER_TABLE_SIZE);
-    let mut ret_array: Box<[u16; BLOOMFILTER_TABLE_SIZE]> = Box::new([0; BLOOMFILTER_TABLE_SIZE]);
+    eprintln!("Allocating Box<[u32; BLOOMFILTER_TABLE_SIZE]> where BLOOMFILTER_TABLE_SIZE = {}", BLOOMFILTER_TABLE_SIZE);
+    let mut ret_array: Box<[u32; BLOOMFILTER_TABLE_SIZE]> = Box::new([0; BLOOMFILTER_TABLE_SIZE]);
     eprintln!("finish allocating");
     'each_read: loop {
         reader.read(&mut record).unwrap();
@@ -245,7 +245,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u16; BLOOMFILTER_TABLE_
                     add_bloom_filter_cnt += 1;
                     let lmr_string:u128 = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [m_window_start, m_window_end], [r_window_start, r_window_end]]);
                     let table_indice:[u32;8] = hash_from_u128(lmr_string);//u128を受けてhashを返す関数
-                    let occurence: u16 = count_occurence_from_counting_bloomfilter_table(source_table, table_indice);
+                    let occurence: u32 = count_occurence_from_counting_bloomfilter_table(source_table, table_indice);
                     if occurence >= threshold{
                         ret_val += 1;
                         for i in 0..8{

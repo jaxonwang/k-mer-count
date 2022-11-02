@@ -51,8 +51,8 @@ fn main() {
         8
     };
 
-    let threshold:u16 = if matches.opt_present("a") {
-        matches.opt_str("a").unwrap().parse::<u16>().unwrap()
+    let threshold:u32 = if matches.opt_present("a") {
+        matches.opt_str("a").unwrap().parse::<u32>().unwrap()
     }else{
         8
     };
@@ -69,7 +69,7 @@ fn main() {
 
     //1段目
     eprintln!("start calling build_counting_bloom_filter");
-    let counting_bloom_filter_table: Box<[u16; BLOOMFILTER_TABLE_SIZE]> = build_counting_bloom_filter(&input_file);
+    let counting_bloom_filter_table: Box<[u32; BLOOMFILTER_TABLE_SIZE]> = build_counting_bloom_filter(&input_file);
     eprintln!("finish calling build_counting_bloom_filter");
 
     //2段目
