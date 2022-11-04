@@ -69,6 +69,8 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
             'each_m_window: loop{
                 m_window_end = m_window_start + M_LEN;
                 if m_window_end >= current_sequence.len(){
+                    let end = start.elapsed();
+                    eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                     continue 'each_read;
                 }
                 if m_window_end - l_window_start > chunk_max - M_LEN{
@@ -79,12 +81,16 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
                 let (m_has_2base_repeat, m_offset_3)  = current_sequence.has_2base_repeat(m_window_start, m_window_end);
                 if m_has_poly_base||m_has_simple_repeat||m_has_2base_repeat {
                     m_window_start += cmp::max(cmp::max(m_offset_1, m_offset_2), m_offset_3) + 1;
+                    let end = start.elapsed();
+                    eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                     continue 'each_m_window;
                 }
                 r_window_start = m_window_end;
                 'each_r_window: loop{
                     r_window_end = r_window_start + R_LEN;
                     if r_window_end >= current_sequence.len() {
+                        let end = start.elapsed();
+                        eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                         continue 'each_read;
                     }
                     if r_window_end - l_window_start > chunk_max{
@@ -206,6 +212,8 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
             'each_m_window: loop{
                 m_window_end = m_window_start + M_LEN;
                 if m_window_end >= current_sequence.len() - R_LEN{
+                    let end = start.elapsed();
+                    eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                     continue 'each_read;
                 }
                 if m_window_end - l_window_start > chunk_max - R_LEN{
@@ -216,12 +224,16 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
                 let (m_has_2base_repeat, m_offset_3)  = current_sequence.has_2base_repeat(m_window_start, m_window_end);
                 if m_has_poly_base||m_has_simple_repeat||m_has_2base_repeat {
                     m_window_start += cmp::max(cmp::max(m_offset_1, m_offset_2), m_offset_3) + 1;
+                    let end = start.elapsed();
+                    eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                     continue 'each_m_window;
                 }
                 r_window_start = m_window_end;
                 'each_r_window: loop{
                     r_window_end = r_window_start + R_LEN;
                     if r_window_end >= current_sequence.len() {
+                        let end = start.elapsed();
+                        eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                         continue 'each_read;
                     }
                     if r_window_end - l_window_start > chunk_max{
@@ -313,6 +325,8 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
         'each_l_window: loop{
             l_window_end = l_window_start + L_LEN;
             if l_window_end >= current_sequence.len(){
+                let end = start.elapsed();
+                eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);        
                 continue 'each_read;
             }
             l_window_cnt += 1;
@@ -327,6 +341,8 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
             'each_m_window: loop{
                 m_window_end = m_window_start + M_LEN;
                 if m_window_end >= current_sequence.len() - R_LEN{
+                    let end = start.elapsed();
+                    eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                     continue 'each_read;
                 }
                 if m_window_end - l_window_start > chunk_max - R_LEN{
@@ -343,6 +359,8 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                 'each_r_window: loop{
                     r_window_end = r_window_start + R_LEN;
                     if r_window_end >= current_sequence.len() {
+                        let end = start.elapsed();
+                        eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                         continue 'each_read;
                     }
                     if r_window_end - l_window_start > chunk_max{
