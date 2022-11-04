@@ -761,7 +761,7 @@ mod tests{
         let source: String = "CAACAACTGC".to_string();
         let v: Vec<u8> = source.into_bytes();
         let obj = DnaSequence::new(&v);
-        assert!(obj.has_simple_repeat(0, 10) == (false, 0), "{} failed", function_name!());
+        assert!(obj.has_simple_repeat(0, 10+-) == (false, 0), "{} failed", function_name!());
     }
 
     
