@@ -68,8 +68,11 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
             m_window_start = l_window_end + 1;
             'each_m_window: loop{
                 m_window_end = m_window_start + M_LEN;
-                if m_window_end >= current_sequence.len() || m_window_end - l_window_start > chunk_max{
+                if m_window_end - l_window_start > chunk_max - R_LEN{
                     break 'each_m_window;
+                }
+                if m_window_end >= current_sequence.len(){
+                    break 'each_read;
                 }
                 let (m_has_poly_base, m_offset_1)     = current_sequence.has_poly_base(m_window_start, m_window_end);
                 let (m_has_simple_repeat, m_offset_2) = current_sequence.has_simple_repeat(m_window_start, m_window_end);
@@ -81,7 +84,10 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
                 r_window_start = m_window_end + 1;
                 'each_r_window: loop{
                     r_window_end = r_window_start + R_LEN;
-                    if r_window_end >= current_sequence.len() || r_window_end - l_window_start > chunk_max{
+                    if r_window_end >= current_sequence.len() {
+                        break 'each_read;
+                    }
+                    if r_window_end - l_window_start > chunk_max{
                         break 'each_r_window;
                     }
                     let (r_has_poly_base, r_offset_1)     = current_sequence.has_poly_base(r_window_start, r_window_end);
@@ -186,8 +192,8 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
         l_window_start = 0;
         'each_l_window: loop{
             l_window_end = l_window_start + L_LEN;
-            if l_window_end >= current_sequence.len(){
-                break 'each_l_window;
+            if l_window_end >= current_sequence.len() - M_LEN - R_LEN{
+                break 'each_read;
             }
             let (l_has_poly_base, l_offset_1)     = current_sequence.has_poly_base(l_window_start, l_window_end);
             let (l_has_simple_repeat, l_offset_2) = current_sequence.has_simple_repeat(l_window_start, l_window_end);
@@ -199,8 +205,11 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
             m_window_start = l_window_end + 1;
             'each_m_window: loop{
                 m_window_end = m_window_start + M_LEN;
-                if m_window_end >= current_sequence.len() || m_window_end - l_window_start > chunk_max{
+                if m_window_end - l_window_start > chunk_max - R_LEN{
                     break 'each_m_window;
+                }
+                if m_window_end >= current_sequence.len() - R_LEN{
+                    break 'each_read;
                 }
                 let (m_has_poly_base, m_offset_1)     = current_sequence.has_poly_base(m_window_start, m_window_end);
                 let (m_has_simple_repeat, m_offset_2) = current_sequence.has_simple_repeat(m_window_start, m_window_end);
@@ -212,7 +221,10 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
                 r_window_start = m_window_end + 1;
                 'each_r_window: loop{
                     r_window_end = r_window_start + R_LEN;
-                    if r_window_end >= current_sequence.len() || r_window_end - l_window_start > chunk_max{
+                    if r_window_end >= current_sequence.len() {
+                        break 'each_read;
+                    }
+                    if r_window_end - l_window_start > chunk_max{
                         break 'each_r_window;
                     }
                     let r_has_poly_base_or_simple_repeat: bool = current_sequence.has_poly_base_or_simple_repeat(r_window_start, r_window_end);
@@ -301,7 +313,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
         'each_l_window: loop{
             l_window_end = l_window_start + L_LEN;
             if l_window_end >= current_sequence.len(){
-                break 'each_l_window;
+                break 'each_read;
             }
             l_window_cnt += 1;
             let (l_has_poly_base, l_offset_1)     = current_sequence.has_poly_base(l_window_start, l_window_end);
@@ -314,8 +326,11 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
             m_window_start = l_window_end + 1;
             'each_m_window: loop{
                 m_window_end = m_window_start + M_LEN;
-                if m_window_end >= current_sequence.len() || m_window_end - l_window_start > chunk_max{
+                if m_window_end - l_window_start > chunk_max - R_LEN{
                     break 'each_m_window;
+                }
+                if m_window_end >= current_sequence.len() - R_LEN{
+                    break 'each_read;
                 }
                 let (m_has_poly_base, m_offset_1)     = current_sequence.has_poly_base(m_window_start, m_window_end);
                 let (m_has_simple_repeat, m_offset_2) = current_sequence.has_simple_repeat(m_window_start, m_window_end);
@@ -327,7 +342,10 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                 r_window_start = m_window_end + 1;
                 'each_r_window: loop{
                     r_window_end = r_window_start + R_LEN;
-                    if r_window_end >= current_sequence.len() || r_window_end - l_window_start > chunk_max{
+                    if r_window_end >= current_sequence.len() {
+                        break 'each_read;
+                    }
+                    if r_window_end - l_window_start > chunk_max{
                         break 'each_r_window;
                     }
                     let (r_has_poly_base, r_offset_1)     = current_sequence.has_poly_base(r_window_start, r_window_end);
