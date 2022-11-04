@@ -2,6 +2,8 @@ use crate::counting_bloomfilter_util::L_LEN;
 use crate::counting_bloomfilter_util::M_LEN;
 use crate::counting_bloomfilter_util::R_LEN;
 
+
+
 pub fn decode_u128_2_dna_seq(source:&u128, char_size: usize) -> Vec<u8>{
     let mut result: Vec<u8> = Vec::new();
     let mut base;
@@ -196,15 +198,17 @@ impl DnaSequence{
         assert!(end - start < 32, "DnaSequence::has_poly_base assertion failed: length of the evaluation subject must be shorter than 32");
         assert!(end <= self.length, "DnaSequence::has_poly_base assertion failed: end coordinate must be smaller than length of the sequence. start: {}, end: {}, self.lngth: {}", start, end, self.length);
         let mut original:  u64 = 0;
-        let mut zero_ichi: u64 = 1;
+        let zero_ichi = 0x5555555555555555;
+
+
+
         for i in start..end{
             original += (self.sequence[i / 32] >> (62 - 2 * (i % 32))) & 3;
             if i != end -1{
                 original <<= 2;
-                zero_ichi <<= 2;
-                zero_ichi += 1;
             }
         }//ここまでで、originalに右詰で対象の領域がコピーされる。
+        //zero_ichi &= !63;
         let val1  = original;
         let val2  = original << 2;
         let val3  = val1 ^ val2;
@@ -213,8 +217,9 @@ impl DnaSequence{
         let val6  = !val5;
         let val7  = val6 & zero_ichi;
         let val8  = val7 << 2;
-        let val9  = val7 & val8;
-        let val10 = (val9 << (2 * (32 + start - end))).leading_zeros() / 2;
+        let val9  = val7 << 4;
+        let val10  = val7 & val8 & val9;
+        let val11 = (val10 << (2 * (32 + start - end))).leading_zeros() / 2;
 
         #[cfg(test)]{
             println!("{}", std::str::from_utf8(&self.decode(start, end)).unwrap());
@@ -230,12 +235,13 @@ impl DnaSequence{
             println!(" val7: {:064b}", val7);
             println!(" val8: {:064b}", val8);
             println!(" val9: {:064b}", val9);
-            println!("val10: {}", val10);
+            println!("val10: {:064b}", val10);
+            println!("val11: {}", val11);
         }
-        if val10 == 32{
+        if val11 == 32{
             return (false, 0)
         }else{
-            return (true, val10.try_into().unwrap())
+            return (true, val11.try_into().unwrap())
         }
         //shift演算でポリ塩基の情報がおっこちてる
     }
@@ -255,6 +261,7 @@ impl DnaSequence{
                 zero_ichi += 1;
             }
         }//ここまでで、originalに右詰で対象の領域がコピーされる。
+        zero_ichi &= !63;
         let val1 = original;
         let val2 = original << 6;
         let val3 = val1 ^ val2;
@@ -271,6 +278,7 @@ impl DnaSequence{
         let leading0 = (last << (2 * (32 + start - end))).leading_zeros() / 2;
 
         #[cfg(test)]{
+            println!("{}", std::str::from_utf8(&self.decode(start, end)).unwrap());
             println!("start: {}", start);
             println!("end:   {}", end);
             println!("0101:  {:064b}", zero_ichi);
@@ -301,17 +309,77 @@ impl DnaSequence{
         assert!(end - start < 32, "DnaSequence::has_2base_repeat assertion failed: length of the evaluation subject must be shorter than 32");
         assert!(end <= self.length, "DnaSequence::has_2base_repeat assertion failed: end coordinate must be smaller than length of the sequence. end: {}, self.lngth: {}", end, self.length);
         let mut original:  u64 = 0;
-        //let mut zero_ichi: u64 = 1;
+        let mut zero_ichi: u64 = 1;
         for i in start..end{
             original += (self.sequence[i / 32] >> (62 - 2 * (i % 32))) & 3;
             if i != end - 1{
                 original <<= 2;
-                //zero_ichi <<= 2;
-                //zero_ichi += 1;
+                zero_ichi <<= 2;
+                zero_ichi += 1;
+            }
+        }//ここまでで、originalに右詰で対象の領域がコピーされる。
+        zero_ichi &= !63;
+        let val1 = original;
+        let val2 = original << 4;
+        let val3 = val1 ^ val2 & !15;
+        let val4 = val3 >> 1;
+        let val5 = val3 | val4;
+        let val6 = !val5;
+        let val7 = val6 & zero_ichi;
+        let val8 = val7 << 2;
+        let val9 = val7 << 4;
+        let val10 = val7 << 6;
+        let val11 = val7 << 8;
+        let val12 = val7 << 10;
+        let last  = val7 & 
+                    val7 << 2 &
+                    val7 << 4 &
+                    val7 << 6 &
+                    val7 << 8 &
+                    val7 << 10 &
+                    val7 << 12 &
+                    val7 << 14 ;
+        let leading0 = (last << (2 * (32 + start - end))).leading_zeros() / 2;
+
+        #[cfg(test)]{
+            println!("{}", std::str::from_utf8(&self.decode(start, end)).unwrap());
+            println!("start: {}", start);
+            println!("end:   {}", end);
+            println!("0101:  {:064b}", zero_ichi);
+            println!("val1:  {:064b}", val1);
+            println!("val2:  {:064b}", val2);
+            println!("val3:  {:064b}", val3);
+            println!("val4:  {:064b}", val4);
+            println!("val5:  {:064b}", val5);
+            println!("val6:  {:064b}", val6);
+            println!("val7:  {:064b}", val7);
+/* 
+            println!("val8:  {:064b}", val8);
+            println!("val9:  {:064b}", val9);
+            println!("val10: {:064b}", val10);
+            println!("val11: {:064b}", val11);
+
+ */
+            //println!("val12: {:064b}", val12);
+            println!("last:  {:064b}", last);
+            println!("leading0: {}", leading0);
+        }
+        if leading0 == 32{
+            return (false, 0)
+        }else{
+            return (true, leading0.try_into().unwrap())
+        }
+
+        /*
+        let mut original:  u64 = 0;
+        for i in start..end{
+            original += (self.sequence[i / 32] >> (62 - 2 * (i % 32))) & 3;
+            if i != end - 1{
+                original <<= 2;
             }
         }//ここまでで、originalに右詰で対象の領域がコピーされる。
         let val1 = original;
-        let val2 = original >> 4;
+        let val2 = original << 4;
         let mut val3 = val1 ^ val2;//val3で0が20個並んでるのを検出したい。これで2x6の単調反復を検出できる。
         //２個隣の塩基が自身と異なればnon-zero, 同じなら00が立つ
         //意味のあるbitは下位(end - start) * 2bit
@@ -330,9 +398,9 @@ impl DnaSequence{
         for _i in 0..(end - start){
             #[cfg(test)]{
                 println!("val3:  {:064b}", val3);
-                println!("val3.leading_zeros(): {}", val3.leading_zeros());//上位のbitから見る。
+                //println!("val3.leading_zeros(): {}", val3.leading_zeros());//上位のbitから見る。
             }
-            if val3.leading_zeros() >= 20{
+            if val3.leading_zeros() >= 16{
                 ret_flag = true;
                 break;
             }
@@ -348,6 +416,7 @@ impl DnaSequence{
         }else{
             return (true, leading0.try_into().unwrap())
         }
+        */
     }
 }
 
@@ -542,8 +611,8 @@ mod tests{
         let v: Vec<u8> = source.into_bytes();
         let obj = DnaSequence::new(&v);
         assert!(obj.has_poly_base(0, 9)   == (false, 0), "{} failed", function_name!());
-        assert!(obj.has_poly_base(0, 19)  == (true, 9),   "{} failed", function_name!());
-        assert!(obj.has_poly_base(9, 20)  == (true, 0),   "{} failed", function_name!());
+        assert!(obj.has_poly_base(0, 19)  == (true, 9),  "{} failed", function_name!());
+        assert!(obj.has_poly_base(9, 20)  == (true, 0),  "{} failed", function_name!());
         assert!(obj.has_poly_base(28, 39) == (false, 0), "{} failed", function_name!());
     }
 
@@ -587,7 +656,7 @@ mod tests{
         let source: String = "TTCGAAATTCATCATCATCATCATCAC".to_string();
         let v: Vec<u8> = source.into_bytes();
         let obj = DnaSequence::new(&v);
-        assert!(obj.has_poly_base(0, 27) == (true, 4), "{} failed", function_name!());
+        assert!(obj.has_poly_base(0, 27) == (false, 0), "{} failed", function_name!());
     }
 
     #[test]
@@ -600,6 +669,51 @@ mod tests{
     }
 
 
+    #[test]
+    #[named]
+    fn has_poly_base_test_27N_7(){
+        let source: String = "AAAAAAAAAAAAAAAAAAAAAAAAAAA".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_poly_base(0, 27) == (true, 0), "{} failed", function_name!());
+    }
+
+    #[test]
+    #[named]
+    fn has_poly_base_test_27N_8(){
+        let source: String = "AAAACGTCGTCGTCGCATACGATCGAT".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_poly_base(0, 27) == (true, 0), "{} failed", function_name!());
+    }
+
+    #[test]
+    #[named]
+    fn has_poly_base_test_27N_9(){
+        let source: String = "AAACGTCGTCGTCGCATACGAATCGAT".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_poly_base(0, 27) == (false, 0), "{} failed", function_name!());
+    }
+
+    #[test]
+    #[named]
+    fn has_poly_base_test_27N_10(){
+        let source: String = "GTCGTCGTCGCATACGAATCGATAAAA".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_poly_base(0, 27) == (true, 23), "{} failed", function_name!());
+    }
+
+    #[test]
+    #[named]
+    fn has_poly_base_test_27N_11(){
+        let source: String = "GTCGTCGTCGCATACGAATCGATTAAA".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_poly_base(0, 23) == (false, 0), "{} failed", function_name!());
+    }
+
 
     #[test]
     #[named]
@@ -608,6 +722,15 @@ mod tests{
         let v: Vec<u8> = source.into_bytes();
         let obj = DnaSequence::new(&v);
         assert!(obj.has_simple_repeat(0, 27) == (true, 7), "{} failed", function_name!());
+    }
+
+    #[test]
+    #[named]
+    fn has_simple_repeat_27N_1_a(){
+        let source: String = "ACGTACGTCAACAAC".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_simple_repeat(0, 15) == (false, 0), "{} failed", function_name!());
     }
 
     #[test]
@@ -636,12 +759,12 @@ mod tests{
         let source: String = "CGTACGCTTATATATATATATACCGCA".to_string();
         let v: Vec<u8> = source.into_bytes();
         let obj = DnaSequence::new(&v);
-        assert!(obj.has_2base_repeat(0, 27) == (true, 9), "{} failed", function_name!());
+        assert!(obj.has_2base_repeat(0, 27) == (true, 8), "{} failed", function_name!());
     }
 
     #[test]
     #[named]
-    fn has_2base_repeat_27N_2x6(){
+    fn has_2base_repeat_27N_2x6_1(){
         let source: String = "TATATATATATAGCCCGCACGTACGCT".to_string();
         let v: Vec<u8> = source.into_bytes();
         let obj = DnaSequence::new(&v);
@@ -650,8 +773,53 @@ mod tests{
 
     #[test]
     #[named]
-    fn has_2base_repeat_27N_2x5(){
-        let source: String = "CGTATATATATAGCCCGCACGTACGCT".to_string();
+    fn has_2base_repeat_27N_2x6_2(){
+        let source: String = "GCCCGCACGTACGCTATATATATATAT".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_2base_repeat(0, 27) == (true, 14), "{} failed", function_name!());
+    }
+
+    #[test]
+    #[named]
+    fn has_2base_repeat_27N_2x5_1(){
+        let source: String = "TATATATATACTGCCCGCACGTACGCT".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_2base_repeat(0, 27) == (true, 0), "{} failed", function_name!());
+    }
+
+    #[test]
+    #[named]
+    fn has_2base_repeat_27N_2x5_2(){
+        let source: String = "CTGCCCGCACGTACGCTATATATATAT".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_2base_repeat(0, 27) == (true, 16), "{} failed", function_name!());
+    }
+
+    #[test]
+    #[named]
+    fn has_2base_repeat_27N_2x4_1(){
+        let source: String = "TATATATACTGCCCGAACACGTACGCT".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_2base_repeat(0, 27) == (false, 0), "{} failed", function_name!());
+    }
+
+    #[test]
+    #[named]
+    fn has_2base_repeat_27N_2x4_2(){
+        let source: String = "CTGCCCGAACACGTACGCTATATATAT".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_2base_repeat(0, 27) == (false, 0), "{} failed", function_name!());
+    }
+
+    #[test]
+    #[named]
+    fn has_2base_repeat_27N_3(){
+        let source: String = "GAATTCGTTACGTAACGACGCGCGCGC".to_string();
         let v: Vec<u8> = source.into_bytes();
         let obj = DnaSequence::new(&v);
         assert!(obj.has_2base_repeat(0, 27) == (false, 0), "{} failed", function_name!());
@@ -675,7 +843,14 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_2base_repeat(0, 27) == (false, 0), "{} failed", function_name!());
     }
-
+    #[test]
+    #[named]
+    fn has_2base_repeat_27N_7(){
+        let source: String = "CGGTATATACGTACCGCACGCACACAC".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_2base_repeat(0, 27) == (false, 0), "{} failed", function_name!());
+    }
 
 
 //Decode test
