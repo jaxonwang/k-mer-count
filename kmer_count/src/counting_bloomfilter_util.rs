@@ -70,7 +70,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
                 m_window_end = m_window_start + M_LEN;
                 if m_window_end >= current_sequence.len() + 1{
                     let end = start.elapsed();
-                    eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
+                    eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}, r_window_end: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt, r_window_end);
                     continue 'each_read;
                 }
                 if m_window_end - l_window_start > chunk_max - M_LEN{
@@ -89,7 +89,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
                     r_window_end = r_window_start + R_LEN;
                     if r_window_end >= current_sequence.len() + 1 {
                         let end = start.elapsed();
-                        eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
+                        eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}, r_window_end: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt, r_window_end);
                         continue 'each_read;
                     }
                     if r_window_end - l_window_start > chunk_max{
@@ -121,7 +121,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
             l_window_start += 1;
         }
         let end = start.elapsed();
-        eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
+        eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}, r_window_end: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt, r_window_end);
         previous_time = end;
     }
     return ret_array;
@@ -212,7 +212,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
                 m_window_end = m_window_start + M_LEN;
                 if m_window_end >= current_sequence.len() + 1{
                     let end = start.elapsed();
-                    eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
+                    eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}, r_window_end: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt, r_window_end);
                     continue 'each_read;
                 }
                 if m_window_end - l_window_start > chunk_max - M_LEN{
@@ -231,7 +231,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
                     r_window_end = r_window_start + R_LEN;
                     if r_window_end >= current_sequence.len() + 1 {
                         let end = start.elapsed();
-                        eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
+                        eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}, r_window_end: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt, r_window_end);
                         continue 'each_read;
                     }
                     if r_window_end - l_window_start > chunk_max{
@@ -244,7 +244,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
                         r_window_start += cmp::max(cmp::max(r_offset_1, r_offset_2), r_offset_3) + 1;
                         continue 'each_r_window;
                     }
-                                //ここからcounting bloom filterに追加していく。
+                    //ここからcounting bloom filterに追加していく。
                     add_bloom_filter_cnt += 1;
                     let lmr_string:u128 = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [m_window_start, m_window_end], [r_window_start, r_window_end]]);
                     let table_indice:[u32;8] = hash_from_u128(lmr_string);//u128を受けてhashを返す関数
@@ -263,7 +263,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
             l_window_start += 1;
         }
         let end = start.elapsed();
-        eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
+        eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}, r_window_end: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt, r_window_end);
         previous_time = end;
     }
     return (ret_table, ret_val);
@@ -337,7 +337,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                 m_window_end = m_window_start + M_LEN;
                 if m_window_end >= current_sequence.len() + 1{
                     let end = start.elapsed();
-                    eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
+                    eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}, r_window_end: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt, r_window_end);
                     continue 'each_read;
                 }
                 if m_window_end - l_window_start > chunk_max - M_LEN{
@@ -356,7 +356,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                     r_window_end = r_window_start + R_LEN;
                     if r_window_end >= current_sequence.len() + 1 {
                         let end = start.elapsed();
-                        eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
+                        eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}, r_window_end: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt, r_window_end);
                         continue 'each_read;
                     }
                     if r_window_end - l_window_start > chunk_max{
@@ -385,7 +385,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
             l_window_start += 1;
         }
         let end = start.elapsed();
-        eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
+        eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}, r_window_end: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt, r_window_end);
         previous_time = end;
     }
     return ret_vec;
