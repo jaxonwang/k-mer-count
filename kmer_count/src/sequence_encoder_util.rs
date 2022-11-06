@@ -197,7 +197,7 @@ impl DnaSequence{
         assert!(end - start > 3, "DnaSequence::has_poly_base assertion failed: {} - {} < 4", end, start);
         assert!(end - start < 32, "DnaSequence::has_poly_base assertion failed: length of the evaluation subject must be shorter than 32");
         assert!(end <= self.length, "DnaSequence::has_poly_base assertion failed: end coordinate must be smaller than length of the sequence. start: {}, end: {}, self.lngth: {}", start, end, self.length);
-        let mut original:  u64 = 0;
+        //let mut original:  u64 = 0;
         let zero_ichi = 0x5555555555555555;
 
 /* 
@@ -432,14 +432,6 @@ impl DnaSequence{
         }
         */
     }
-}
-
-
-fn get_function_name<F>(_: F) -> &'static str
-where
-    F: Fn(),
-{
-    std::any::type_name::<F>()
 }
 
 
