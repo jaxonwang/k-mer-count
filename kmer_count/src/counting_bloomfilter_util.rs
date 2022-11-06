@@ -21,12 +21,12 @@ pub const BLOOMFILTER_TABLE_SIZE: usize = u32::MAX as usize + 1;
 //全てのL, Rと、hash値を出力する
 //部分配列のdecoderを書き、テストする
 pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SIZE]>{
-    let mut l_window_start: usize;
-    let mut l_window_end:   usize;
-    let mut m_window_start: usize;
-    let mut m_window_end:   usize;
-    let mut r_window_start: usize;
-    let mut r_window_end:   usize;
+    let mut l_window_start: usize = 0;
+    let mut l_window_end:   usize = 0;
+    let mut m_window_start: usize = 0;
+    let mut m_window_end:   usize = 0;
+    let mut r_window_start: usize = 0;
+    let mut r_window_end:   usize = 0;
     let chunk_max: usize = 141;
 
     let mut loop_cnt:usize = 0;
@@ -162,12 +162,12 @@ fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &
 pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_SIZE]>, path: &str, threshold: u32) -> (Box<[bool; BLOOMFILTER_TABLE_SIZE]>, usize){
     let mut ret_table: Box<[bool; BLOOMFILTER_TABLE_SIZE]> = Box::new([false; BLOOMFILTER_TABLE_SIZE]);
     let mut ret_val: usize = 0;
-    let mut l_window_start: usize;
-    let mut l_window_end:   usize;
-    let mut m_window_start: usize;
-    let mut m_window_end:   usize;
-    let mut r_window_start: usize;
-    let mut r_window_end:   usize;
+    let mut l_window_start: usize = 0;
+    let mut l_window_end:   usize = 0;
+    let mut m_window_start: usize = 0;
+    let mut m_window_end:   usize = 0;
+    let mut r_window_start: usize = 0;
+    let mut r_window_end:   usize = 0;
     let mut loop_cnt:usize = 0;
     let chunk_max: usize = 140;
     let file = File::open(path).expect("Error during opening the file");
@@ -287,12 +287,12 @@ fn refer_bloom_filter_table(bloomfilter_table: &Box<[bool; BLOOMFILTER_TABLE_SIZ
 
 pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_SIZE]>, path: &str, max_size_of_list: usize) -> Vec<u128>{
     let mut ret_val: usize = 0;
-    let mut l_window_start: usize;
-    let mut l_window_end:   usize;
-    let mut m_window_start: usize;
-    let mut m_window_end:   usize;
-    let mut r_window_start: usize;
-    let mut r_window_end:   usize;
+    let mut l_window_start: usize = 0;
+    let mut l_window_end:   usize = 0;
+    let mut m_window_start: usize = 0;
+    let mut m_window_end:   usize = 0;
+    let mut r_window_start: usize = 0;
+    let mut r_window_end:   usize = 0;
     let mut loop_cnt:usize = 0;
     let chunk_max: usize = 140;
     let mut loop_cnt:usize = 0;
