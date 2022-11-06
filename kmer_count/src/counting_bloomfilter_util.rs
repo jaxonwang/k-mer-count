@@ -119,10 +119,13 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
                             ret_array[idx] += 1;
                         }
                     }
+                    eprintln!("finish r loop, r_window_start += 1");
                     r_window_start += 1;
                 }
+                eprintln!("finish r loop, m_window_start += 1");
                 m_window_start += 1;
             }
+            eprintln!("finish r loop, l_window_start += 1");
             l_window_start += 1;
         }
         let end = start.elapsed();
