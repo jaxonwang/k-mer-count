@@ -54,8 +54,8 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
         l_window_start = 0;
         'each_l_window: loop{
             l_window_end = l_window_start + L_LEN;
-            if l_window_end >= current_sequence.len(){
-                eprintln!("each_l_window broken by l_window_end >= current_sequence.len(), {} >= {}", l_window_end, current_sequence.len());
+            if l_window_end >= current_sequence.len() + 1{
+                eprintln!("each_l_window broken by l_window_end >= current_sequence.len() + 1, {} >= {}", l_window_end, current_sequence.len() + 1);
                 break 'each_l_window;
             }
             l_window_cnt += 1;
@@ -69,14 +69,14 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
             m_window_start = l_window_end;
             'each_m_window: loop{
                 m_window_end = m_window_start + M_LEN;
-                if m_window_end >= current_sequence.len(){
+                if m_window_end >= current_sequence.len() + 1{
                     let end = start.elapsed();
-                    eprintln!("each_read continue by m_window_end >= current_sequence.len(), {} >= {}", m_window_end, current_sequence.len());
+                    eprintln!("each_read continue by m_window_end >= current_sequence.len() + 1, {} >= {}", m_window_end, current_sequence.len() + 1);
                     eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                     continue 'each_read;
                 }
                 if m_window_end - l_window_start > chunk_max - M_LEN{
-                    eprintln!("each_m_window broken by m_window_end >= current_sequence.len(), {} >= {}", m_window_end, current_sequence.len());
+                    eprintln!("each_m_window broken by m_window_end >= current_sequence.len() + 1, {} >= {}", m_window_end, current_sequence.len() + 1);
                     break 'each_m_window;
                 }
                 let (m_has_poly_base, m_offset_1)     = current_sequence.has_poly_base(m_window_start, m_window_end);
@@ -91,9 +91,9 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
                 r_window_start = m_window_end;
                 'each_r_window: loop{
                     r_window_end = r_window_start + R_LEN;
-                    if r_window_end >= current_sequence.len() {
+                    if r_window_end >= current_sequence.len() + 1 {
                         let end = start.elapsed();
-                        eprintln!("each_read continue by r_window_end >= current_sequence.len(), {} >= {}", r_window_end, current_sequence.len());
+                        eprintln!("each_read continue by r_window_end >= current_sequence.len() + 1, {} >= {}", r_window_end, current_sequence.len() + 1);
                         eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                         continue 'each_read;
                     }
@@ -205,7 +205,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
         l_window_start = 0;
         'each_l_window: loop{
             l_window_end = l_window_start + L_LEN;
-            if l_window_end >= current_sequence.len() - M_LEN - R_LEN{
+            if l_window_end >= current_sequence.len() + 1 - M_LEN - R_LEN{
                 let end = start.elapsed();
                 eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                 continue 'each_read;
@@ -220,7 +220,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
             m_window_start = l_window_end;
             'each_m_window: loop{
                 m_window_end = m_window_start + M_LEN;
-                if m_window_end >= current_sequence.len() - R_LEN{
+                if m_window_end >= current_sequence.len() + 1 - R_LEN{
                     let end = start.elapsed();
                     eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                     continue 'each_read;
@@ -238,7 +238,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
                 r_window_start = m_window_end;
                 'each_r_window: loop{
                     r_window_end = r_window_start + R_LEN;
-                    if r_window_end >= current_sequence.len() {
+                    if r_window_end >= current_sequence.len() + 1 {
                         let end = start.elapsed();
                         eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                         continue 'each_read;
@@ -331,7 +331,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
         l_window_start = 0;
         'each_l_window: loop{
             l_window_end = l_window_start + L_LEN;
-            if l_window_end >= current_sequence.len(){
+            if l_window_end >= current_sequence.len() + 1{
                 let end = start.elapsed();
                 eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);        
                 continue 'each_read;
@@ -347,7 +347,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
             m_window_start = l_window_end;
             'each_m_window: loop{
                 m_window_end = m_window_start + M_LEN;
-                if m_window_end >= current_sequence.len() - R_LEN{
+                if m_window_end >= current_sequence.len() + 1 - R_LEN{
                     let end = start.elapsed();
                     eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                     continue 'each_read;
@@ -365,7 +365,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                 r_window_start = m_window_end;
                 'each_r_window: loop{
                     r_window_end = r_window_start + R_LEN;
-                    if r_window_end >= current_sequence.len() {
+                    if r_window_end >= current_sequence.len() + 1 {
                         let end = start.elapsed();
                         eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                         continue 'each_read;
