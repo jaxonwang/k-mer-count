@@ -55,7 +55,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
         'each_l_window: loop{
             l_window_end = l_window_start + L_LEN;
             if l_window_end >= current_sequence.len() + 1{
-                eprintln!("each_l_window broken by l_window_end >= current_sequence.len() + 1, {} >= {}", l_window_end, current_sequence.len() + 1);
+                //eprintln!("each_l_window broken by l_window_end >= current_sequence.len() + 1, {} >= {}", l_window_end, current_sequence.len() + 1);
                 break 'each_l_window;
             }
             l_window_cnt += 1;
@@ -71,7 +71,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
                 m_window_end = m_window_start + M_LEN;
                 if m_window_end >= current_sequence.len() + 1{
                     let end = start.elapsed();
-                    eprintln!("each_read continue by m_window_end >= current_sequence.len() + 1, {} >= {}", m_window_end, current_sequence.len() + 1);
+                    //eprintln!("each_read continue by m_window_end >= current_sequence.len() + 1, {} >= {}", m_window_end, current_sequence.len() + 1);
                     eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                     continue 'each_read;
                 }
@@ -85,7 +85,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
                 if m_has_poly_base||m_has_simple_repeat||m_has_2base_repeat {
                     m_window_start += cmp::max(cmp::max(m_offset_1, m_offset_2), m_offset_3) + 1;
                     let end = start.elapsed();
-                    eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
+                    //eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                     continue 'each_m_window;
                 }
                 r_window_start = m_window_end;
@@ -93,7 +93,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
                     r_window_end = r_window_start + R_LEN;
                     if r_window_end >= current_sequence.len() + 1 {
                         let end = start.elapsed();
-                        eprintln!("each_read continue by r_window_end >= current_sequence.len() + 1, {} >= {}", r_window_end, current_sequence.len() + 1);
+                        //eprintln!("each_read continue by r_window_end >= current_sequence.len() + 1, {} >= {}", r_window_end, current_sequence.len() + 1);
                         eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                         continue 'each_read;
                     }
@@ -119,13 +119,13 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
                             ret_array[idx] += 1;
                         }
                     }
-                    eprintln!("finish r loop, r_window_start += 1");
+                    //eprintln!("finish r loop, r_window_start += 1");
                     r_window_start += 1;
                 }
-                eprintln!("finish r loop, m_window_start += 1");
+                //eprintln!("finish r loop, m_window_start += 1");
                 m_window_start += 1;
             }
-            eprintln!("finish r loop, l_window_start += 1");
+            //eprintln!("finish r loop, l_window_start += 1");
             l_window_start += 1;
         }
         let end = start.elapsed();
