@@ -76,7 +76,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
                     continue 'each_read;
                 }
                 if m_window_end - l_window_start > chunk_max - M_LEN{
-                    eprintln!("each_m_window broken by m_window_end >= current_sequence.len() + 1, {} >= {}", m_window_end, current_sequence.len() + 1);
+                    //eprintln!("each_m_window broken by m_window_end >= current_sequence.len() + 1, {} >= {}", m_window_end, current_sequence.len() + 1);
                     break 'each_m_window;
                 }
                 let (m_has_poly_base, m_offset_1)     = current_sequence.has_poly_base(m_window_start, m_window_end);

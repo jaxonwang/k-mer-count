@@ -200,15 +200,15 @@ impl DnaSequence{
         let mut original:  u64 = 0;
         let zero_ichi = 0x5555555555555555;
 
-/*
+/* 
         let mut original = self.sequence[start/32];
         //original = original.checked_shl((64 - 2 * (start % 32)).try_into().unwrap()).unwrap_or(0);
         //original = original.checked_shr((64 - 2 * (start % 32)).try_into().unwrap()).unwrap_or(0);
-        original <<= (64 - 2 * (start % 32));
-        original >>= (64 - 2 * (start % 32));
+        original &= (u64::MAX << (64 - 2 * (start % 32)));
         original <<= 2 * (end % 32);
         original += ((self.sequence[end / 32] >> (64 - 2 * (end % 32))));
  */
+
         let mut original = 0;
         for i in start..end{
             original += (self.sequence[i / 32] >> (62 - 2 * (i % 32))) & 3;
@@ -216,6 +216,7 @@ impl DnaSequence{
                 original <<= 2;
             }
          }
+
          //assert!(original == old_original, "DnaSequence::has_poly_base assertion failed:\n{:064b}\n{:064b}\n", original, old_original);
          
 
@@ -761,7 +762,7 @@ mod tests{
         let source: String = "CAACAACTGC".to_string();
         let v: Vec<u8> = source.into_bytes();
         let obj = DnaSequence::new(&v);
-        assert!(obj.has_simple_repeat(0, 10+-) == (false, 0), "{} failed", function_name!());
+        assert!(obj.has_simple_repeat(0, 10) == (false, 0), "{} failed", function_name!());
     }
 
     
