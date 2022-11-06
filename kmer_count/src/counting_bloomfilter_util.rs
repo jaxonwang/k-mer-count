@@ -210,6 +210,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
                 eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                 continue 'each_read;
             }
+            l_window_cnt += 1;
             let (l_has_poly_base, l_offset_1)     = current_sequence.has_poly_base(l_window_start, l_window_end);
             let (l_has_simple_repeat, l_offset_2) = current_sequence.has_simple_repeat(l_window_start, l_window_end);
             let (l_has_2base_repeat, l_offset_3)  = current_sequence.has_2base_repeat(l_window_start, l_window_end);
