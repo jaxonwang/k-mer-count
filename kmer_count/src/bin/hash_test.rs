@@ -13,7 +13,7 @@ use std::fs::File;
 use bio::io::fasta::Reader as faReader;
 use bio::io::fasta::Record as faRecord;
 use bio::io::fasta::FastaRead;
-
+use std::collections::HashSet;
 
 fn print_usage(program: &str, opts: &Options) {
     let brief = format!("Usage: {} FILE", program);
@@ -46,7 +46,8 @@ fn main() {
     let file = File::open(input_file).expect("Error during opening the file");
     let mut reader = faReader::new(file);
     let mut record = faRecord::new();
-    let mut sequences: Vec<DnaSequence> = Vec::new();
+    let mut hash_count: usize = 0;
+    let mut hash_from_u128: HashSet<u128> = HashSet::new();
     'each_read: loop {
         reader.read(&mut record).unwrap();
         if record.is_empty(){
@@ -54,6 +55,11 @@ fn main() {
         }
         let sequence_as_vec: Vec<u8> = record.seq().to_vec();
         let current_sequence = DnaSequence::new(&sequence_as_vec);
-        sequences.push(current_sequence);
+        for i in 0..current_sequence.len(){
+            let subseq: u128 = current_sequence.subsequence_as_u128(vec!([i, i + 64]));
+            hash_from_u128.insert(subseq);
+            hash_count += 1;
+            eprintln!("hash_count: {}", hash_count);
+        }
     }
 }
