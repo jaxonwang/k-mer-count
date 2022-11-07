@@ -198,7 +198,7 @@ impl DnaSequence{
         assert!(end - start < 32, "DnaSequence::has_poly_base assertion failed: length of the evaluation subject must be shorter than 32");
         assert!(end <= self.length, "DnaSequence::has_poly_base assertion failed: end coordinate must be smaller than length of the sequence. start: {}, end: {}, self.lngth: {}", start, end, self.length);
         //let mut original:  u64 = 0;
-        let zero_ichi = 0x5555555555555555;
+        let zero_ichi = 0x5555555555555554;
 
 /* 
         let mut original = self.sequence[start/32];
@@ -216,23 +216,18 @@ impl DnaSequence{
                 original <<= 2;
             }
          }
-
-         //assert!(original == old_original, "DnaSequence::has_poly_base assertion failed:\n{:064b}\n{:064b}\n", original, old_original);
-         
-
-        
+        //assert!(original == old_original, "DnaSequence::has_poly_base assertion failed:\n{:064b}\n{:064b}\n", original, old_original);
         //ここまでで、originalに右詰で対象の領域がコピーされる。
-        //zero_ichi &= !63;
         let val1  = original;
         let val2  = original << 2;
         let val3  = val1 ^ val2;
         let val4  = val3 >> 1;
         let val5  = val3 | val4;
         let val6  = !val5;
-        let val7  = val6 & zero_ichi;
+        let val7  = val6 & zero_ichi;//下位1bitだけ0にする。
         let val8  = val7 << 2;
         let val9  = val7 << 4;
-        let val10  = val7 & val8 & val9;
+        let val10 = val7 & val8 & val9;
         let val11 = (val10 << (2 * (32 + start - end))).leading_zeros() / 2;
 
         #[cfg(test)]{
@@ -724,6 +719,15 @@ mod tests{
         assert!(obj.has_poly_base(0, 30) == (true, 23), "{} failed", function_name!());
         assert!(obj.has_poly_base(0, 19) == (false, 0), "{} failed", function_name!());
     }
+    #[test]
+    #[named]
+    fn has_poly_base_test_27N_13(){
+        let source: String = "TAATGTATTCACTAACAAA".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_poly_base(0, 19) == (false, 0), "{} failed", function_name!());
+    }
+
 /*
 *
 *has_simple_repeat
