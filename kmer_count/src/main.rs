@@ -98,13 +98,12 @@ fn main() {
     let mut cbf_oyadama: Box<[u32; BLOOMFILTER_TABLE_SIZE]> = Box::new([0; BLOOMFILTER_TABLE_SIZE]);
     let handle = thread::spawn(|| {
         for i in 1..threads {
-            let subpart; 
             let start: usize = i * chunk_size;
             let end: usize;
             if i != threads - 1{
                 end = (i + 1) * chunk_size;
             }else{
-                end = sequence_len - 1;
+                end = sequences_len - 1;
             }
             eprintln!("start calling build_counting_bloom_filter[{}]", i);
             let cbf: Box<[u32; BLOOMFILTER_TABLE_SIZE]> = build_counting_bloom_filter(&sequences, start, end);
