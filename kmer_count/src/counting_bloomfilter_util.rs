@@ -63,7 +63,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
             let (l_has_2base_repeat, l_offset_3)  = current_sequence.has_2base_repeat(l_window_start, l_window_end);
             if l_has_poly_base||l_has_simple_repeat||l_has_2base_repeat {
                 l_window_start += cmp::max(cmp::max(l_offset_1, l_offset_2), l_offset_3) + 1;
-                eprintln!("l_has_poly_base:{}, l_offset_1:{}, l_has_simple_repeat:{}, l_offset_2:{}, l_has_2base_repeat:{}, l_offset_3:{}", l_has_poly_base, l_offset_1, l_has_simple_repeat, l_offset_2, l_has_2base_repeat, l_offset_3);
+                eprintln!("l_window_start:{}, l_window_end:{}, l_has_poly_base:{}, l_offset_1:{}, l_has_simple_repeat:{}, l_offset_2:{}, l_has_2base_repeat:{}, l_offset_3:{}",l_window_start, l_window_end, l_has_poly_base, l_offset_1, l_has_simple_repeat, l_offset_2, l_has_2base_repeat, l_offset_3);
                 //l_window_start += 1;
                 continue 'each_l_window;
             }
@@ -83,7 +83,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
                 let (m_has_2base_repeat, m_offset_3)  = current_sequence.has_2base_repeat(m_window_start, m_window_end);
                 if m_has_poly_base||m_has_simple_repeat||m_has_2base_repeat {
                     m_window_start += cmp::max(cmp::max(m_offset_1, m_offset_2), m_offset_3) + 1;
-                    eprintln!("m_has_poly_base:{}, m_offset_1:{}, m_has_simple_repeat:{}, m_offset_2:{}, m_has_2base_repeat:{}, m_offset_3:{}", m_has_poly_base, m_offset_1, m_has_simple_repeat, m_offset_2, m_has_2base_repeat, m_offset_3);
+                    eprintln!("m_window_start:{}, m_window_end:{}, m_has_poly_base:{}, m_offset_1:{}, m_has_simple_repeat:{}, m_offset_2:{}, m_has_2base_repeat:{}, m_offset_3:{}",m_window_start, m_window_end, m_has_poly_base, m_offset_1, m_has_simple_repeat, m_offset_2, m_has_2base_repeat, m_offset_3);
                     //m_window_start += 1;
                     continue 'each_m_window;
                 }
@@ -103,7 +103,7 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
                     let (r_has_2base_repeat, r_offset_3)  = current_sequence.has_2base_repeat(r_window_start, r_window_end);
                     if r_has_poly_base||r_has_simple_repeat||r_has_2base_repeat {
                         r_window_start += cmp::max(cmp::max(r_offset_1, r_offset_2), r_offset_3) + 1;
-                        eprintln!("r_has_poly_base:{}, r_offset_1:{}, r_has_simple_repeat:{}, r_offset_2:{}, r_has_2base_repeat:{}, r_offset_3:{}", r_has_poly_base, r_offset_1, r_has_simple_repeat, r_offset_2, r_has_2base_repeat, r_offset_3);
+                        eprintln!("r_window_start:{}, r_window_end:{}, r_has_poly_base:{}, r_offset_1:{}, r_has_simple_repeat:{}, r_offset_2:{}, r_has_2base_repeat:{}, r_offset_3:{}",r_window_start, r_window_end, r_has_poly_base, r_offset_1, r_has_simple_repeat, r_offset_2, r_has_2base_repeat, r_offset_3);
                         //r_window_start += 1;
                         continue 'each_r_window;
                     }
@@ -208,7 +208,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
             let (l_has_2base_repeat, l_offset_3)  = current_sequence.has_2base_repeat(l_window_start, l_window_end);
             if l_has_poly_base||l_has_simple_repeat||l_has_2base_repeat {
                 l_window_start += cmp::max(cmp::max(l_offset_1, l_offset_2), l_offset_3) + 1;
-                eprintln!("l_has_poly_base:{}, l_offset_1:{}, l_has_simple_repeat:{}, l_offset_2:{}, l_has_2base_repeat:{}, l_offset_3:{}", l_has_poly_base, l_offset_1, l_has_simple_repeat, l_offset_2, l_has_2base_repeat, l_offset_3);
+                eprintln!("l_window_start:{}, l_window_end:{}, l_has_poly_base:{}, l_offset_1:{}, l_has_simple_repeat:{}, l_offset_2:{}, l_has_2base_repeat:{}, l_offset_3:{}",l_window_start, l_window_end, l_has_poly_base, l_offset_1, l_has_simple_repeat, l_offset_2, l_has_2base_repeat, l_offset_3);
                 //l_window_start += 1;
                 continue 'each_l_window;
             }
@@ -228,7 +228,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
                 let (m_has_2base_repeat, m_offset_3)  = current_sequence.has_2base_repeat(m_window_start, m_window_end);
                 if m_has_poly_base||m_has_simple_repeat||m_has_2base_repeat {
                     m_window_start += cmp::max(cmp::max(m_offset_1, m_offset_2), m_offset_3) + 1;
-                    eprintln!("m_has_poly_base:{}, m_offset_1:{}, m_has_simple_repeat:{}, m_offset_2:{}, m_has_2base_repeat:{}, m_offset_3:{}", m_has_poly_base, m_offset_1, m_has_simple_repeat, m_offset_2, m_has_2base_repeat, m_offset_3);
+                    eprintln!("m_window_start:{}, m_window_end:{}, m_has_poly_base:{}, m_offset_1:{}, m_has_simple_repeat:{}, m_offset_2:{}, m_has_2base_repeat:{}, m_offset_3:{}",m_window_start, m_window_end, m_has_poly_base, m_offset_1, m_has_simple_repeat, m_offset_2, m_has_2base_repeat, m_offset_3);
                     //m_window_start += 1;
                     continue 'each_m_window;
                 }
@@ -248,7 +248,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
                     let (r_has_2base_repeat, r_offset_3)  = current_sequence.has_2base_repeat(r_window_start, r_window_end);
                     if r_has_poly_base||r_has_simple_repeat||r_has_2base_repeat {
                         r_window_start += cmp::max(cmp::max(r_offset_1, r_offset_2), r_offset_3) + 1;
-                        eprintln!("r_has_poly_base:{}, r_offset_1:{}, r_has_simple_repeat:{}, r_offset_2:{}, r_has_2base_repeat:{}, r_offset_3:{}", r_has_poly_base, r_offset_1, r_has_simple_repeat, r_offset_2, r_has_2base_repeat, r_offset_3);
+                        eprintln!("r_window_start:{}, r_window_end:{}, r_has_poly_base:{}, r_offset_1:{}, r_has_simple_repeat:{}, r_offset_2:{}, r_has_2base_repeat:{}, r_offset_3:{}",r_window_start, r_window_end, r_has_poly_base, r_offset_1, r_has_simple_repeat, r_offset_2, r_has_2base_repeat, r_offset_3);
                         //r_window_start += 1;
                         continue 'each_r_window;
                     }
@@ -336,7 +336,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
             let (l_has_2base_repeat, l_offset_3)  = current_sequence.has_2base_repeat(l_window_start, l_window_end);
             if l_has_poly_base||l_has_simple_repeat||l_has_2base_repeat {
                 l_window_start += cmp::max(cmp::max(l_offset_1, l_offset_2), l_offset_3) + 1;
-                eprintln!("l_has_poly_base:{}, l_offset_1:{}, l_has_simple_repeat:{}, l_offset_2:{}, l_has_2base_repeat:{}, l_offset_3:{}", l_has_poly_base, l_offset_1, l_has_simple_repeat, l_offset_2, l_has_2base_repeat, l_offset_3);
+                eprintln!("l_window_start:{}, l_window_end:{}, l_has_poly_base:{}, l_offset_1:{}, l_has_simple_repeat:{}, l_offset_2:{}, l_has_2base_repeat:{}, l_offset_3:{}",l_window_start, l_window_end, l_has_poly_base, l_offset_1, l_has_simple_repeat, l_offset_2, l_has_2base_repeat, l_offset_3);
                 //l_window_start += 1;
                 continue 'each_l_window;
             }
@@ -356,7 +356,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                 let (m_has_2base_repeat, m_offset_3)  = current_sequence.has_2base_repeat(m_window_start, m_window_end);
                 if m_has_poly_base||m_has_simple_repeat||m_has_2base_repeat {
                     m_window_start += cmp::max(cmp::max(m_offset_1, m_offset_2), m_offset_3) + 1;
-                    eprintln!("m_has_poly_base:{}, m_offset_1:{}, m_has_simple_repeat:{}, m_offset_2:{}, m_has_2base_repeat:{}, m_offset_3:{}", m_has_poly_base, m_offset_1, m_has_simple_repeat, m_offset_2, m_has_2base_repeat, m_offset_3);
+                    eprintln!("m_window_start:{}, m_window_end:{}, m_has_poly_base:{}, m_offset_1:{}, m_has_simple_repeat:{}, m_offset_2:{}, m_has_2base_repeat:{}, m_offset_3:{}",m_window_start, m_window_end, m_has_poly_base, m_offset_1, m_has_simple_repeat, m_offset_2, m_has_2base_repeat, m_offset_3);
                     //m_window_start += 1;
                     continue 'each_m_window;
                 }
@@ -376,7 +376,7 @@ pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_S
                     let (r_has_2base_repeat, r_offset_3)  = current_sequence.has_2base_repeat(r_window_start, r_window_end);
                     if r_has_poly_base||r_has_simple_repeat||r_has_2base_repeat {
                         r_window_start += cmp::max(cmp::max(r_offset_1, r_offset_2), r_offset_3) + 1;
-                        eprintln!("r_has_poly_base:{}, r_offset_1:{}, r_has_simple_repeat:{}, r_offset_2:{}, r_has_2base_repeat:{}, r_offset_3:{}", r_has_poly_base, r_offset_1, r_has_simple_repeat, r_offset_2, r_has_2base_repeat, r_offset_3);
+                        eprintln!("r_window_start:{}, r_window_end:{}, r_has_poly_base:{}, r_offset_1:{}, r_has_simple_repeat:{}, r_offset_2:{}, r_has_2base_repeat:{}, r_offset_3:{}",r_window_start, r_window_end, r_has_poly_base, r_offset_1, r_has_simple_repeat, r_offset_2, r_has_2base_repeat, r_offset_3);
                         //r_window_start += 1;
                         continue 'each_r_window;
                     }

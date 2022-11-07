@@ -439,7 +439,11 @@ impl DnaSequence{
 mod tests{
     use crate::sequence_encoder_util::DnaSequence;
     use ::function_name::named;
-//Encode test
+/*
+*
+*Encode Test
+*
+*/
     #[test]
     #[named]
     fn encode_test_4A(){
@@ -565,8 +569,14 @@ mod tests{
         assert!(obj.sequence[3] == 0x8f6c5ce0c75b0000, "{} failed", function_name!());
     }
 
-// Detection of repetitive subsequence
-    #[test]
+/*
+*
+*has_poly_base_test
+*4つからtrue
+*
+*/
+
+#[test]
     #[named]
     fn has_poly_base_test_8C(){
         let source: Vec<u8> = vec![b'C', b'C', b'C', b'C', b'C', b'C', b'C', b'C'];
@@ -576,7 +586,6 @@ mod tests{
         assert!(obj.has_poly_base(0, 6) == (true, 0),  "{} failed", function_name!());
         assert!(obj.has_poly_base(0, 7) == (true, 0),  "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn has_poly_base_test_8G(){
@@ -587,7 +596,6 @@ mod tests{
         assert!(obj.has_poly_base(0, 6) == (true, 0),  "{} failed", function_name!());
         assert!(obj.has_poly_base(0, 7) == (true, 0),  "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn has_poly_base_test_8T(){
@@ -598,7 +606,6 @@ mod tests{
         assert!(obj.has_poly_base(0, 6) == (true, 0),  "{} failed", function_name!());
         assert!(obj.has_poly_base(0, 7) == (true, 0),  "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn has_poly_base_test_8N(){
@@ -609,7 +616,6 @@ mod tests{
         assert!(obj.has_poly_base(0, 6) == (false, 0), "{} failed", function_name!());
         assert!(obj.has_poly_base(0, 7) == (false, 0), "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn has_poly_base_test_120N(){
@@ -621,7 +627,6 @@ mod tests{
         assert!(obj.has_poly_base(9, 20)  == (true, 0),  "{} failed", function_name!());
         assert!(obj.has_poly_base(28, 39) == (false, 0), "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn has_poly_base_test_27N_1(){
@@ -646,7 +651,6 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_poly_base(0, 27) == (false, 0), "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn has_poly_base_test_27N_4(){
@@ -655,7 +659,6 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_poly_base(0, 27) == (true, 4), "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn has_poly_base_test_27N_5(){
@@ -664,7 +667,6 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_poly_base(0, 27) == (false, 0), "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn has_poly_base_test_27N_6(){
@@ -673,8 +675,6 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_poly_base(0, 27) == (false, 0), "{} failed", function_name!());
     }
-
-
     #[test]
     #[named]
     fn has_poly_base_test_27N_7(){
@@ -683,7 +683,6 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_poly_base(0, 27) == (true, 0), "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn has_poly_base_test_27N_8(){
@@ -692,7 +691,6 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_poly_base(0, 27) == (true, 0), "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn has_poly_base_test_27N_9(){
@@ -701,7 +699,6 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_poly_base(0, 27) == (false, 0), "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn has_poly_base_test_27N_10(){
@@ -710,7 +707,6 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_poly_base(0, 27) == (true, 23), "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn has_poly_base_test_27N_11(){
@@ -719,8 +715,20 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_poly_base(0, 23) == (false, 0), "{} failed", function_name!());
     }
-
-
+    #[test]
+    #[named]
+    fn has_poly_base_test_27N_12(){
+        let source: String = "GAATCCTCAGCTGCTTGTATACAGGGGATT".to_string();
+        let v: Vec<u8> = source.into_bytes();
+        let obj = DnaSequence::new(&v);
+        assert!(obj.has_poly_base(0, 30) == (true, 23), "{} failed", function_name!());
+        assert!(obj.has_poly_base(0, 19) == (false, 0), "{} failed", function_name!());
+    }
+/*
+*
+*has_simple_repeat
+*
+*/
     #[test]
     #[named]
     fn has_simple_repeat_27N_1(){
@@ -756,9 +764,11 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_simple_repeat(0, 10) == (false, 0), "{} failed", function_name!());
     }
-
-    
-
+/*
+*
+*has_2base_repeat
+*
+*/
     #[test]
     #[named]
     fn has_2base_repeat_27N_1(){
@@ -767,8 +777,6 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_2base_repeat(0, 27) == (false, 0), "{} failed", function_name!());
     }
-
-
     #[test]
     #[named]
     fn has_2base_repeat_27N_2(){
@@ -777,7 +785,6 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_2base_repeat(0, 27) == (true, 8), "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn has_2base_repeat_27N_2x6_1(){
@@ -786,7 +793,6 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_2base_repeat(0, 27) == (true, 0), "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn has_2base_repeat_27N_2x6_2(){
@@ -795,7 +801,6 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_2base_repeat(0, 27) == (true, 14), "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn has_2base_repeat_27N_2x5_1(){
@@ -804,7 +809,6 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_2base_repeat(0, 27) == (true, 0), "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn has_2base_repeat_27N_2x5_2(){
@@ -813,7 +817,6 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_2base_repeat(0, 27) == (true, 16), "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn has_2base_repeat_27N_2x4_1(){
@@ -822,7 +825,6 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_2base_repeat(0, 27) == (false, 0), "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn has_2base_repeat_27N_2x4_2(){
@@ -831,7 +833,6 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_2base_repeat(0, 27) == (false, 0), "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn has_2base_repeat_27N_3(){
@@ -840,8 +841,6 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_2base_repeat(0, 27) == (false, 0), "{} failed", function_name!());
     }
-
-
     #[test]
     #[named]
     fn has_2base_repeat_27N_5(){
@@ -850,7 +849,6 @@ mod tests{
         let obj = DnaSequence::new(&v);
         assert!(obj.has_2base_repeat(0, 27) == (false, 0), "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn has_2base_repeat_27N_6(){
@@ -868,8 +866,11 @@ mod tests{
         assert!(obj.has_2base_repeat(0, 27) == (false, 0), "{} failed", function_name!());
     }
 
-
-//Decode test
+/*
+*
+*Decode test
+*
+*/
     #[test]
     #[named]
     fn decode_test_8C(){
@@ -880,7 +881,6 @@ mod tests{
         assert!(obj.decode(0, 6) == vec![67, 67, 67, 67, 67, 67    ], "{} failed", function_name!());
         assert!(obj.decode(0, 7) == vec![67, 67, 67, 67, 67, 67, 67], "{} failed", function_name!());
     }
-
     #[test]
     #[named]
     fn decode_test_120N(){
@@ -890,7 +890,11 @@ mod tests{
         assert!(obj.decode(0, 120) == v, "{} failed", function_name!());
     }
 
-//Subsequence test
+/*
+*
+*Subsequence Test
+*
+*/
     #[test]
     #[named]
     fn subsequence_as_u128_test_64G(){
