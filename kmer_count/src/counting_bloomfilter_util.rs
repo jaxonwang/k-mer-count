@@ -7,8 +7,10 @@ use std::fs::File;
 use sha2::Sha256;
 use sha2::Digest;
 
-use std::time::{/*Duration, */Instant};
+use std::time::{Instant};
 use std::cmp;
+use std::collections::HashSet;
+
 //use bio::io::fastq::Reader as fqReader;
 //use bio::io::fastq::Record as fqRecord;
 use bio::io::fasta::Reader as faReader;
@@ -20,7 +22,7 @@ pub const BLOOMFILTER_TABLE_SIZE: usize = u32::MAX as usize + 1;
 
 //全てのL, Rと、hash値を出力する
 //部分配列のdecoderを書き、テストする
-pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SIZE]>{
+pub fn build_counting_bloom_filter(sequences: &[DnaSequence], start: usize, end: usize) -> Box<[u32; BLOOMFILTER_TABLE_SIZE]>{
     let mut l_window_start: usize;
     let mut l_window_end:   usize;
     let mut m_window_start: usize;
@@ -33,24 +35,20 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
     eprintln!("Allocating Box<[u32; BLOOMFILTER_TABLE_SIZE]> where BLOOMFILTER_TABLE_SIZE = {}", BLOOMFILTER_TABLE_SIZE);
     let mut ret_array: Box<[u32; BLOOMFILTER_TABLE_SIZE]> = Box::new([0; BLOOMFILTER_TABLE_SIZE]);
     eprintln!("finish allocating");
+/* 
     let file = File::open(path).expect("Error during opening the file");
     let mut reader = faReader::new(file);
     let mut record = faRecord::new();
+
+ */
     let start = Instant::now();
     let mut previous_time = start.elapsed();
 
-    'each_read: loop {
-        reader.read(&mut record).unwrap();
-        if record.is_empty(){
-            break 'each_read;
-        }
+    'each_read: for current_sequence in sequences{
         let mut add_bloom_filter_cnt: usize = 0;
         let mut l_window_cnt: usize         = 0;
-
-        eprint!("1st loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
+        eprint!("1st loop: {:09?}\tlength: {}\t", loop_cnt, current_sequence.len());
         loop_cnt += 1;
-        let sequence_as_vec: Vec<u8> = record.seq().to_vec();
-        let current_sequence = DnaSequence::new(&sequence_as_vec);
         l_window_start = 0;
         'each_l_window: loop{
             l_window_end = l_window_start + L_LEN;
@@ -160,11 +158,10 @@ fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &
 }
 
 
-pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_SIZE]>, path: &str, threshold: u32) -> (Box<[bool; BLOOMFILTER_TABLE_SIZE]>, usize){
+pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_SIZE]>, sequences: &Vec<DnaSequence>, threshold: u32) -> HashSet<u128>{
     eprintln!("Allocating Box<[false; BLOOMFILTER_TABLE_SIZE]> where BLOOMFILTER_TABLE_SIZE = {}", BLOOMFILTER_TABLE_SIZE);
-    let mut ret_table: Box<[bool; BLOOMFILTER_TABLE_SIZE]> = Box::new([false; BLOOMFILTER_TABLE_SIZE]);
+    let mut ret_table: HashSet<u128> = HashSet::new();
     eprintln!("finish allocating");
-    let mut ret_val: usize = 0;
     let mut l_window_start: usize;
     let mut l_window_end:   usize;
     let mut m_window_start: usize;
@@ -172,26 +169,15 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
     let mut r_window_start: usize;
     let mut r_window_end:   usize;
     let chunk_max: usize = 141;
-    let file = File::open(path).expect("Error during opening the file");
-
-    let mut reader = faReader::new(file);
-    let mut record = faRecord::new();
 
     let start = Instant::now();
     let mut previous_time = start.elapsed();
-
     let mut loop_cnt:usize = 0;
-    'each_read: loop {
-        reader.read(&mut record).unwrap();
-        if record.is_empty(){
-            break 'each_read;
-        }
+    'each_read: for current_sequence in sequences.iter() {
         let mut add_bloom_filter_cnt: usize = 0;
         let mut l_window_cnt: usize         = 0;
-        eprint!("2nd loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
+        eprint!("2nd loop: {:09?}\tlength: {}\t", loop_cnt, current_sequence.len());
         loop_cnt += 1;
-        let sequence_as_vec: Vec<u8> = record.seq().to_vec();
-        let current_sequence = DnaSequence::new(&sequence_as_vec);
         l_window_start = 0;
         'each_l_window: loop{
             l_window_end = l_window_start + L_LEN;
@@ -250,11 +236,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
                     let table_indice:[u32;8] = hash_from_u128(lmr_string);//u128を受けてhashを返す関数
                     let occurence: u32 = count_occurence_from_counting_bloomfilter_table(source_table, table_indice);
                     if occurence >= threshold{
-                        ret_val += 1;
-                        for i in 0..8{
-                            let idx: usize = table_indice[i] as usize;
-                            ret_table[idx] |= true;
-                        }
+                        ret_table.insert(lmr_string);
                     }
                     r_window_start += 1;
                 }
@@ -266,9 +248,10 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
         eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
         previous_time = end;
     }
-    return (ret_table, ret_val);
+    return ret_table;
 }
 
+/* 
 fn refer_bloom_filter_table(bloomfilter_table: &Box<[bool; BLOOMFILTER_TABLE_SIZE]>, query: u128) -> bool {
     let indice: [u32;8] = hash_from_u128(query);
     let mut retval: bool = true;
@@ -277,115 +260,4 @@ fn refer_bloom_filter_table(bloomfilter_table: &Box<[bool; BLOOMFILTER_TABLE_SIZ
     }
     return retval;
 }
-
-
-//3週目。
-/*
-ファイルを舐めて、個数を確定させてからVecを確保する。
-*/
-
-
-pub fn pick_up_high_occurence_kmer(source_table: &Box<[bool; BLOOMFILTER_TABLE_SIZE]>, path: &str, max_size_of_list: usize) -> Vec<u128>{
-    let mut l_window_start: usize;
-    let mut l_window_end:   usize;
-    let mut m_window_start: usize;
-    let mut m_window_end:   usize;
-    let mut r_window_start: usize;
-    let mut r_window_end:   usize;
-    let chunk_max:          usize = 141;
-    let mut loop_cnt:       usize = 0;
-    let file: File = File::open(path).expect("Error during opening the file");
-
-    let mut ret_vec: Vec<u128> = vec![0 as u128; max_size_of_list + 1];
-    let mut ret_vec_cnt: usize = 0;
-
-    let mut reader = faReader::new(file);
-    let mut record = faRecord::new();
-
-    let start: Instant = Instant::now();
-    let mut previous_time = start.elapsed();
-    'each_read: loop {
-        reader.read(&mut record).unwrap();
-        if record.is_empty(){
-            break 'each_read;
-        }
-        let mut add_bloom_filter_cnt: usize = 0;
-        let mut l_window_cnt: usize         = 0;
-
-        eprint!("3rd loop: {:09?}, current record id:{:?}\tlength: {:?}\t", loop_cnt, record.id(), record.seq().len());
-        loop_cnt += 1;
-        let sequence_as_vec: Vec<u8> = record.seq().to_vec();
-        let current_sequence = DnaSequence::new(&sequence_as_vec);
-        l_window_start = 0;
-        'each_l_window: loop{
-            l_window_end = l_window_start + L_LEN;
-            if l_window_end >= current_sequence.len() + 1{
-                break 'each_l_window;
-            }
-            l_window_cnt += 1;
-            let (l_has_poly_base, l_offset_1)     = current_sequence.has_poly_base(l_window_start, l_window_end);
-            let (l_has_simple_repeat, l_offset_2) = current_sequence.has_simple_repeat(l_window_start, l_window_end);
-            let (l_has_2base_repeat, l_offset_3)  = current_sequence.has_2base_repeat(l_window_start, l_window_end);
-            if l_has_poly_base||l_has_simple_repeat||l_has_2base_repeat {
-                l_window_start += cmp::max(cmp::max(l_offset_1, l_offset_2), l_offset_3) + 1;
-                continue 'each_l_window;
-            }
-            m_window_start = l_window_end;
-            'each_m_window: loop{
-                m_window_end = m_window_start + M_LEN;
-                if m_window_end >= current_sequence.len() + 1{
-                    let end = start.elapsed();
-                    eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
-                    previous_time = end;
-                    continue 'each_read;
-                }
-                if m_window_end - l_window_start > chunk_max - M_LEN{
-                    break 'each_m_window;
-                }
-                let (m_has_poly_base, m_offset_1)     = current_sequence.has_poly_base(m_window_start, m_window_end);
-                let (m_has_simple_repeat, m_offset_2) = current_sequence.has_simple_repeat(m_window_start, m_window_end);
-                let (m_has_2base_repeat, m_offset_3)  = current_sequence.has_2base_repeat(m_window_start, m_window_end);
-                if m_has_poly_base||m_has_simple_repeat||m_has_2base_repeat {
-                    m_window_start += cmp::max(cmp::max(m_offset_1, m_offset_2), m_offset_3) + 1;
-                    continue 'each_m_window;
-                }
-                r_window_start = m_window_end;
-                'each_r_window: loop{
-                    r_window_end = r_window_start + R_LEN;
-                    if r_window_end >= current_sequence.len() + 1 {
-                        let end = start.elapsed();
-                        eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
-                        previous_time = end;
-                        continue 'each_read;
-                    }
-                    if r_window_end - l_window_start > chunk_max{
-                        break 'each_r_window;
-                    }
-                    let (r_has_poly_base, r_offset_1)     = current_sequence.has_poly_base(r_window_start, r_window_end);
-                    let (r_has_simple_repeat, r_offset_2) = current_sequence.has_simple_repeat(r_window_start, r_window_end);
-                    let (r_has_2base_repeat, r_offset_3)  = current_sequence.has_2base_repeat(r_window_start, r_window_end);
-                    if r_has_poly_base||r_has_simple_repeat||r_has_2base_repeat {
-                        r_window_start += cmp::max(cmp::max(r_offset_1, r_offset_2), r_offset_3) + 1;
-                        continue 'each_r_window;
-                    }
-                    //ここからcounting bloom filterに追加していく。
-                    add_bloom_filter_cnt += 1;
-                    let lmr_string:u128 = current_sequence.subsequence_as_u128(vec![[l_window_start, l_window_end], [m_window_start, m_window_end], [r_window_start, r_window_end]]);
-                    let is_high_occr_kmer: bool = refer_bloom_filter_table(source_table, lmr_string);
-                    if is_high_occr_kmer == true{
-                        ret_vec[ret_vec_cnt] = lmr_string;
-                        ret_vec_cnt += 1;
-                    }
-                    r_window_start += 1;
-                }
-                m_window_start += 1;
-            }
-            l_window_start += 1;
-        }
-        let end = start.elapsed();
-        eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
-        previous_time = end;
-    }
-    return ret_vec;
-}
-
+ */

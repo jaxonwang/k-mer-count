@@ -5,11 +5,20 @@ use getopts::Options;
 use std::{env, process};
 use std::fs;
 use std::io::{BufWriter, Write};
+use std::collections::HashSet;
+use std::thread;
 use voracious_radix_sort::{RadixSort};
 use kmer_count::counting_bloomfilter_util::BLOOMFILTER_TABLE_SIZE;
 use kmer_count::counting_bloomfilter_util::{L_LEN, M_LEN, R_LEN};
-use kmer_count::counting_bloomfilter_util::{build_counting_bloom_filter, number_of_high_occurence_kmer, pick_up_high_occurence_kmer};
+use kmer_count::counting_bloomfilter_util::{build_counting_bloom_filter, number_of_high_occurence_kmer};
 use kmer_count::sequence_encoder_util::{decode_u128_2_dna_seq};
+use kmer_count::sequence_encoder_util::DnaSequence;
+use bio::io::fasta::Reader as faReader;
+use bio::io::fasta::Record as faRecord;
+use std::fs::File;
+use crate::bio::io::fasta::FastaRead;
+
+
 
 fn print_usage(program: &str, opts: &Options) {
     let brief = format!("Usage: {} FILE [options]", program);
@@ -62,44 +71,64 @@ fn main() {
     }else{
         format!("{:?}_threshold{}_threads{}.out", input_file, threshold, threads)
     };
-
-
     eprintln!("input  file: {:?}",  input_file);
     eprintln!("loading {:?} done", input_file);
 
-    //1段目
-    eprintln!("start calling build_counting_bloom_filter");
-    let counting_bloom_filter_table: Box<[u32; BLOOMFILTER_TABLE_SIZE]> = build_counting_bloom_filter(&input_file);
-    eprintln!("finish calling build_counting_bloom_filter");
 
-    //2段目
+    let file = File::open(&input_file).expect("Error during opening the file");
+    let mut reader = faReader::new(file);
+    let mut record = faRecord::new();
+    let mut sequences: Vec<DnaSequence> = Vec::new();
+    eprintln!("loading {:?} done", input_file);
+    'each_read: loop {
+        reader.read(&mut record).unwrap();
+        if record.is_empty(){
+            break 'each_read;
+        }
+        let sequence_as_vec: Vec<u8> = record.seq().to_vec();
+        let current_sequence = DnaSequence::new(&sequence_as_vec);
+        sequences.push(current_sequence);
+    }
+
+/*
+ここにマルチスレッド処理を書く
+*/
+    let sequences_len: usize = sequences.len();
+    let chunk_size: usize = sequences_len / threads;
+    let mut cbf_oyadama: Box<[u32; BLOOMFILTER_TABLE_SIZE]> = Box::new([0; BLOOMFILTER_TABLE_SIZE]);
+    let handle = thread::spawn(|| {
+        for i in 1..threads {
+            let subpart; 
+            let start: usize = i * chunk_size;
+            let end: usize;
+            if i != threads - 1{
+                end = (i + 1) * chunk_size;
+            }else{
+                end = sequence_len - 1;
+            }
+            eprintln!("start calling build_counting_bloom_filter[{}]", i);
+            let cbf: Box<[u32; BLOOMFILTER_TABLE_SIZE]> = build_counting_bloom_filter(&sequences, start, end);
+            eprintln!("finish calling build_counting_bloom_filter");
+        }
+    });
+
     eprintln!("start calling number_of_high_occurence_kmer");
-    let (high_occr_bloomfilter_table, occurence) = number_of_high_occurence_kmer(&counting_bloom_filter_table, &input_file, threshold);
+    let h_cbf_h: HashSet<u128> = number_of_high_occurence_kmer(&cbf_oyadama, &sequences, threshold);
     eprintln!("finish calling number_of_high_occurence_kmer");
-    //3段目
+    let mut high_occurence_kmer: Vec<u128> = h_cbf_h.into_iter().collect();
 
-    eprintln!("Vec size is {}", occurence);
-    eprintln!("start calling pick_up_high_occurence_kmer");
-    let occr_with_mergin = ((occurence as f64) * 1.2).ceil() as usize;
-    let mut high_occurence_kmer: Vec<u128> = pick_up_high_occurence_kmer(&high_occr_bloomfilter_table, &input_file, occr_with_mergin);
-    eprintln!("finish calling pick_up_high_occurence_kmer");
+/*
+ここまで
+*/
+
+
+
 
     //sortする
     eprintln!("start voracious_mt_sort({})", threads);
     high_occurence_kmer.voracious_mt_sort(threads);
     eprintln!("finish voracious_mt_sort({})", threads);
 
-/*
-    let mut previous_l_kmer: [u8; L_LEN] = [b'A'; L_LEN];
-    let mut current_l_kmer:  [u8; L_LEN] = [b'A'; L_LEN];
-    for each_kmer in high_occurence_kmer{
-        current_l_kmer = decode_u128_l(&each_kmer);
-        if current_l_kmer != previous_l_kmer{
-            println!("{:?}", String::from_utf8(current_l_kmer.to_vec()).unwrap());
-        }
-        previous_l_kmer = current_l_kmer;
-    }
-*/
     eprintln!("start  writing to output file: {:?}", &output_file);
 
     //let mut w = File::create(&output_file).unwrap();
