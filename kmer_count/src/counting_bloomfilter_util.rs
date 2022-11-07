@@ -98,11 +98,9 @@ pub fn build_counting_bloom_filter(path: &str) -> Box<[u32; BLOOMFILTER_TABLE_SI
                     if r_window_end - l_window_start > chunk_max{
                         break 'each_r_window;
                     }
-                    eprintln!("r_window_start: {}, r_window_end: {}", r_window_start, r_window_end);
                     let (r_has_poly_base, r_offset_1)     = current_sequence.has_poly_base(r_window_start, r_window_end);
                     let (r_has_simple_repeat, r_offset_2) = current_sequence.has_simple_repeat(r_window_start, r_window_end);
                     let (r_has_2base_repeat, r_offset_3)  = current_sequence.has_2base_repeat(r_window_start, r_window_end);
-                    eprintln!("r_window_start: {}, r_window_end: {}", r_window_start, r_window_end);
                     if r_has_poly_base||r_has_simple_repeat||r_has_2base_repeat {
                         r_window_start += cmp::max(cmp::max(r_offset_1, r_offset_2), r_offset_3) + 1;
                         //eprintln!("r_window_start:{}, r_window_end:{}, r_has_poly_base:{}, r_offset_1:{}, r_has_simple_repeat:{}, r_offset_2:{}, r_has_2base_repeat:{}, r_offset_3:{}",r_window_start, r_window_end, r_has_poly_base, r_offset_1, r_has_simple_repeat, r_offset_2, r_has_2base_repeat, r_offset_3);
