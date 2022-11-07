@@ -51,7 +51,7 @@ fn main() {
         }
         let sequence_as_vec: Vec<u8> = record.seq().to_vec();
         let current_sequence = DnaSequence::new(&sequence_as_vec);
-        for i in 0..current_sequence.len(){
+        for i in 0..(current_sequence.len() - 64){
             let subseq: u128 = current_sequence.subsequence_as_u128(vec!([i, i + 64]));
             hash_from_u128.insert(subseq);
             hash_count += 1;
