@@ -72,8 +72,8 @@ pub fn decode_u128_r(source: &u128) -> [u8; R_LEN]{
 
 
 pub struct DnaSequence{
-    sequence: Vec<u64>,
-    length:   usize
+    length:   usize,
+    sequence: Vec<u64>
 }
 
 impl DnaSequence{
