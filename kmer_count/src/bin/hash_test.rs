@@ -31,10 +31,6 @@ fn main() {
         Ok(m) => { m }
         Err(f) => { panic!("{}", f.to_string()) }
     };
-    if matches.opt_present("h") {
-        print_usage(&program, &opts);
-        return;
-    }
 
     let input_file = if !matches.free.is_empty() {
         matches.free[0].clone()
