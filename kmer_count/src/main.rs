@@ -137,62 +137,71 @@ fn main() {
 ここにマルチスレッド処理を書く
 */
 
-    let arc_sequences: Arc<Vec<DnaSequence>>  = Arc::new(sequences);
-    let chunk_size: Arc<usize>                = Arc::new(sequences.len() / threads);
-    let mut cbf_oyadama: Arc<Mutex<Vec<u32>>> = Arc::new(Mutex::new(Vec::with_capacity(BLOOMFILTER_TABLE_SIZE)));
-    let mut children_1                        = Vec::new();
+    let chunk_size: usize                = sequences.len() / threads;
+    let sequences_ref = &sequences;
+    let mut cbf_oyadama: Vec<u32> = Vec::with_capacity(BLOOMFILTER_TABLE_SIZE);
 
-    for i in 1..threads {
-        children_1.push(
-            thread::spawn(||
-                {
-                    let start_idx: usize = i * (*chunk_size);
-                    let end_idx: usize;
-                    if i != threads - 1{
-                        end_idx = (i + 1) * (*chunk_size);
-                    }else{
-                        end_idx = sequences.len() - 1;
+    thread::scope(|scope|{
+        let mut children_1                        = Vec::new();
+        for i in 1..threads {
+            let i = i;
+            children_1.push(
+                scope.spawn(move || 
+                    {
+                        let start_idx: usize = i * chunk_size;
+                        let end_idx: usize;
+                        if i != threads - 1{
+                            end_idx = (i + 1) * chunk_size;
+                        }else{
+                            end_idx = sequences_ref.len() - 1;
+                        }
+                        eprintln!("start calling build_counting_bloom_filter[{}]", i);
+                        let cbf: Vec<u32> = build_counting_bloom_filter(sequences_ref, start_idx, end_idx);
+                        eprintln!("finish calling build_counting_bloom_filter[{}]", i);
+                        cbf
                     }
-                    eprintln!("start calling build_counting_bloom_filter[{}]", i);
-                    let cbf: Vec<u32> = build_counting_bloom_filter(&sequences, start_idx, end_idx);
-                    zip(cbf_oyadama.lock().unwrap().iter(), cbf).map(|(x, y)|x.checked_add(y).unwrap_or(u32::MAX)).collect();
-                    eprintln!("finish calling build_counting_bloom_filter[{}]", i);
-                }
+                )
             )
-        )
-    }
-    for child in children_1{
-        let _ = child.join();
-    }
+        }
+        for child in children_1{
+            let cbf = child.join().unwrap();
+            zip(cbf_oyadama.iter_mut(), cbf).for_each(|(x, y)| *x = x.checked_add(y).unwrap_or(u32::MAX));
+        }
+    });
 
-    let mut h_cbf_h_oyadama: Arc<Mutex<HashSet<u128>>> = Arc::new(Mutex::new(HashSet::with_capacity(10_000)));
-    let mut children_2                                 = Vec::new();
+    let h_cbf_h_oyadama: Mutex<HashSet<u128>> = Mutex::new(HashSet::with_capacity(10_000));
+    let cbf_oyadama_ref = &cbf_oyadama;
+    let h_cbf_h_oyadama_ref = &h_cbf_h_oyadama;
 
-    for i in 1..threads {
-        children_2.push(
-            thread::spawn(||
-                {
-                    let start_idx: usize = i * (*chunk_size);
-                    let end_idx: usize;
-                    if i != threads - 1{
-                        end_idx = (i + 1) * (*chunk_size);
-                    }else{
-                        end_idx = sequences.len() - 1;
+    thread::scope(|scope|{
+        let mut children_2                                 = Vec::new();
+        for i in 1..threads {
+            let i = i;
+            children_2.push(
+                scope.spawn(move ||
+                    {
+                        let start_idx: usize = i * chunk_size;
+                        let end_idx: usize;
+                        if i != threads - 1{
+                            end_idx = (i + 1) * chunk_size;
+                        }else{
+                            end_idx = sequences_ref.len() - 1;
+                        }
+                        eprintln!("start calling number_of_high_occurence_kmer[{}]", i);
+                        let h_cbf_h: HashSet<u128> = number_of_high_occurence_kmer(cbf_oyadama_ref, sequences_ref, start_idx, end_idx, threshold);
+                        h_cbf_h_oyadama_ref.lock().unwrap().union(&h_cbf_h);
+                        eprintln!("finish calling number_of_high_occurence_kmer[{}]", i);
                     }
-                    eprintln!("start calling number_of_high_occurence_kmer[{}]", i);
-                    let h_cbf_h: HashSet<u128> = number_of_high_occurence_kmer(cbf_oyadama, &sequences, start_idx, end_idx, threshold);
-                    h_cbf_h_oyadama.lock().unwrap().union(&h_cbf_h).collect();
-                    eprintln!("finish calling number_of_high_occurence_kmer[{}]", i);
-                }
+                )
             )
-        )
-    }
-    for child in children_2{
-        let _ = child.join();
-    }
+        }
+        for child in children_2{
+            let _ = child.join();
+        }
+    });
 
 
-    let mut high_occurence_kmer: HashSet<u128> = h_cbf_h_oyadama.lock().unwrap().into_iter().collect();
+    let mut high_occurence_kmer: HashSet<u128> = h_cbf_h_oyadama.lock().unwrap().clone();
 
 
  /*
