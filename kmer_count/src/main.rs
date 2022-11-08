@@ -7,6 +7,7 @@ use std::fs;
 use std::io::{BufWriter, Write};
 use std::collections::HashSet;
 use std::thread;
+use std::sync::Arc;
 use voracious_radix_sort::{RadixSort};
 use kmer_count::counting_bloomfilter_util::BLOOMFILTER_TABLE_SIZE;
 use kmer_count::counting_bloomfilter_util::{L_LEN, M_LEN, R_LEN};
@@ -90,14 +91,66 @@ fn main() {
         sequences.push(current_sequence);
     }
 
+
+
+
+
+/*
+
+    let primer3_fmt_string: Vec<String> = primer3_core_input_sequence(&candidates);
+
+    let mut chunks_of_input: Vec<String> = Vec::new();
+    for _i in 0..thread_number{
+        chunks_of_input.push(String::new());
+    }
+    for (index, string) in primer3_fmt_string.iter().enumerate(){
+        chunks_of_input[index % thread_number] += string;
+        chunks_of_input[index % thread_number] += "\n";
+    }
+
+    let arc_chunks_of_input: Arc<Vec<String>> = Arc::new(chunks_of_input);
+    let final_result: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
+    let mut children = Vec::new();
+    for i in 0..thread_number{
+        let chunks_of_input  = Arc::clone(&arc_chunks_of_input);
+        let arc_final_result = Arc::clone(&final_result);
+        //eprintln!("about to spawn thread {}", i);
+        children.push(
+            thread::spawn(move|| {
+                //eprintln!("thread {}: ready to run primer3", i);
+                let primer3_results: String = execute_primer3((*chunks_of_input[i]).to_string());
+                //eprintln!("thread {}: finish primer3", i);
+                arc_final_result.lock().unwrap().push(primer3_results);
+        })
+        );
+    }
+    for child in children{
+        let _ = child.join();
+    }
+
+
+*/
+
+
+
+
+
+
+
+
+
+
 /*
 ここにマルチスレッド処理を書く
 */
+
+/* 
     let sequences_len: usize = sequences.len();
     let chunk_size: usize = sequences_len / threads;
     let mut cbf_oyadama: Box<[u32; BLOOMFILTER_TABLE_SIZE]> = Box::new([0; BLOOMFILTER_TABLE_SIZE]);
-    let handle = thread::spawn(|| {
-        for i in 1..threads {
+    let iter_cnt = Arc::new([1..threads]);
+    for i in iter_cnt {
+        let handle = thread::spawn(|| {
             let start: usize = i * chunk_size;
             let end: usize;
             if i != threads - 1{
@@ -108,8 +161,12 @@ fn main() {
             eprintln!("start calling build_counting_bloom_filter[{}]", i);
             let cbf: Box<[u32; BLOOMFILTER_TABLE_SIZE]> = build_counting_bloom_filter(&sequences, start, end);
             eprintln!("finish calling build_counting_bloom_filter");
-        }
-    });
+        });
+    }
+ */
+    eprintln!("start calling build_counting_bloom_filter[{}]", i);
+    let cbf: Box<[u32; BLOOMFILTER_TABLE_SIZE]> = build_counting_bloom_filter(&sequences, start, end);
+    eprintln!("finish calling build_counting_bloom_filter");
 
     eprintln!("start calling number_of_high_occurence_kmer");
     let h_cbf_h: HashSet<u128> = number_of_high_occurence_kmer(&cbf_oyadama, &sequences, threshold);
