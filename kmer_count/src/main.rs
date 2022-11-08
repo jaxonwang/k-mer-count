@@ -8,6 +8,8 @@ use std::io::{BufWriter, Write};
 use std::collections::HashSet;
 use std::thread;
 use std::sync::Arc;
+use std::sync::Mutex;
+use std::iter::zip;
 use voracious_radix_sort::{RadixSort};
 use kmer_count::counting_bloomfilter_util::BLOOMFILTER_TABLE_SIZE;
 use kmer_count::counting_bloomfilter_util::{L_LEN, M_LEN, R_LEN};
@@ -131,55 +133,75 @@ fn main() {
 
 */
 
-
-
-
-
-
-
-
-
-
 /*
 ここにマルチスレッド処理を書く
 */
 
-/* 
-    let sequences_len: usize = sequences.len();
-    let chunk_size: usize = sequences_len / threads;
-    let mut cbf_oyadama: Box<[u32; BLOOMFILTER_TABLE_SIZE]> = Box::new([0; BLOOMFILTER_TABLE_SIZE]);
-    let iter_cnt = Arc::new([1..threads]);
-    for i in iter_cnt {
-        let handle = thread::spawn(|| {
-            let start: usize = i * chunk_size;
-            let end: usize;
-            if i != threads - 1{
-                end = (i + 1) * chunk_size;
-            }else{
-                end = sequences_len - 1;
-            }
-            eprintln!("start calling build_counting_bloom_filter[{}]", i);
-            let cbf: Box<[u32; BLOOMFILTER_TABLE_SIZE]> = build_counting_bloom_filter(&sequences, start, end);
-            eprintln!("finish calling build_counting_bloom_filter");
-        });
+    let arc_sequences: Arc<Vec<DnaSequence>>  = Arc::new(sequences);
+    let chunk_size: Arc<usize>                = Arc::new(sequences.len() / threads);
+    let mut cbf_oyadama: Arc<Mutex<Vec<u32>>> = Arc::new(Mutex::new(Vec::with_capacity(BLOOMFILTER_TABLE_SIZE)));
+    let mut children_1                        = Vec::new();
+
+    for i in 1..threads {
+        children_1.push(
+            thread::spawn(||
+                {
+                    let start_idx: usize = i * (*chunk_size);
+                    let end_idx: usize;
+                    if i != threads - 1{
+                        end_idx = (i + 1) * (*chunk_size);
+                    }else{
+                        end_idx = sequences.len() - 1;
+                    }
+                    eprintln!("start calling build_counting_bloom_filter[{}]", i);
+                    let cbf: Vec<u32> = build_counting_bloom_filter(&sequences, start_idx, end_idx);
+                    zip(cbf_oyadama.lock().unwrap().iter(), cbf).map(|(x, y)|x.checked_add(y).unwrap_or(u32::MAX)).collect();
+                    eprintln!("finish calling build_counting_bloom_filter[{}]", i);
+                }
+            )
+        )
     }
- */
-    eprintln!("start calling build_counting_bloom_filter[{}]", i);
-    let cbf: Box<[u32; BLOOMFILTER_TABLE_SIZE]> = build_counting_bloom_filter(&sequences, start, end);
-    eprintln!("finish calling build_counting_bloom_filter");
+    for child in children_1{
+        let _ = child.join();
+    }
 
-    eprintln!("start calling number_of_high_occurence_kmer");
-    let h_cbf_h: HashSet<u128> = number_of_high_occurence_kmer(&cbf_oyadama, &sequences, threshold);
-    eprintln!("finish calling number_of_high_occurence_kmer");
-    let mut high_occurence_kmer: Vec<u128> = h_cbf_h.into_iter().collect();
+    let mut h_cbf_h_oyadama: Arc<Mutex<HashSet<u128>>> = Arc::new(Mutex::new(HashSet::with_capacity(10_000)));
+    let mut children_2                                 = Vec::new();
 
-/*
+    for i in 1..threads {
+        children_2.push(
+            thread::spawn(||
+                {
+                    let start_idx: usize = i * (*chunk_size);
+                    let end_idx: usize;
+                    if i != threads - 1{
+                        end_idx = (i + 1) * (*chunk_size);
+                    }else{
+                        end_idx = sequences.len() - 1;
+                    }
+                    eprintln!("start calling number_of_high_occurence_kmer[{}]", i);
+                    let h_cbf_h: HashSet<u128> = number_of_high_occurence_kmer(cbf_oyadama, &sequences, start_idx, end_idx, threshold);
+                    h_cbf_h_oyadama.lock().unwrap().union(&h_cbf_h).collect();
+                    eprintln!("finish calling number_of_high_occurence_kmer[{}]", i);
+                }
+            )
+        )
+    }
+    for child in children_2{
+        let _ = child.join();
+    }
+
+
+    let mut high_occurence_kmer: HashSet<u128> = h_cbf_h_oyadama.lock().unwrap().into_iter().collect();
+
+
+ /*
 ここまで
 */
 
 
 
-
+/* 
     //sortする
     eprintln!("start voracious_mt_sort({})", threads);
     high_occurence_kmer.voracious_mt_sort(threads);
@@ -187,6 +209,7 @@ fn main() {
 
     eprintln!("start  writing to output file: {:?}", &output_file);
 
+ */
     //let mut w = File::create(&output_file).unwrap();
     let mut w = BufWriter::new(fs::File::create(&output_file).unwrap());
     //let mut w_kensho = BufWriter::new(fs::File::create("./kensho_out").unwrap());

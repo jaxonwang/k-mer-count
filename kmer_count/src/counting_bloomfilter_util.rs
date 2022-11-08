@@ -22,7 +22,7 @@ pub const BLOOMFILTER_TABLE_SIZE: usize = u32::MAX as usize + 1;
 
 //全てのL, Rと、hash値を出力する
 //部分配列のdecoderを書き、テストする
-pub fn build_counting_bloom_filter(sequences: &[DnaSequence], start: usize, end: usize) -> Box<[u32; BLOOMFILTER_TABLE_SIZE]>{
+pub fn build_counting_bloom_filter(sequences: &Vec<DnaSequence>, start_idx: usize, end_idx: usize) -> Vec<u32>{
     let mut l_window_start: usize;
     let mut l_window_end:   usize;
     let mut m_window_start: usize;
@@ -32,19 +32,14 @@ pub fn build_counting_bloom_filter(sequences: &[DnaSequence], start: usize, end:
     let chunk_max: usize = 141;
 
     let mut loop_cnt:usize = 0;
-    eprintln!("Allocating Box<[u32; BLOOMFILTER_TABLE_SIZE]> where BLOOMFILTER_TABLE_SIZE = {}", BLOOMFILTER_TABLE_SIZE);
-    let mut ret_array: Box<[u32; BLOOMFILTER_TABLE_SIZE]> = Box::new([0; BLOOMFILTER_TABLE_SIZE]);
+    eprintln!("Allocating Vec<u32> where BLOOMFILTER_TABLE_SIZE = {}", BLOOMFILTER_TABLE_SIZE);
+    let mut ret_array: Vec<u32> = Vec::with_capacity(BLOOMFILTER_TABLE_SIZE);
     eprintln!("finish allocating");
-/* 
-    let file = File::open(path).expect("Error during opening the file");
-    let mut reader = faReader::new(file);
-    let mut record = faRecord::new();
 
- */
-    let start = Instant::now();
-    let mut previous_time = start.elapsed();
+    let start_time = Instant::now();
+    let mut previous_time = start_time.elapsed();
 
-    'each_read: for current_sequence in sequences{
+    'each_read: for current_sequence in sequences[start_idx..end_idx].iter() {
         let mut add_bloom_filter_cnt: usize = 0;
         let mut l_window_cnt: usize         = 0;
         eprint!("1st loop: {:09?}\tlength: {}\t", loop_cnt, current_sequence.len());
@@ -67,7 +62,7 @@ pub fn build_counting_bloom_filter(sequences: &[DnaSequence], start: usize, end:
             'each_m_window: loop{
                 m_window_end = m_window_start + M_LEN;
                 if m_window_end >= current_sequence.len() + 1{
-                    let end = start.elapsed();
+                    let end = start_time.elapsed();
                     eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                     previous_time = end;
                     continue 'each_read;
@@ -86,7 +81,7 @@ pub fn build_counting_bloom_filter(sequences: &[DnaSequence], start: usize, end:
                 'each_r_window: loop{
                     r_window_end = r_window_start + R_LEN;
                     if r_window_end >= current_sequence.len() + 1 {
-                        let end = start.elapsed();
+                        let end = start_time.elapsed();
                         eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
                         previous_time = end;
                         continue 'each_read;
@@ -119,7 +114,7 @@ pub fn build_counting_bloom_filter(sequences: &[DnaSequence], start: usize, end:
             }
             l_window_start += 1;
         }
-        let end = start.elapsed();
+        let end = start_time.elapsed();
         eprintln!("sec: {}.{:03}\t subject to add bloom filter: {}\tl_window_cnt: {}", end.as_secs() - previous_time.as_secs(),end.subsec_nanos() - previous_time.subsec_nanos(),  add_bloom_filter_cnt, l_window_cnt);
         previous_time = end;
     }
@@ -147,7 +142,7 @@ fn hash_from_u128(source: u128) -> [u32; 8]{
     return ret_val;
 }
 
-fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &Box<[u32; BLOOMFILTER_TABLE_SIZE]>, indice: [u32; 8]) -> u32{
+fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &Vec<u32>, indice: [u32; 8]) -> u32{
     let mut retval: u32 = u32::MAX;
     for index in indice{
         if counting_bloomfilter_table[index as usize] < retval{
@@ -158,10 +153,8 @@ fn count_occurence_from_counting_bloomfilter_table(counting_bloomfilter_table: &
 }
 
 
-pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_SIZE]>, sequences: &Vec<DnaSequence>, threshold: u32) -> HashSet<u128>{
-    eprintln!("Allocating Box<[false; BLOOMFILTER_TABLE_SIZE]> where BLOOMFILTER_TABLE_SIZE = {}", BLOOMFILTER_TABLE_SIZE);
+pub fn number_of_high_occurence_kmer(source_table: &Vec<u32>, sequences: &Vec<DnaSequence>, start_idx: usize, end_idx: usize, threshold: u32) -> HashSet<u128>{
     let mut ret_table: HashSet<u128> = HashSet::new();
-    eprintln!("finish allocating");
     let mut l_window_start: usize;
     let mut l_window_end:   usize;
     let mut m_window_start: usize;
@@ -173,7 +166,7 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
     let start = Instant::now();
     let mut previous_time = start.elapsed();
     let mut loop_cnt:usize = 0;
-    'each_read: for current_sequence in sequences.iter() {
+    'each_read: for current_sequence in sequences[start_idx..end_idx].iter() {
         let mut add_bloom_filter_cnt: usize = 0;
         let mut l_window_cnt: usize         = 0;
         eprint!("2nd loop: {:09?}\tlength: {}\t", loop_cnt, current_sequence.len());
@@ -250,14 +243,3 @@ pub fn number_of_high_occurence_kmer(source_table: &Box<[u32; BLOOMFILTER_TABLE_
     }
     return ret_table;
 }
-
-/* 
-fn refer_bloom_filter_table(bloomfilter_table: &Box<[bool; BLOOMFILTER_TABLE_SIZE]>, query: u128) -> bool {
-    let indice: [u32;8] = hash_from_u128(query);
-    let mut retval: bool = true;
-    for index in indice{
-        retval &= bloomfilter_table[index as usize]
-    }
-    return retval;
-}
- */
